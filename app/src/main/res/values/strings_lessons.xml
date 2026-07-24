@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="smart_lesson">Smart Lesson</string>
+    <string name="current_chapter">CURRENT CHAPTER</string>
+
+    <string name="reading_preferences">Reading Preferences</string>
+    <string name="reading_font_size">Main reading font size</string>
+
+    <string name="bilingual">Hindi + English</string>
+    <string name="hindi">Hindi</string>
+    <string name="english">English</string>
+
+    <string name="easy_explanation">Easy Explanation</string>
+    <string name="key_points">Key Points</string>
+    <string name="simple_example">Simple Example</string>
+    <string name="try_yourself">Try Yourself</string>
+
+    <string name="check_understanding">Check My Understanding</string>
+    <string name="mark_lesson_complete">Mark Lesson Complete</string>
+
+    <string name="bilingual_content_format">
+        English:\n%1$s\n\nहिंदी:\n%2$s
+    </string>
+
+    <string name="lesson_encouragement">
+        कठिन विषय को छोटे-छोटे steps में समझना ही smart learning है। आपने आज एक अच्छा कदम उठाया है।
+    </string>
+
+    <string name="minimum_font_size_reached">
+        Reading font इससे छोटा नहीं किया जा सकता।
+    </string>
+
+    <string name="maximum_font_size_reached">
+        Reading font की अधिकतम सीमा पूरी हो गई है।
+    </string>
+
+    <string name="practice_activity_coming_soon">
+        Interactive practice अगले चरण में जोड़ी जाएगी।
+    </string>
+
+    <string name="lesson_completion_coming_soon">
+        Lesson progress और emotional celebration अगले चरण में जोड़े जाएँगे।
+    </string>
+
+</resources>

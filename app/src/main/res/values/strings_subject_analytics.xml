@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="analytics_subject_progress">
+        Subject-wise Progress
+    </string>
+
+    <string name="analytics_subject_progress_description">
+        हर Subject के lessons, revisions और quiz performance को एक साथ देखें।
+    </string>
+
+    <string name="analytics_subject_lessons_format">
+        %1$d of %2$d lessons completed
+    </string>
+
+    <string name="analytics_subject_revisions_format">
+        %1$d revisions
+    </string>
+
+    <string name="analytics_subject_quiz_format">
+        %1$d quiz attempts • %2$d%% average
+    </string>
+
+    <string name="analytics_subject_no_quiz">
+        No quiz attempt yet
+    </string>
+
+    <string name="analytics_subject_percent_format">
+        %1$d%%
+    </string>
+
+    <string name="analytics_status_strong">
+        STRONG
+    </string>
+
+    <string name="analytics_status_growing">
+        GROWING
+    </string>
+
+    <string name="analytics_status_start">
+        START
+    </string>
+
+    <string name="analytics_no_subject_progress">
+        Subjects unavailable
+    </string>
+
+    <string name="analytics_no_subject_progress_description">
+        Active student के Class और Board के subjects अभी उपलब्ध नहीं हैं।
+    </string>
+
+</resources>

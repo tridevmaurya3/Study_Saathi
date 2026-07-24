@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="settings_cloud_account_button">
+        Cloud Account &amp; Sync
+    </string>
+
+    <string name="cloud_account_title">
+        Cloud Account &amp; Sync
+    </string>
+
+    <string name="cloud_account_subtitle">
+        Secure account, manual backup and restore
+    </string>
+
+    <string name="cloud_status_signed_out">
+        Cloud Account Not Connected
+    </string>
+
+    <string name="cloud_status_signed_out_description">
+        Sign in या नया account बनाएँ। आपका local Study Saathi data बिना आपकी permission के upload या replace नहीं होगा।
+    </string>
+
+    <string name="cloud_status_verified">
+        Cloud Account Verified
+    </string>
+
+    <string name="cloud_status_verified_description">
+        Account manual cloud backup और restore के लिए तैयार है।
+    </string>
+
+    <string name="cloud_status_verification_required">
+        Email Verification Required
+    </string>
+
+    <string name="cloud_status_verification_description">
+        Email inbox में verification link खोलें और फिर Refresh Account Status दबाएँ।
+    </string>
+
+    <string name="cloud_sign_in_mode">
+        Sign In
+    </string>
+
+    <string name="cloud_create_mode">
+        Create Account
+    </string>
+
+    <string name="cloud_sign_in_title">
+        Sign in to Study Saathi
+    </string>
+
+    <string name="cloud_sign_in_description">
+        अपने existing cloud account के email और password का उपयोग करें।
+    </string>
+
+    <string name="cloud_create_account_title">
+        Create Cloud Account
+    </string>
+
+    <string name="cloud_create_account_description">
+        Parent या family द्वारा नियंत्रित email address का उपयोग करें। Password कम से कम 8 characters का रखें।
+    </string>
+
+    <string name="cloud_display_name_hint">
+        Account display name
+    </string>
+
+    <string name="cloud_email_hint">
+        Email address
+    </string>
+
+    <string name="cloud_password_hint">
+        Password
+    </string>
+
+    <string name="cloud_confirm_password_hint">
+        Confirm password
+    </string>
+
+    <string name="cloud_sign_in_action">
+        Sign In
+    </string>
+
+    <string name="cloud_create_account_action">
+        Create Account
+    </string>
+
+    <string name="cloud_forgot_password">
+        Forgot password? Send reset email
+    </string>
+
+    <string name="cloud_creating_account">
+        Creating Account…
+    </string>
+
+    <string name="cloud_signing_in">
+        Signing In…
+    </string>
+
+    <string name="cloud_sending_reset_email">
+        Sending Reset Email…
+    </string>
+
+    <string name="cloud_name_required">
+        कम से कम 2 characters का display name लिखें।
+    </string>
+
+    <string name="cloud_valid_email_required">
+        Valid email address लिखें।
+    </string>
+
+    <string name="cloud_password_length_required">
+        Password कम से कम 8 characters का होना चाहिए।
+    </string>
+
+    <string name="cloud_password_mismatch">
+        दोनों passwords समान नहीं हैं।
+    </string>
+
+    <string name="cloud_account_creation_failed">
+        Cloud account create नहीं हो सका।
+    </string>
+
+    <string name="cloud_profile_creation_failed">
+        Account बना, लेकिन display profile तैयार नहीं हो सकी।
+    </string>
+
+    <string name="cloud_sign_in_failed">
+        Cloud account sign-in नहीं हो सका।
+    </string>
+
+    <string name="cloud_sign_in_success">
+        Cloud account successfully connected।
+    </string>
+
+    <string name="cloud_account_created_verify_email">
+        Account बन गया। Verification email भेजी गई है।
+    </string>
+
+    <string name="cloud_account_created_verification_failed">
+        Account बन गया, लेकिन verification email नहीं भेजी जा सकी। Resend Verification दबाएँ।
+    </string>
+
+    <string name="cloud_profile_document_warning">
+        Account connected है, लेकिन Firestore profile status save नहीं हो सका।
+    </string>
+
+    <string name="cloud_reset_email_sent">
+        Password reset email भेजी गई है।
+    </string>
+
+    <string name="cloud_reset_email_failed">
+        Password reset email नहीं भेजी जा सकी।
+    </string>
+
+    <string name="cloud_verification_email_sent">
+        Verification email दोबारा भेजी गई है।
+    </string>
+
+    <string name="cloud_verification_email_failed">
+        Verification email नहीं भेजी जा सकी।
+    </string>
+
+    <string name="cloud_email_already_verified">
+        यह email पहले से verified है।
+    </string>
+
+    <string name="cloud_account_refresh_failed">
+        Account status refresh नहीं हो सका।
+    </string>
+
+    <string name="cloud_email_verified_success">
+        Email verification confirmed।
+    </string>
+
+    <string name="cloud_email_not_verified_yet">
+        Email अभी verified नहीं है। Inbox में verification link खोलें।
+    </string>
+
+    <string name="cloud_account_required">
+        पहले cloud account में sign in करें।
+    </string>
+
+    <string name="cloud_signed_in_account">
+        Connected Cloud Account
+    </string>
+
+    <string name="cloud_account_default_name">
+        Study Saathi User
+    </string>
+
+    <string name="cloud_email_unavailable">
+        Email unavailable
+    </string>
+
+    <string name="cloud_verified_badge">
+        VERIFIED
+    </string>
+
+    <string name="cloud_unverified_badge">
+        NOT VERIFIED
+    </string>
+
+    <string name="cloud_uid_format">
+        Account UID: %1$s
+    </string>
+
+    <string name="cloud_uid_placeholder">
+        Account UID
+    </string>
+
+    <string name="cloud_resend_verification">
+        Resend Verification Email
+    </string>
+
+    <string name="cloud_refresh_status">
+        Refresh Account Status
+    </string>
+
+    <string name="cloud_sign_out">
+        Sign Out
+    </string>
+
+    <string name="cloud_sign_out_success">
+        Cloud account signed out।
+    </string>
+
+    <string name="cloud_backup_section_title">
+        Manual Cloud Backup
+    </string>
+
+    <string name="cloud_backup_section_description">
+        Current profiles, progress, quizzes, doubts, notes, bookmarks और Study Saathi settings को private Firebase account में manually save या restore करें।
+    </string>
+
+    <string name="cloud_backup_checking_status">
+        Checking Cloud Backup…
+    </string>
+
+    <string name="cloud_backup_checking_description">
+        Firebase server से latest backup status पढ़ा जा रहा है।
+    </string>
+
+    <string name="cloud_backup_none_status">
+        No Cloud Backup Found
+    </string>
+
+    <string name="cloud_backup_none_description">
+        इस account पर अभी कोई Study Saathi cloud backup मौजूद नहीं है।
+    </string>
+
+    <string name="cloud_backup_available_status">
+        Cloud Backup Available
+    </string>
+
+    <string name="cloud_backup_available_description">
+        यह account एक complete और downloadable Study Saathi cloud backup रखता है।
+    </string>
+
+    <string name="cloud_backup_incomplete_status">
+        Cloud Backup Status Invalid
+    </string>
+
+    <string name="cloud_backup_incomplete_description">
+        Existing backup complete status में नहीं है। नया backup upload करके इसे replace करें।
+    </string>
+
+    <string name="cloud_backup_blocked_status">
+        Verification Required
+    </string>
+
+    <string name="cloud_backup_blocked_description">
+        Cloud backup बनाने या restore करने से पहले account email verify करें।
+    </string>
+
+    <string name="cloud_backup_signed_out_status">
+        Sign In Required
+    </string>
+
+    <string name="cloud_backup_signed_out_description">
+        Cloud backup देखने, बनाने या restore करने के लिए account में sign in करें।
+    </string>
+
+    <string name="cloud_backup_status_error">
+        Cloud Status Unavailable
+    </string>
+
+    <string name="cloud_backup_status_error_description">
+        Cloud backup status अभी load नहीं हो सका। Internet connection check करके Refresh दबाएँ।
+    </string>
+
+    <string name="cloud_backup_status_error_with_local_format">
+        Server status load नहीं हुआ। इस device से last successful upload: %1$s
+    </string>
+
+    <string name="cloud_backup_uploaded_at_none">
+        Uploaded: Not available
+    </string>
+
+    <string name="cloud_backup_uploaded_at_format">
+        Uploaded: %1$s
+    </string>
+
+    <string name="cloud_backup_id_none">
+        Backup ID: Not available
+    </string>
+
+    <string name="cloud_backup_id_format">
+        Backup ID: %1$s
+    </string>
+
+    <string name="cloud_backup_preferences_label">
+        Preference Items
+    </string>
+
+    <string name="cloud_backup_storage_none">
+        Storage information unavailable
+    </string>
+
+    <string name="cloud_backup_storage_format">
+        Compressed size: %1$s • Firestore chunks: %2$d
+    </string>
+
+    <string name="cloud_backup_upload_action">
+        Upload Current Data to Cloud
+    </string>
+
+    <string name="cloud_backup_replace_action">
+        Replace Existing Cloud Backup
+    </string>
+
+    <string name="cloud_backup_uploading_action">
+        Preparing or Transferring…
+    </string>
+
+    <string name="cloud_backup_restore_action">
+        Download &amp; Restore Cloud Backup
+    </string>
+
+    <string name="cloud_backup_refresh_action">
+        Refresh Cloud Backup Status
+    </string>
+
+    <string name="cloud_backup_first_confirmation_title">
+        Create first cloud backup?
+    </string>
+
+    <string name="cloud_backup_first_confirmation_message">
+        Current Study Saathi data compress होकर verified Firebase account में upload होगा। Local data में कोई बदलाव नहीं होगा।
+    </string>
+
+    <string name="cloud_backup_replace_confirmation_title">
+        Replace existing cloud backup?
+    </string>
+
+    <string name="cloud_backup_replace_confirmation_message">
+        Existing cloud backup, uploaded on %1$s, current device data से replace हो जाएगा। Local data सुरक्षित रहेगा।
+    </string>
+
+    <string name="cloud_backup_upload_confirm">
+        Upload Backup
+    </string>
+
+    <string name="cloud_backup_replace_confirm">
+        Replace Backup
+    </string>
+
+    <string name="cloud_backup_cancel">
+        Cancel
+    </string>
+
+    <string name="cloud_backup_preparing_status">
+        Preparing Backup…
+    </string>
+
+    <string name="cloud_backup_preparing_description">
+        Room database और Study Saathi preferences को cloud payload में तैयार किया जा रहा है।
+    </string>
+
+    <string name="cloud_backup_uploading_status">
+        Uploading Backup…
+    </string>
+
+    <string name="cloud_backup_uploading_description_format">
+        Firebase पर %1$d private account chunks upload किए जा रहे हैं।
+    </string>
+
+    <string name="cloud_backup_upload_success">
+        Cloud backup successfully uploaded।
+    </string>
+
+    <string name="cloud_backup_prepare_failed">
+        Cloud backup data तैयार नहीं हो सका।
+    </string>
+
+    <string name="cloud_backup_upload_failed">
+        Cloud backup upload नहीं हो सका।
+    </string>
+
+    <string name="cloud_backup_status_load_failed">
+        Cloud backup status load नहीं हो सका।
+    </string>
+
+    <string name="cloud_backup_verification_required">
+        Cloud backup के लिए verified email account आवश्यक है।
+    </string>
+
+    <string name="cloud_backup_account_changed">
+        Cloud account बदल गया है। Current cloud operation cancel कर दिया गया।
+    </string>
+
+    <string name="cloud_backup_time_unknown">
+        Time unavailable
+    </string>
+
+    <string name="cloud_backup_error_format">
+        %1$s\n%2$s
+    </string>
+
+    <string name="cloud_backup_restore_confirmation_title">
+        Download cloud backup?
+    </string>
+
+    <string name="cloud_backup_restore_confirmation_message">
+        Backup uploaded on: %1$s\n\nCloud data:\n• Profiles: %2$d\n• Lesson progress: %3$d\n• Quiz attempts: %4$d\n• Doubts: %5$d\n• Preference items: %6$d\n\nBackup पहले download और validate होगा। Local data केवल अगली Restore screen पर आपकी confirmation के बाद replace होगा।
+    </string>
+
+    <string name="cloud_backup_restore_confirm">
+        Download &amp; Review
+    </string>
+
+    <string name="cloud_backup_restore_unavailable">
+        Complete cloud backup उपलब्ध नहीं है। Cloud status refresh करें या नया backup upload करें।
+    </string>
+
+    <string name="cloud_backup_downloading_status">
+        Downloading Cloud Backup…
+    </string>
+
+    <string name="cloud_backup_downloading_description">
+        Backup chunks download होकर checksum, ownership और JSON structure से validate किए जा रहे हैं।
+    </string>
+
+    <string name="cloud_backup_restore_prepare_failed">
+        Cloud backup download या validation पूरा नहीं हो सका।
+    </string>
+
+    <string name="cloud_privacy_title">
+        Local-first privacy
+    </string>
+
+    <string name="cloud_privacy_description_updated">
+        Upload और restore दोनों manual confirmation से चलते हैं। Download करने से local data नहीं बदलता। Restore screen पर दूसरी confirmation के बाद ही local Room database replace होता है। Restore से पहले automatic safety backup भी बनाया जाता है। Cloud payload compressed और Base64 encoded है, लेकिन client-side encrypted नहीं है।
+    </string>
+
+    <string name="cloud_error_format">
+        %1$s\n%2$s
+    </string>
+
+</resources>

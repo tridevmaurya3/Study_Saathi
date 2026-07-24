@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="settings_backup_restore_button">
+        Restore Backup &amp; Import
+    </string>
+
+    <string name="backup_restore_title">
+        Restore Backup
+    </string>
+
+    <string name="backup_restore_subtitle">
+        Import a validated Study Saathi backup
+    </string>
+
+    <string name="backup_restore_warning_title">
+        Current data will be replaced
+    </string>
+
+    <string name="backup_restore_warning_description">
+        Restore पूरा होने पर वर्तमान profiles, progress, quizzes, doubts, notes, bookmarks, goals और reminder settings backup file के data से बदल जाएँगे।
+    </string>
+
+    <string name="backup_restore_choose_title">
+        Choose Backup File
+    </string>
+
+    <string name="backup_restore_choose_description">
+        केवल Study Saathi द्वारा बनाई गई original JSON backup file चुनें।
+    </string>
+
+    <string name="backup_restore_choose_button">
+        Choose Backup JSON
+    </string>
+
+    <string name="backup_restore_no_file_selected">
+        No backup file selected
+    </string>
+
+    <string name="backup_restore_selected_file_format">
+        Selected file: %1$s
+    </string>
+
+    <string name="backup_restore_unknown_file">
+        Selected backup
+    </string>
+
+    <string name="backup_restore_preview_title">
+        Restore Preview
+    </string>
+
+    <string name="backup_restore_created_format">
+        Backup created: %1$s
+    </string>
+
+    <string name="backup_restore_created_unknown">
+        Backup creation time unavailable
+    </string>
+
+    <string name="backup_restore_preferences_label">
+        Preference Items
+    </string>
+
+    <string name="backup_restore_safety_title">
+        Automatic Safety Backup
+    </string>
+
+    <string name="backup_restore_safety_description">
+        Restore शुरू होने से पहले current data की internal safety copy बनाई जाएगी। Restore fail होने पर पुराना data automatically वापस लाया जाएगा।
+    </string>
+
+    <string name="backup_restore_restore_button">
+        Restore This Backup
+    </string>
+
+    <string name="backup_restore_validating_button">
+        Validating Backup…
+    </string>
+
+    <string name="backup_restore_restoring_button">
+        Restoring Data…
+    </string>
+
+    <string name="backup_restore_confirmation_title">
+        Restore this backup?
+    </string>
+
+    <string name="backup_restore_confirmation_message">
+        Current Study Saathi data replace होगा।\n\nProfiles: %1$d\nLesson progress: %2$d\nQuiz attempts: %3$d\nDoubts: %4$d\nPreference items: %5$d\n\nRestore से पहले automatic safety backup बनाया जाएगा।
+    </string>
+
+    <string name="backup_restore_confirm_action">
+        Restore Now
+    </string>
+
+    <string name="backup_restore_cancel">
+        Cancel
+    </string>
+
+    <string name="backup_restore_success_title">
+        Restore Completed
+    </string>
+
+    <string name="backup_restore_success_message">
+        Backup successfully restore हो गया। Restore से पहले बनाई गई internal safety file: %1$s\n\nRestored data load करने के लिए Study Saathi restart करें।
+    </string>
+
+    <string name="backup_restore_restart_action">
+        Restart Study Saathi
+    </string>
+
+    <string name="backup_restore_safety_unknown">
+        Internal safety backup
+    </string>
+
+    <string name="backup_restore_last_none">
+        No backup restored on this device yet
+    </string>
+
+    <string name="backup_restore_last_format">
+        Last restore: %1$s
+    </string>
+
+    <string name="backup_restore_selection_cancelled">
+        Backup file selection cancelled।
+    </string>
+
+    <string name="backup_restore_read_failed">
+        Backup file पढ़ी नहीं जा सकी। सही JSON file चुनें।
+    </string>
+
+    <string name="backup_restore_invalid_file">
+        यह valid Study Saathi backup file नहीं है।
+    </string>
+
+    <string name="backup_restore_invalid_format">
+        Backup format valid नहीं है।
+    </string>
+
+    <string name="backup_restore_unsupported_format">
+        यह backup format app के इस version द्वारा supported नहीं है।
+    </string>
+
+    <string name="backup_restore_schema_mismatch_format">
+        Backup database version %1$d है, लेकिन इस app को version %2$d चाहिए।
+    </string>
+
+    <string name="backup_restore_different_app">
+        यह backup किसी दूसरे app package का है।
+    </string>
+
+    <string name="backup_restore_missing_table_format">
+        Backup में आवश्यक table “%1$s” नहीं मिली।
+    </string>
+
+    <string name="backup_restore_duplicate_table_format">
+        Backup में table “%1$s” एक से अधिक बार मौजूद है।
+    </string>
+
+    <string name="backup_restore_missing_column_format">
+        Backup table “%1$s” में “%2$s” field उपलब्ध नहीं है।
+    </string>
+
+    <string name="backup_restore_invalid_preferences">
+        Backup preference data valid नहीं है।
+    </string>
+
+    <string name="backup_restore_multiple_active_profiles">
+        Backup में एक से अधिक active student profiles हैं।
+    </string>
+
+    <string name="backup_restore_file_too_large">
+        Backup file बहुत बड़ी है। Maximum supported size 25 MB है।
+    </string>
+
+    <string name="backup_restore_failed_rolled_back">
+        Restore पूरा नहीं हो सका। आपका पुराना data safety backup से वापस कर दिया गया है।
+    </string>
+
+    <string name="backup_restore_failed_manual_recovery">
+        Restore और automatic rollback पूरा नहीं हो सका। App बंद करके दोबारा खोलें और अपनी external backup file सुरक्षित रखें।
+    </string>
+
+</resources>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="lessons_done">Lessons Done</string>
+
+    <string name="lessons_done_empty_detail">
+        अपना पहला lesson पूरा करें
+    </string>
+
+    <string name="lessons_done_detail_format">
+        %1$d completed learning activities
+    </string>
+
+    <string name="learning_streak">Learning Streak</string>
+
+    <string name="streak_empty_detail">
+        आज lesson पूरा करके streak शुरू करें
+    </string>
+
+    <string name="streak_detail_format">
+        लगातार %1$d दिन की learning
+    </string>
+
+    <string name="continue_learning_button">
+        Continue Learning
+    </string>
+
+    <string name="continue_learning_default_detail">
+        कोई subject चुनकर अपना पहला lesson शुरू करें।
+    </string>
+
+    <string name="continue_learning_detail_format">
+        Next: %1$s • %2$s
+    </string>
+
+    <string name="continue_current_lesson_detail_format">
+        Continue: %1$s • %2$s
+    </string>
+
+    <string name="dashboard_progress_loading">
+        Loading your learning progress…
+    </string>
+
+    <string name="dashboard_progress_load_failed">
+        Dashboard learning progress load नहीं हो सकी।
+    </string>
+
+    <string name="dashboard_progress_coach_format">
+        %1$s, आपने %2$d lessons पूरे कर लिए हैं। आपकी consistency बहुत अच्छी progress बना रही है।
+    </string>
+
+    <string name="dashboard_first_lesson_coach_format">
+        %1$s, आज सिर्फ एक छोटा lesson पूरा करके अपनी learning journey शुरू करें।
+    </string>
+
+</resources>

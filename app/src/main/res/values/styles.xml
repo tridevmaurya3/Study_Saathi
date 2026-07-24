@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Stylish branding font for app name and major headings -->
+    <style name="TextAppearance.StudySaathi.Brand"
+        parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:fontFamily">sans-serif-rounded</item>
+        <item name="fontFamily">sans-serif-rounded</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/ss_text_primary</item>
+    </style>
+
+    <!-- Main screen heading -->
+    <style name="TextAppearance.StudySaathi.Heading"
+        parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">sans-serif-rounded</item>
+        <item name="fontFamily">sans-serif-rounded</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/ss_text_primary</item>
+    </style>
+
+    <!-- Card and section title -->
+    <style name="TextAppearance.StudySaathi.Title"
+        parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">sans-serif-rounded</item>
+        <item name="fontFamily">sans-serif-rounded</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/ss_text_primary</item>
+    </style>
+
+    <!-- Normal labels -->
+    <style name="TextAppearance.StudySaathi.Label"
+        parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/ss_text_secondary</item>
+    </style>
+
+    <!-- Main lesson-reading font -->
+    <style name="TextAppearance.StudySaathi.Reading"
+        parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/ss_text_primary</item>
+        <item name="android:lineSpacingExtra">5dp</item>
+    </style>
+
+    <!-- Supporting descriptions -->
+    <style name="TextAppearance.StudySaathi.Body"
+        parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/ss_text_secondary</item>
+    </style>
+
+    <!-- Standard Study Saathi card -->
+    <style name="Widget.StudySaathi.Card"
+        parent="Widget.Material3.CardView.Outlined">
+        <item name="cardCornerRadius">20dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">@color/ss_outline</item>
+        <item name="cardBackgroundColor">@color/ss_surface</item>
+    </style>
+
+    <!-- Main filled button -->
+    <style name="Widget.StudySaathi.Button.Primary"
+        parent="Widget.Material3.Button">
+        <item name="cornerRadius">18dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="backgroundTint">@color/ss_primary</item>
+        <item name="android:textColor">@color/ss_on_primary</item>
+    </style>
+
+    <!-- Outlined secondary button -->
+    <style name="Widget.StudySaathi.Button.Outlined"
+        parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">18dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="strokeColor">@color/ss_outline_strong</item>
+        <item name="android:textColor">@color/ss_primary</item>
+    </style>
+
+</resources>

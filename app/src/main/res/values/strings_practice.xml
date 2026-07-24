@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="practice_quiz">Practice Quiz</string>
+
+    <string name="check_your_understanding">
+        CHECK YOUR UNDERSTANDING
+    </string>
+
+    <string name="default_question_counter">
+        Question 1 of 4
+    </string>
+
+    <string name="practice_question_counter_format">
+        Question %1$d of %2$d
+    </string>
+
+    <string name="choose_one_answer">
+        Choose one answer
+    </string>
+
+    <string name="practice_question_placeholder">
+        Practice question
+    </string>
+
+    <string name="check_answer">
+        Check Answer
+    </string>
+
+    <string name="next_question">
+        Next Question
+    </string>
+
+    <string name="view_practice_result">
+        View Result
+    </string>
+
+    <string name="select_practice_answer">
+        पहले कोई एक answer चुनें।
+    </string>
+
+    <string name="practice_correct_answer">
+        Correct Answer ✓
+    </string>
+
+    <string name="practice_incorrect_answer">
+        Not Quite — Let’s Understand
+    </string>
+
+    <string name="practice_bilingual_format">
+        English:\n%1$s\n\nहिंदी:\n%2$s
+    </string>
+
+    <string name="practice_score_format">
+        %1$d/%2$d
+    </string>
+
+    <string name="practice_percentage_format">
+        %1$d%% correct
+    </string>
+
+    <string name="practice_result_excellent">
+        Excellent Work!
+    </string>
+
+    <string name="practice_result_excellent_message">
+        आपने concept को बहुत अच्छे से समझा है। इसी confidence के साथ अगले lesson की ओर बढ़ें।
+    </string>
+
+    <string name="practice_result_good">
+        Good Progress!
+    </string>
+
+    <string name="practice_result_good_message">
+        आपकी understanding सही दिशा में है। गलत questions की explanation दोबारा पढ़कर concept और मजबूत करें।
+    </string>
+
+    <string name="practice_result_retry">
+        Keep Practising
+    </string>
+
+    <string name="practice_result_retry_message">
+        गलत answer learning का हिस्सा है। Lesson के key points दोबारा पढ़ें और फिर quiz retry करें।
+    </string>
+
+    <string name="retry_practice">
+        Retry Quiz
+    </string>
+
+    <string name="back_to_lesson">
+        Back to Lesson
+    </string>
+
+    <string name="practice_no_questions">
+        Practice unavailable
+    </string>
+
+    <string name="practice_no_questions_description">
+        इस chapter के practice questions अभी उपलब्ध नहीं हैं।
+    </string>
+
+    <string name="practice_no_score">
+        No score
+    </string>
+
+</resources>

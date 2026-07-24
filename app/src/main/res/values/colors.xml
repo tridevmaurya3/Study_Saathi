@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Main brand colors -->
+    <color name="ss_primary">#2457C5</color>
+    <color name="ss_primary_dark">#173F99</color>
+    <color name="ss_on_primary">#FFFFFF</color>
+
+    <color name="ss_secondary">#087F8C</color>
+    <color name="ss_on_secondary">#FFFFFF</color>
+
+    <color name="ss_tertiary">#8A5A00</color>
+    <color name="ss_on_tertiary">#FFFFFF</color>
+
+    <!-- Main backgrounds -->
+    <color name="ss_background">#F7F9FC</color>
+    <color name="ss_surface">#FFFFFF</color>
+    <color name="ss_surface_soft">#F0F4FA</color>
+    <color name="ss_surface_muted">#E8EEF6</color>
+
+    <!-- Text colors -->
+    <color name="ss_text_primary">#182230</color>
+    <color name="ss_text_secondary">#566273</color>
+    <color name="ss_text_muted">#7B8797</color>
+    <color name="ss_text_on_dark">#FFFFFF</color>
+
+    <!-- Borders and dividers -->
+    <color name="ss_outline">#D6DEE9</color>
+    <color name="ss_outline_strong">#B9C5D5</color>
+    <color name="ss_divider">#E3E9F1</color>
+
+    <!-- Soft card colors -->
+    <color name="ss_blue_soft">#EAF2FF</color>
+    <color name="ss_blue_border">#B8D1FA</color>
+
+    <color name="ss_green_soft">#ECF8F0</color>
+    <color name="ss_green_border">#B7DEC2</color>
+
+    <color name="ss_red_soft">#FFF0F0</color>
+    <color name="ss_red_border">#E9BDBD</color>
+
+    <color name="ss_yellow_soft">#FFF8E8</color>
+    <color name="ss_yellow_border">#E8D49B</color>
+
+    <color name="ss_purple_soft">#F6F0FC</color>
+    <color name="ss_purple_border">#D6C0E8</color>
+
+    <color name="ss_teal_soft">#EAF8F8</color>
+    <color name="ss_teal_border">#B4DCDC</color>
+
+    <!-- Status colors -->
+    <color name="ss_success">#16813B</color>
+    <color name="ss_warning">#A26300</color>
+    <color name="ss_error">#BA1A1A</color>
+    <color name="ss_info">#1769AA</color>
+
+    <!-- Transparent colors -->
+    <color name="ss_transparent">#00000000</color>
+    <color name="ss_scrim">#52000000</color>
+
+    <!-- Standard template names -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+</resources>

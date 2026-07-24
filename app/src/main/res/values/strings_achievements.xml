@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="achievement_section_title">
+        Achievements
+    </string>
+
+    <string name="achievement_section_description">
+        Lessons, revision और quizzes में progress करके badges unlock करें।
+    </string>
+
+    <string name="achievement_unlocked">
+        UNLOCKED
+    </string>
+
+    <string name="achievement_locked">
+        LOCKED
+    </string>
+
+    <string name="achievement_completed">
+        Achievement completed
+    </string>
+
+    <string name="achievement_progress_format">
+        %1$d of %2$d completed
+    </string>
+
+    <string name="achievement_first_step_title">
+        First Step
+    </string>
+
+    <string name="achievement_first_step_description">
+        अपना पहला Smart Lesson पूरा करें।
+    </string>
+
+    <string name="achievement_lesson_explorer_title">
+        Lesson Explorer
+    </string>
+
+    <string name="achievement_lesson_explorer_description">
+        5 अलग lessons पूरे करें।
+    </string>
+
+    <string name="achievement_revision_starter_title">
+        Revision Starter
+    </string>
+
+    <string name="achievement_revision_starter_description">
+        अपना पहला Smart Revision पूरा करें।
+    </string>
+
+    <string name="achievement_quiz_challenger_title">
+        Quiz Challenger
+    </string>
+
+    <string name="achievement_quiz_challenger_description">
+        3 Practice Quiz attempts पूरे करें।
+    </string>
+
+    <string name="achievement_high_scorer_title">
+        High Scorer
+    </string>
+
+    <string name="achievement_high_scorer_description">
+        किसी quiz में 80%% या अधिक score प्राप्त करें।
+    </string>
+
+    <string name="achievement_revision_champion_title">
+        Revision Champion
+    </string>
+
+    <string name="achievement_revision_champion_description">
+        कुल 5 Smart Revisions पूरे करें।
+    </string>
+
+</resources>

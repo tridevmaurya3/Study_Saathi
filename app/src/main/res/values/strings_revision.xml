@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="smart_revision">Smart Revision</string>
+    <string name="revision_screen_subtitle">Your personalised revision plan</string>
+
+    <string name="revision_for_student_format">
+        %1$s • %2$s • %3$s
+    </string>
+
+    <string name="spaced_revision_plan">Spaced Revision Plan</string>
+
+    <string name="spaced_revision_description">
+        Completed lessons को 1, 3, 7, 14 और 30 दिन के smart intervals पर दोहराएँ।
+    </string>
+
+    <string name="due_now">Due Now</string>
+    <string name="upcoming_revision">Upcoming</string>
+
+    <string name="revision_lessons">Revision Lessons</string>
+
+    <string name="revision_lessons_description">
+        Revision card खोलकर lesson को दोबारा पढ़ें और concept मजबूत करें।
+    </string>
+
+    <string name="revision_status_due_today">DUE TODAY</string>
+    <string name="revision_status_overdue">OVERDUE</string>
+    <string name="revision_status_upcoming">UPCOMING</string>
+
+    <string name="revision_due_today_detail">
+        आज revision करें
+    </string>
+
+    <string name="revision_overdue_date_format">
+        Due since %1$s
+    </string>
+
+    <string name="revision_upcoming_date_format">
+        Scheduled for %1$s
+    </string>
+
+    <string name="no_revision_lessons">No revision scheduled</string>
+
+    <string name="no_revision_lessons_description">
+        कोई lesson complete करने के बाद उसका smart revision plan यहाँ दिखाई देगा।
+    </string>
+
+    <string name="browse_subjects">Browse Subjects</string>
+
+    <string name="revision_profile_load_failed">
+        Active student profile load नहीं हो सकी।
+    </string>
+
+    <string name="revision_progress_load_failed">
+        Revision plan तैयार नहीं हो सका।
+    </string>
+
+    <string name="revision_default_chapter_description">
+        इस completed lesson को दोबारा पढ़कर important concepts revise करें।
+    </string>
+
+</resources>

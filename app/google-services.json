@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "784206588318",
+    "project_id": "study-saathi-cloud",
+    "storage_bucket": "study-saathi-cloud.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:784206588318:android:fb25fc84b37b2024680e8f",
+        "android_client_info": {
+          "package_name": "com.tridev.studysaathi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVW7MDg2se7jPRxLbPgznKmQYIwzMyjYs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

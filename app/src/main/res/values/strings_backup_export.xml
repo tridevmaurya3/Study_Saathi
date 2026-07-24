@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="settings_backup_export_button">
+        Local Backup &amp; Export
+    </string>
+
+    <string name="backup_export_title">
+        Backup &amp; Export
+    </string>
+
+    <string name="backup_export_subtitle">
+        Save your complete offline Study Saathi data
+    </string>
+
+    <string name="backup_intro_title">
+        Create a Local Backup
+    </string>
+
+    <string name="backup_intro_description">
+        Android का Save File Picker खुलेगा। अपनी backup file को Downloads, Google Drive या किसी सुरक्षित folder में save करें।
+    </string>
+
+    <string name="backup_summary_title">
+        Backup Summary
+    </string>
+
+    <string name="backup_summary_description">
+        अभी backup में शामिल होने वाले saved records:
+    </string>
+
+    <string name="backup_profiles_label">
+        Profiles
+    </string>
+
+    <string name="backup_lessons_label">
+        Lesson Progress
+    </string>
+
+    <string name="backup_quizzes_label">
+        Quiz Attempts
+    </string>
+
+    <string name="backup_doubts_label">
+        Doubts
+    </string>
+
+    <string name="backup_preferences_label">
+        Notes, bookmarks, goals, reminders and other preference items
+    </string>
+
+    <string name="backup_included_title">
+        What is included?
+    </string>
+
+    <string name="backup_included_description">
+        Student profiles, completed lessons, revisions, quiz history, doubt history, chapter notes, bookmarks, daily goals, reminder settings, selected reminder days and reading preferences।
+    </string>
+
+    <string name="backup_privacy_title">
+        Keep this file private
+    </string>
+
+    <string name="backup_privacy_description">
+        यह JSON backup encrypted नहीं है। इसमें student names, notes और asked doubts हो सकते हैं। इसे public group या unknown person के साथ share न करें।
+    </string>
+
+    <string name="backup_create_button">
+        Choose Location &amp; Create Backup
+    </string>
+
+    <string name="backup_creating_button">
+        Creating Backup…
+    </string>
+
+    <string name="backup_last_backup_none">
+        No backup created from this device yet
+    </string>
+
+    <string name="backup_last_backup_format">
+        Last backup: %1$s
+    </string>
+
+    <string name="backup_export_success">
+        Study Saathi backup successfully saved।
+    </string>
+
+    <string name="backup_export_failed">
+        Backup file create नहीं हो सकी। दूसरा folder चुनकर फिर प्रयास करें।
+    </string>
+
+    <string name="backup_export_cancelled">
+        Backup save cancelled।
+    </string>
+
+    <string name="backup_overview_load_failed">
+        Backup summary पूरी तरह load नहीं हो सकी, लेकिन backup फिर भी बनाया जा सकता है।
+    </string>
+
+</resources>

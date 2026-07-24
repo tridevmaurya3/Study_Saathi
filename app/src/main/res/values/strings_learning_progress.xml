@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="learning_progress">
+        Learning Progress
+    </string>
+
+    <string name="learning_progress_subtitle">
+        Lessons, revision and quiz performance
+    </string>
+
+    <string name="learning_progress_student_format">
+        %1$s • %2$s • %3$s
+    </string>
+
+    <string name="smart_coach_insight">
+        Smart Study Coach Insight
+    </string>
+
+    <string name="learning_progress_default_insight">
+        अपनी learning journey शुरू करके personalised guidance प्राप्त करें।
+    </string>
+
+    <string name="progress_completed_lessons">
+        Lessons Done
+    </string>
+
+    <string name="progress_total_revisions">
+        Revisions
+    </string>
+
+    <string name="progress_quiz_attempts">
+        Attempts
+    </string>
+
+    <string name="progress_average_score">
+        Average
+    </string>
+
+    <string name="progress_best_score">
+        Best
+    </string>
+
+    <string name="progress_percentage_format">
+        %1$d%%
+    </string>
+
+    <string name="recent_quiz_attempts">
+        Recent Quiz Attempts
+    </string>
+
+    <string name="recent_quiz_attempts_description">
+        किसी attempt को दबाकर उसी chapter का quiz दोबारा करें।
+    </string>
+
+    <string name="quiz_history_score_format">
+        %1$d/%2$d correct • %3$d%%
+    </string>
+
+    <string name="quiz_history_saved_attempt">
+        Saved quiz attempt
+    </string>
+
+    <string name="quiz_grade_excellent">
+        EXCELLENT
+    </string>
+
+    <string name="quiz_grade_good">
+        GOOD
+    </string>
+
+    <string name="quiz_grade_practise">
+        PRACTISE
+    </string>
+
+    <string name="no_quiz_history">
+        No quiz attempts yet
+    </string>
+
+    <string name="no_quiz_history_description">
+        Smart Lesson खोलकर Check My Understanding quiz पूरा करें।
+    </string>
+
+    <string name="learning_insight_start_format">
+        %1$s, एक छोटा lesson पूरा करके आज अपनी learning progress शुरू करें।
+    </string>
+
+    <string name="learning_insight_quiz_format">
+        %1$s, आपने %2$d lessons पूरे किए हैं। अब quiz करके अपनी understanding जाँचें।
+    </string>
+
+    <string name="learning_insight_excellent_format">
+        %1$s, आपका average score %2$d%% है। आपकी understanding और consistency शानदार है।
+    </string>
+
+    <string name="learning_insight_good_format">
+        %1$s, आपका average score %2$d%% है। गलत answers की explanation revise करने से score और बेहतर होगा।
+    </string>
+
+    <string name="learning_insight_practise_format">
+        %1$s, आपका average score %2$d%% है। चिंता नहीं—lesson के key points दोबारा पढ़कर quiz retry करें।
+    </string>
+
+    <string name="learning_progress_profile_failed">
+        Active student profile load नहीं हो सकी।
+    </string>
+
+    <string name="learning_progress_lessons_failed">
+        Lesson progress load नहीं हो सकी।
+    </string>
+
+    <string name="learning_progress_quiz_failed">
+        Quiz attempt history load नहीं हो सकी।
+    </string>
+
+</resources>

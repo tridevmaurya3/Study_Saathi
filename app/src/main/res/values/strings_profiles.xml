@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="manage_student_profiles">Student Profiles</string>
+    <string name="manage_student_profiles_subtitle">Choose who is learning</string>
+
+    <string name="student_profiles_information">
+        हर बच्चे की Board, Class, language, progress और revision अलग सुरक्षित रहेगा।
+    </string>
+
+    <string name="saved_students">Saved Students</string>
+    <string name="select_student_to_continue">
+        पढ़ाई जारी रखने के लिए किसी student profile को चुनें।
+    </string>
+
+    <string name="add_new_student">+ Add New Student</string>
+    <string name="active_profile">ACTIVE</string>
+
+    <string name="student_profile_language_format">
+        Explanation: %1$s
+    </string>
+
+    <string name="no_student_profiles">No student profiles found</string>
+    <string name="no_student_profiles_description">
+        नई student profile बनाकर personalised learning शुरू करें।
+    </string>
+
+    <string name="student_profiles_loading_failed">
+        Student profiles load नहीं हो सकीं।
+    </string>
+
+    <string name="student_profile_activation_failed">
+        Student profile active नहीं हो सकी। दोबारा प्रयास करें।
+    </string>
+
+</resources>

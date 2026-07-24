@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="settings_parent_dashboard_button">
+        Parent Dashboard
+    </string>
+
+    <string name="parent_dashboard_title">
+        Parent Dashboard
+    </string>
+
+    <string name="parent_dashboard_subtitle">
+        All student profiles and learning progress
+    </string>
+
+    <string name="parent_dashboard_profiles_format">
+        %1$d student profiles and their study progress
+    </string>
+
+    <string name="parent_dashboard_no_profiles_subtitle">
+        Create a student profile to view progress
+    </string>
+
+    <string name="parent_family_summary">
+        Family Learning Summary
+    </string>
+
+    <string name="parent_total_students">
+        Students
+    </string>
+
+    <string name="parent_profiles_with_activity">
+        With Activity
+    </string>
+
+    <string name="parent_total_lessons">
+        Lessons
+    </string>
+
+    <string name="parent_average_best_score">
+        Avg. Best
+    </string>
+
+    <string name="parent_student_progress">
+        Student Progress
+    </string>
+
+    <string name="parent_student_progress_description">
+        प्रत्येक profile की daily activity, quiz performance और suggested focus देखें।
+    </string>
+
+    <string name="parent_profile_details_format">
+        %1$s • %2$s
+    </string>
+
+    <string name="parent_active_profile">
+        ACTIVE
+    </string>
+
+    <string name="parent_lessons">
+        Lessons
+    </string>
+
+    <string name="parent_revisions">
+        Revisions
+    </string>
+
+    <string name="parent_quizzes">
+        Quizzes
+    </string>
+
+    <string name="parent_best_score">
+        Best
+    </string>
+
+    <string name="parent_percentage_format">
+        %1$d%%
+    </string>
+
+    <string name="parent_latest_score_format">
+        Latest quiz score: %1$d%%
+    </string>
+
+    <string name="parent_no_quiz_attempt">
+        Latest quiz score: No quiz attempted
+    </string>
+
+    <string name="parent_streak_format">
+        Current streak: %1$d days
+    </string>
+
+    <string name="parent_daily_goal_format">
+        Today: %1$d / %2$d study actions
+    </string>
+
+    <string name="parent_last_activity_today_format">
+        Last activity: Today, %1$s
+    </string>
+
+    <string name="parent_last_activity_yesterday_format">
+        Last activity: Yesterday, %1$s
+    </string>
+
+    <string name="parent_last_activity_date_format">
+        Last activity: %1$s, %2$s
+    </string>
+
+    <string name="parent_no_study_activity">
+        Last activity: No study activity yet
+    </string>
+
+    <string name="parent_weak_chapter_format">
+        Suggested focus: %1$s • %2$s • Average score %3$d%%
+    </string>
+
+    <string name="parent_weak_chapter_unavailable">
+        Suggested focus quiz attempts के बाद दिखाई देगा।
+    </string>
+
+    <string name="parent_view_progress">
+        View Detailed Progress
+    </string>
+
+    <string name="parent_activate_and_view">
+        Make Active &amp; View Progress
+    </string>
+
+    <string name="parent_activating_profile_format">
+        %1$s का profile active किया जा रहा है…
+    </string>
+
+    <string name="parent_profile_activation_failed">
+        Student profile active नहीं किया जा सका।
+    </string>
+
+    <string name="parent_profiles_load_failed">
+        Student profiles load नहीं हो सकीं।
+    </string>
+
+    <string name="parent_partial_data_failed">
+        कुछ profiles का पूरा progress data load नहीं हो सका।
+    </string>
+
+    <string name="parent_no_profiles_title">
+        No student profiles
+    </string>
+
+    <string name="parent_no_profiles_description">
+        Parent Dashboard इस्तेमाल करने के लिए पहले student profile बनाएँ।
+    </string>
+
+    <string name="parent_manage_profiles">
+        Manage Student Profiles
+    </string>
+
+</resources>

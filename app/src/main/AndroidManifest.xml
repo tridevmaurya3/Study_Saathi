@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission
+        android:name="android.permission.INTERNET" />
+
+    <uses-permission
+        android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.StudySaathi">
+
+        <receiver
+            android:name=".reminder.StudyReminderActionReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <activity
+            android:name=".CloudAccountActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".BackupRestoreActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".BackupExportActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ParentDashboardActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".BookmarksActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".WeeklyStudyActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".GlobalSearchActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".AllChapterNotesActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ChapterNotesActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ReminderSettingsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SmartStudyPlanActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".DoubtHistoryActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".AskStudySaathiActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".LearningProgressActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".PracticeActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".RevisionActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".LessonActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ChaptersActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SubjectsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".StudentProfilesActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".DashboardActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".StudentProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+
+            <intent-filter>
+
+                <action
+                    android:name="android.intent.action.MAIN" />
+
+                <category
+                    android:name="android.intent.category.LAUNCHER" />
+
+            </intent-filter>
+
+        </activity>
+
+    </application>
+
+</manifest>

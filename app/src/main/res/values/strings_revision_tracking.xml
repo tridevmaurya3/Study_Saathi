@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="mark_revision_complete">
+        Mark Revision Complete
+    </string>
+
+    <string name="revision_progress_saving">
+        Saving revision…
+    </string>
+
+    <string name="revision_completed_button">
+        Revision Completed ✓
+    </string>
+
+    <string name="revision_progress_unavailable">
+        इस lesson की पुरानी completion progress उपलब्ध नहीं है।
+    </string>
+
+    <string name="revision_progress_save_failed">
+        Revision progress save नहीं हो सकी। दोबारा प्रयास करें।
+    </string>
+
+    <string name="revision_celebration_title_format">
+        शानदार revision, %1$s!
+    </string>
+
+    <string name="revision_celebration_subtitle">
+        YOU COMPLETED A SMART REVISION
+    </string>
+
+    <string name="revision_completed_badge">
+        REVISION COMPLETED
+    </string>
+
+    <string name="revision_celebration_message">
+        आपने lesson को दोबारा पढ़कर अपनी memory और understanding दोनों मजबूत की हैं। सही समय पर revision करना smart learning की सबसे अच्छी आदतों में से एक है।
+    </string>
+
+    <string name="back_to_revision_plan">
+        Back to Revision Plan
+    </string>
+
+</resources>

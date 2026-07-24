@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="study_tools_settings_option">
+        Settings &amp; Profiles
+    </string>
+
+    <string name="settings_title">
+        Settings
+    </string>
+
+    <string name="settings_subtitle">
+        Profiles, study goals and learning tools
+    </string>
+
+    <string name="settings_profile_section_title">
+        Active Student Profile
+    </string>
+
+    <string name="settings_no_active_profile">
+        No active student
+    </string>
+
+    <string name="settings_no_active_profile_description">
+        पहले student profile बनाएँ या existing profile को active करें।
+    </string>
+
+    <string name="settings_profile_detail_format">
+        %1$s • %2$s
+    </string>
+
+    <string name="settings_active_profile_available">
+        इस profile के लिए progress, goals, notes और doubts अलग सुरक्षित हैं।
+    </string>
+
+    <string name="settings_profile_required_status">
+        Study settings इस्तेमाल करने के लिए active profile आवश्यक है।
+    </string>
+
+    <string name="settings_manage_profiles">
+        Manage Student Profiles
+    </string>
+
+    <string name="settings_daily_goal_title">
+        Daily Study Goal
+    </string>
+
+    <string name="settings_daily_goal_description">
+        Active student के लिए रोज़ पूरे किए जाने वाले study actions चुनें।
+    </string>
+
+    <string name="settings_goal_one">
+        1 Action
+    </string>
+
+    <string name="settings_goal_three">
+        3 Actions
+    </string>
+
+    <string name="settings_goal_five">
+        5 Actions
+    </string>
+
+    <string name="settings_daily_goal_status_format">
+        %1$s का current daily goal: %2$d study actions
+    </string>
+
+    <string name="settings_daily_goal_saved_format">
+        Daily goal %1$d study actions पर set कर दिया गया।
+    </string>
+
+    <string name="settings_daily_goal_unavailable">
+        Daily goal बदलने के लिए active student profile चुनें।
+    </string>
+
+    <string name="settings_tools_title">
+        Study Tools
+    </string>
+
+    <string name="settings_tools_description">
+        Reminder, personal notes और saved doubt history manage करें।
+    </string>
+
+    <string name="settings_reminder_button">
+        Daily Study Reminder
+    </string>
+
+    <string name="settings_notes_button">
+        Open Notes Library
+    </string>
+
+    <string name="settings_doubt_history_button">
+        Open Saved Doubt History
+    </string>
+
+    <string name="settings_offline_data_title">
+        Offline-first Data
+    </string>
+
+    <string name="settings_offline_data_description">
+        Student profiles, lesson progress, quiz history, revisions, doubts और notes अभी device पर offline सुरक्षित हैं।
+    </string>
+
+    <string name="settings_profile_load_failed">
+        Active student profile load नहीं हो सकी।
+    </string>
+
+    <string name="settings_profile_required_message">
+        इस सुविधा के लिए पहले active student profile चुनें।
+    </string>
+
+</resources>

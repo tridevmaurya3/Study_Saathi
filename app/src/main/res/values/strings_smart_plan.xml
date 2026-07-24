@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="smart_study_plan_title">
+        Smart Study Plan
+    </string>
+
+    <string name="smart_study_plan_subtitle">
+        Personalised next step for today
+    </string>
+
+    <string name="smart_plan_student_format">
+        %1$s • %2$s • %3$s
+    </string>
+
+    <string name="smart_plan_today_progress">
+        Today’s Progress
+    </string>
+
+    <string name="smart_plan_goal_format">
+        %1$d / %2$d
+    </string>
+
+    <string name="smart_plan_goal_remaining_format">
+        आज का goal पूरा करने के लिए %1$d study actions बाकी हैं।
+    </string>
+
+    <string name="smart_plan_goal_complete">
+        Daily goal complete! अब optional revision या practice कर सकते हैं।
+    </string>
+
+    <string name="smart_plan_recommendation_heading">
+        Recommended Next Step
+    </string>
+
+    <string name="smart_plan_recommendation_description">
+        Lesson progress और quiz performance के आधार पर आज का अगला useful task।
+    </string>
+
+    <string name="smart_plan_strengthen_title">
+        Strengthen This Topic
+    </string>
+
+    <string name="smart_plan_low_score_reason_format">
+        इस chapter का average quiz score %1$d%% है। Lesson revise करके quiz दोबारा करना उपयोगी रहेगा।
+    </string>
+
+    <string name="smart_plan_check_understanding_title">
+        Check Your Understanding
+    </string>
+
+    <string name="smart_plan_no_quiz_reason">
+        Lesson पूरा हो चुका है, लेकिन इस chapter का quiz अभी नहीं किया गया है।
+    </string>
+
+    <string name="smart_plan_next_lesson_title">
+        Continue With the Next Lesson
+    </string>
+
+    <string name="smart_plan_next_lesson_reason">
+        यह अगला incomplete chapter है। इसे पूरा करने से course progress आगे बढ़ेगी।
+    </string>
+
+    <string name="smart_plan_revision_title">
+        Time for Smart Revision
+    </string>
+
+    <string name="smart_plan_revision_reason">
+        उपलब्ध lessons पूरे हो चुके हैं। इस chapter को revise करके understanding मजबूत करें।
+    </string>
+
+    <string name="smart_plan_start_lesson">
+        Start Recommended Lesson
+    </string>
+
+    <string name="smart_plan_review_lesson">
+        Review Smart Lesson
+    </string>
+
+    <string name="smart_plan_start_quiz">
+        Start Practice Quiz
+    </string>
+
+    <string name="smart_plan_retry_quiz">
+        Retry Practice Quiz
+    </string>
+
+    <string name="smart_plan_preview_quiz">
+        Preview Practice Quiz
+    </string>
+
+    <string name="smart_plan_practice_again">
+        Practice Again
+    </string>
+
+    <string name="smart_plan_open_revision">
+        Open Complete Revision Planner
+    </string>
+
+    <string name="smart_plan_no_content_title">
+        Study plan not available
+    </string>
+
+    <string name="smart_plan_no_content_description">
+        Subjects खोलकर पहला lesson शुरू करें। इसके बाद personalised recommendation यहाँ दिखाई देगी।
+    </string>
+
+    <string name="smart_plan_no_recommendation">
+        अभी कोई recommended chapter उपलब्ध नहीं है।
+    </string>
+
+    <string name="smart_plan_profile_failed">
+        Active student profile load नहीं हो सकी।
+    </string>
+
+    <string name="smart_plan_progress_failed">
+        Lesson progress पूरी तरह load नहीं हो सकी।
+    </string>
+
+    <string name="smart_plan_quiz_failed">
+        Quiz performance load नहीं हो सकी।
+    </string>
+
+</resources>

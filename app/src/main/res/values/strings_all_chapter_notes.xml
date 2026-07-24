@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="chapter_notes_view_all">
+        View All Saved Notes
+    </string>
+
+    <string name="all_notes_title">
+        Notes Library
+    </string>
+
+    <string name="all_notes_subtitle">
+        Search and manage all saved chapter notes
+    </string>
+
+    <string name="all_notes_student_format">
+        %1$s • %2$s • %3$s
+    </string>
+
+    <string name="all_notes_search_title">
+        Search Saved Notes
+    </string>
+
+    <string name="all_notes_search_hint">
+        Search subject, chapter or note text
+    </string>
+
+    <string name="all_notes_count_format">
+        Showing %1$d of %2$d notes
+    </string>
+
+    <string name="all_notes_empty_title">
+        No saved notes
+    </string>
+
+    <string name="all_notes_empty_description">
+        किसी chapter का personal note लिखने के बाद वह यहाँ दिखाई देगा।
+    </string>
+
+    <string name="all_notes_no_matching_title">
+        No matching notes
+    </string>
+
+    <string name="all_notes_no_matching_description">
+        Search text बदलें या search field clear करके सभी notes देखें।
+    </string>
+
+    <string name="all_notes_profile_required_title">
+        Student profile required
+    </string>
+
+    <string name="all_notes_profile_required_description">
+        Notes Library देखने के लिए active student profile आवश्यक है।
+    </string>
+
+    <string name="all_notes_create_note">
+        Create Chapter Note
+    </string>
+
+    <string name="all_notes_open_note">
+        Open Note
+    </string>
+
+    <string name="all_notes_delete_note">
+        Delete
+    </string>
+
+    <string name="all_notes_delete_title">
+        Delete this note?
+    </string>
+
+    <string name="all_notes_delete_message_format">
+        “%1$s” का पूरा personal note स्थायी रूप से हट जाएगा।
+    </string>
+
+    <string name="all_notes_delete_action">
+        Delete
+    </string>
+
+    <string name="all_notes_deleted">
+        Selected chapter note delete कर दिया गया।
+    </string>
+
+</resources>

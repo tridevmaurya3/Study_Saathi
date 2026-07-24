@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="lesson_bookmark_button">
+        Bookmark Chapter
+    </string>
+
+    <string name="lesson_bookmarked_button">
+        Bookmarked
+    </string>
+
+    <string name="lesson_bookmark_loading">
+        Loading Bookmark…
+    </string>
+
+    <string name="lesson_bookmark_saved">
+        यह chapter bookmark library में सुरक्षित कर दिया गया।
+    </string>
+
+    <string name="lesson_bookmark_remove_title">
+        Remove bookmark?
+    </string>
+
+    <string name="lesson_bookmark_remove_message_format">
+        “%1$s” को bookmark library से हटाया जाएगा। Lesson और progress सुरक्षित रहेंगे।
+    </string>
+
+    <string name="lesson_bookmark_remove_action">
+        Remove
+    </string>
+
+    <string name="lesson_bookmark_cancel">
+        Cancel
+    </string>
+
+    <string name="lesson_bookmark_removed">
+        Chapter bookmark हटा दिया गया।
+    </string>
+
+    <string name="lesson_bookmark_profile_required">
+        Bookmark इस्तेमाल करने के लिए active student profile आवश्यक है।
+    </string>
+
+</resources>

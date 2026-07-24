@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="study_tools_button">
+        Study Tools
+    </string>
+
+    <string name="study_tools_dialog_title">
+        Study Tools
+    </string>
+
+    <string name="study_tools_revision_option">
+        Open Smart Revision Planner
+    </string>
+
+    <string name="study_tools_reminder_option">
+        Daily Study Reminder
+    </string>
+
+    <string name="study_reminder_title">
+        Study Reminder
+    </string>
+
+    <string name="study_reminder_subtitle">
+        Choose reminder time and study days
+    </string>
+
+    <string name="study_reminder_card_title">
+        Build a Regular Study Routine
+    </string>
+
+    <string name="study_reminder_card_description">
+        चुने हुए दिनों और समय के आसपास Study Saathi आपको Smart Study Plan शुरू करने की याद दिलाएगा।
+    </string>
+
+    <string name="study_reminder_enable_title">
+        Enable Study Reminder
+    </string>
+
+    <string name="study_reminder_enable_description">
+        इसे बंद करके Save Reminder दबाने पर scheduled और snoozed notifications cancel हो जाएँगी।
+    </string>
+
+    <string name="study_reminder_time_title">
+        Reminder Time
+    </string>
+
+    <string name="study_reminder_choose_time">
+        Choose Reminder Time
+    </string>
+
+    <string name="study_reminder_days_title">
+        Reminder Days
+    </string>
+
+    <string name="study_reminder_days_description">
+        जिन दिनों study notification चाहिए, उन्हें select करें।
+    </string>
+
+    <string name="reminder_day_monday">
+        Mon
+    </string>
+
+    <string name="reminder_day_tuesday">
+        Tue
+    </string>
+
+    <string name="reminder_day_wednesday">
+        Wed
+    </string>
+
+    <string name="reminder_day_thursday">
+        Thu
+    </string>
+
+    <string name="reminder_day_friday">
+        Fri
+    </string>
+
+    <string name="reminder_day_saturday">
+        Sat
+    </string>
+
+    <string name="reminder_day_sunday">
+        Sun
+    </string>
+
+    <string name="study_reminder_every_day">
+        Every day
+    </string>
+
+    <string name="study_reminder_no_days_selected">
+        No day selected
+    </string>
+
+    <string name="study_reminder_selected_days_format">
+        Selected: %1$s
+    </string>
+
+    <string name="study_reminder_choose_day_required">
+        Reminder enable करने के लिए कम-से-कम एक दिन चुनें।
+    </string>
+
+    <string name="study_reminder_status_title">
+        Current Status
+    </string>
+
+    <string name="study_reminder_disabled_status">
+        Study reminder अभी disabled है।
+    </string>
+
+    <string name="study_reminder_ready_status_format">
+        Reminder %1$s के आसपास schedule करने के लिए तैयार है। Save Reminder दबाएँ।
+    </string>
+
+    <string name="study_reminder_enabled_status_format">
+        Daily reminder %1$s के आसपास enabled है।
+    </string>
+
+    <string name="study_reminder_ready_days_status_format">
+        Reminder %1$s पर %2$s के लिए तैयार है। Save Reminder दबाएँ।
+    </string>
+
+    <string name="study_reminder_enabled_days_status_format">
+        Reminder %1$s पर इन दिनों enabled है: %2$s
+    </string>
+
+    <string name="study_reminder_save_button">
+        Save Reminder
+    </string>
+
+    <string name="study_reminder_saved_format">
+        Daily study reminder %1$s के आसपास schedule कर दिया गया।
+    </string>
+
+    <string name="study_reminder_saved_days_format">
+        Study reminder %1$s पर इन दिनों schedule कर दिया गया: %2$s
+    </string>
+
+    <string name="study_reminder_disabled_message">
+        Study reminder और pending snooze बंद कर दिए गए।
+    </string>
+
+    <string name="study_reminder_permission_denied">
+        Notification permission के बिना study reminder दिखाई नहीं दे सकता।
+    </string>
+
+    <string name="study_reminder_test_button">
+        Send Test Notification Now
+    </string>
+
+    <string name="study_reminder_test_description">
+        Test notification selected days की जाँच किए बिना तुरंत भेजी जाएगी। इसके Snooze action को भी test कर सकते हैं।
+    </string>
+
+    <string name="study_reminder_test_queued">
+        Test notification भेजी जा रही है। कुछ seconds में notification panel देखें।
+    </string>
+
+    <string name="study_reminder_timing_note">
+        Battery optimisation के कारण reminder चुने हुए समय से कुछ देर आगे या पीछे दिखाई दे सकता है।
+    </string>
+
+    <string name="study_reminder_channel_name">
+        Daily Study Reminder
+    </string>
+
+    <string name="study_reminder_channel_description">
+        Notifications for the Study Saathi learning routine
+    </string>
+
+    <string name="study_reminder_notification_title">
+        Time for Study Saathi
+    </string>
+
+    <string name="study_reminder_notification_message">
+        आज का छोटा study goal पूरा करने का समय है। अपना personalised Smart Study Plan खोलें।
+    </string>
+
+    <string name="study_reminder_test_notification_title">
+        Study Saathi Reminder Test
+    </string>
+
+    <string name="study_reminder_test_notification_message">
+        Test successful! Smart Study Plan खोलें या इस reminder को 15 मिनट के लिए snooze करें।
+    </string>
+
+    <string name="study_reminder_snoozed_notification_title">
+        Study Reminder
+    </string>
+
+    <string name="study_reminder_snoozed_notification_message">
+        15 मिनट पूरे हो गए। अब अपना छोटा study task शुरू करें।
+    </string>
+
+    <string name="study_reminder_open_plan_action">
+        Open Plan
+    </string>
+
+    <string name="study_reminder_snooze_action">
+        Snooze 15 min
+    </string>
+
+    <string name="study_reminder_snoozed_confirmation">
+        Reminder 15 मिनट के लिए snooze कर दिया गया।
+    </string>
+
+</resources>

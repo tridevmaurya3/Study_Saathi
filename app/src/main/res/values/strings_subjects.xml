@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="my_subjects">My Subjects</string>
+    <string name="subjects_screen_subtitle">Choose a subject to start learning</string>
+
+    <string name="subjects_for_student_format">
+        %1$s के लिए उपलब्ध subjects
+    </string>
+
+    <string name="learning_curriculum">Learning Curriculum</string>
+
+    <string name="available_subjects">Available Subjects</string>
+    <string name="available_subjects_description">
+        किसी subject को खोलकर उसके chapters और learning activities देखें।
+    </string>
+
+    <string name="default_subject_count">0 Subjects</string>
+    <string name="subject_count_format">%1$d Subjects</string>
+
+    <string name="no_subjects_available">No subjects available</string>
+    <string name="no_subjects_available_description">
+        Selected class के लिए subject catalog उपलब्ध नहीं हो सका।
+    </string>
+
+    <string name="subject_profile_loading_failed">
+        Student information load नहीं हो सकी।
+    </string>
+
+    <string name="subject_chapters_coming_soon_format">
+        %1$s के chapters अगले step में जोड़े जाएँगे।
+    </string>
+
+</resources>

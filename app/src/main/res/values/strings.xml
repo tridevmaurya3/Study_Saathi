@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Study Saathi</string>
+
+    <!-- Welcome screen -->
+    <string name="welcome_language">Hindi + English</string>
+    <string name="welcome_label">SMART LEARNING PLATFORM</string>
+    <string name="welcome_title">Learning made simple,\nsmart and personal</string>
+    <string name="welcome_description">हर बच्चे के Board, Class और समझने के स्तर के अनुसार आसान पढ़ाई।</string>
+
+    <string name="classes_title">Classes 1–12</string>
+    <string name="classes_description">किसी भी class का अध्ययन</string>
+
+    <string name="boards_title">Multiple Boards</string>
+    <string name="boards_description">CBSE, CISCE, UP Board और अन्य</string>
+
+    <string name="language_title">Bilingual Learning</string>
+    <string name="language_description">Hindi और English में आसान explanation</string>
+
+    <string name="smart_title">Smart Guidance</string>
+    <string name="smart_description">Step-by-step learning, practice और progress</string>
+
+    <string name="create_profile">Create Student Profile</string>
+    <string name="explore_app">Explore Study Saathi</string>
+
+    <string name="section_title">Everything needed for better learning</string>
+    <string name="section_description">Chapters, practice, homework help और progress एक ही सुरक्षित स्थान पर।</string>
+
+    <string name="parent_note">Designed for students, guided by parents</string>
+    <string name="explore_mode_coming_soon">Explore mode अगले चरण में जोड़ा जाएगा।</string>
+
+    <!-- Student profile screen -->
+    <string name="back">Back</string>
+    <string name="create_student_profile">Student Profile</string>
+    <string name="profile_setup_subtitle">Personal learning setup</string>
+
+    <string name="personal_learning_setup">PERSONAL LEARNING SETUP</string>
+    <string name="profile_setup_title">Tell us about the student</string>
+    <string name="profile_setup_description">इन जानकारियों के आधार पर Study Saathi सही Board, Class, subjects और explanations उपलब्ध कराएगा।</string>
+
+    <string name="student_information">Student Information</string>
+    <string name="student_information_description">विद्यार्थी की basic study details चुनें।</string>
+
+    <string name="student_name">Student name</string>
+    <string name="student_name_helper">यह नाम student dashboard पर दिखाई देगा।</string>
+
+    <string name="select_board">Select education board</string>
+    <string name="select_class">Select current class</string>
+    <string name="select_study_medium">Select school medium</string>
+    <string name="explanation_language">Explanation language</string>
+
+    <string name="continue_button">Continue</string>
+    <string name="saving_profile">Saving profile…</string>
+
+    <string name="profile_preview">Profile information ready</string>
+    <string name="profile_privacy_note">Student information private रहेगी और केवल learning experience के लिए उपयोग होगी।</string>
+
+    <!-- Validation -->
+    <string name="error_student_name_required">Student name दर्ज करें।</string>
+    <string name="error_board_required">Education board चुनें।</string>
+    <string name="error_class_required">Current class चुनें।</string>
+    <string name="error_medium_required">School medium चुनें।</string>
+    <string name="error_language_required">Explanation language चुनें।</string>
+    <string name="complete_required_information">कृपया सभी आवश्यक जानकारी पूरी करें।</string>
+
+    <!-- Profile database messages -->
+    <string name="profile_save_failed">Profile save नहीं हो सकी। दोबारा प्रयास करें।</string>
+    <string name="profile_activation_failed">Profile save हुई, लेकिन active नहीं हो सकी।</string>
+    <string name="profile_loading_failed">Student profile load नहीं हो सकी।</string>
+    <string name="no_active_profile">कोई active student profile नहीं मिली।</string>
+    <string name="create_profile_to_continue">पढ़ाई शुरू करने के लिए student profile बनाएँ।</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_subtitle">Smart learning companion</string>
+    <string name="my_learning_dashboard">MY LEARNING DASHBOARD</string>
+    <string name="dashboard_default_greeting">Hello, Student!</string>
+    <string name="dashboard_greeting_format">Hello, %1$s!</string>
+    <string name="loading_student_profile">Loading student profile…</string>
+    <string name="loading_explanation_language">Preparing learning language…</string>
+    <string name="explanation_language_format">Explanation: %1$s</string>
+
+    <string name="start_learning">Start Learning</string>
+
+    <string name="today_learning">Today’s Learning</string>
+    <string name="today_learning_description">आज की छोटी progress भी एक बड़ी शुरुआत है।</string>
+
+    <string name="study_minutes">Study Minutes</string>
+    <string name="start_small_today">आज 10 मिनट से शुरू करें</string>
+
+    <string name="study_streak">Day Streak</string>
+    <string name="new_streak_today">आज नई streak शुरू करें</string>
+
+    <string name="smart_study_coach">Smart Study Coach</string>
+    <string name="smart_study_coach_description">Gentle reminders, revision और emotional encouragement।</string>
+
+    <string name="default_coach_message">आज सिर्फ 10 मिनट पढ़कर एक अच्छी शुरुआत करें।</string>
+    <string name="first_day_coach_message_format">%1$s, आज का छोटा प्रयास कल की बड़ी सफलता बनेगा।</string>
+    <string name="tap_for_study_plan">अपना आज का smart study plan देखने के लिए tap करें।</string>
+
+    <string name="quick_learning_actions">Quick Learning Actions</string>
+    <string name="quick_learning_actions_description">अपने subjects, revision और Study Saathi तक जल्दी पहुँचें।</string>
+
+    <string name="subjects">Subjects</string>
+    <string name="revision">Revision</string>
+    <string name="ask_study_saathi">Ask Study Saathi</string>
+
+    <string name="dashboard_parent_note">Safe learning experience • Parent guided</string>
+
+    <!-- Coming soon messages -->
+    <string name="continue_learning_coming_soon">Chapter learning अगले चरण में जोड़ा जाएगा।</string>
+    <string name="subjects_coming_soon">Subject selection अगले चरण में जोड़ा जाएगा।</string>
+    <string name="revision_coming_soon">Smart revision planner जल्द जोड़ा जाएगा।</string>
+    <string name="ai_teacher_coming_soon">AI Study Saathi बाद के चरण में उपलब्ध होगा।</string>
+    <string name="study_coach_coming_soon">Smart Study Coach की पूरी planning अगले चरणों में जोड़ी जाएगी।</string>
+
+</resources>

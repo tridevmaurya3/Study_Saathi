@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="quiz_mode_full">
+        Full Quiz
+    </string>
+
+    <string name="quiz_mode_wrong_only_format">
+        Wrong Questions Retry • %1$d questions
+    </string>
+
+    <string name="quiz_result_correct_count_format">
+        %1$d Correct
+    </string>
+
+    <string name="quiz_result_incorrect_count_format">
+        %1$d Incorrect
+    </string>
+
+    <string name="quiz_review_title">
+        Answer Review
+    </string>
+
+    <string name="quiz_review_subtitle">
+        अपने answers, सही answers और explanations दोबारा देखें।
+    </string>
+
+    <string name="quiz_review_question_format">
+        Question %1$d
+    </string>
+
+    <string name="quiz_review_correct">
+        CORRECT
+    </string>
+
+    <string name="quiz_review_incorrect">
+        INCORRECT
+    </string>
+
+    <string name="quiz_review_selected_answer_format">
+        Your answer: %1$s
+    </string>
+
+    <string name="quiz_review_correct_answer_format">
+        Correct answer: %1$s
+    </string>
+
+    <string name="quiz_review_explanation_format">
+        Explanation: %1$s
+    </string>
+
+    <string name="retry_full_quiz">
+        Retry Full Quiz
+    </string>
+
+    <string name="retry_wrong_questions_format">
+        Retry Wrong Questions (%1$d)
+    </string>
+
+    <string name="quiz_no_wrong_questions">
+        इस attempt में कोई wrong question नहीं है।
+    </string>
+
+</resources>

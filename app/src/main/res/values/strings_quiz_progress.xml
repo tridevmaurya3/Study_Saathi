@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="quiz_score_saving_format">
+        %1$d%% correct • Saving result…
+    </string>
+
+    <string name="quiz_score_summary_format">
+        Current %1$d%%  •  Best %2$d%%  •  Attempt %3$d
+    </string>
+
+    <string name="quiz_score_saved_format">
+        %1$d%% correct • Result saved
+    </string>
+
+    <string name="quiz_score_unsaved_format">
+        %1$d%% correct • Result not saved
+    </string>
+
+    <string name="quiz_result_profile_unavailable">
+        Active student profile उपलब्ध नहीं है, इसलिए quiz result save नहीं हुआ।
+    </string>
+
+    <string name="quiz_result_save_failed">
+        Quiz result save नहीं हो सका। अगला attempt फिर से किया जा सकता है।
+    </string>
+
+</resources>

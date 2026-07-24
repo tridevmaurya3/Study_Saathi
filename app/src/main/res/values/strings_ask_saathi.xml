@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="ask_study_saathi_title">
+        Ask Study Saathi
+    </string>
+
+    <string name="ask_study_saathi_subtitle">
+        Ask a question from your selected chapter
+    </string>
+
+    <string name="ask_saathi_student_format">
+        %1$s • %2$s • %3$s • %4$s
+    </string>
+
+    <string name="offline_doubt_helper">
+        Offline Doubt Helper
+    </string>
+
+    <string name="offline_doubt_helper_description">
+        Subject और chapter चुनकर explanation, key points, example और practice question प्राप्त करें।
+    </string>
+
+    <string name="select_learning_context">
+        Select Learning Context
+    </string>
+
+    <string name="select_subject">
+        Select Subject
+    </string>
+
+    <string name="select_chapter">
+        Select Chapter
+    </string>
+
+    <string name="quick_doubt_help">
+        Quick Doubt Help
+    </string>
+
+    <string name="quick_doubt_help_description">
+        Common help के लिए किसी quick action को दबाएँ।
+    </string>
+
+    <string name="quick_explain">
+        Explain Simply
+    </string>
+
+    <string name="quick_key_points">
+        Key Points
+    </string>
+
+    <string name="quick_example">
+        Give Example
+    </string>
+
+    <string name="quick_practice">
+        Practice Question
+    </string>
+
+    <string name="quick_question_explain">
+        Explain this chapter simply / इस chapter को आसान भाषा में समझाओ
+    </string>
+
+    <string name="quick_question_key_points">
+        Show the important key points / मुख्य बिंदु बताओ
+    </string>
+
+    <string name="quick_question_example">
+        Give me a simple example / एक आसान उदाहरण दो
+    </string>
+
+    <string name="quick_question_practice">
+        Give me a practice question / एक अभ्यास प्रश्न दो
+    </string>
+
+    <string name="ask_your_question">
+        Ask Your Question
+    </string>
+
+    <string name="question_input_hint">
+        Example: अंश और हर में क्या अंतर है?
+    </string>
+
+    <string name="ask_study_saathi_button">
+        Ask Study Saathi
+    </string>
+
+    <string name="your_question">
+        YOUR QUESTION
+    </string>
+
+    <string name="study_saathi_answer">
+        STUDY SAATHI ANSWER
+    </string>
+
+    <string name="open_full_lesson">
+        Open Full Smart Lesson
+    </string>
+
+    <string name="offline_assistant_note">
+        अभी उत्तर selected lesson content से offline तैयार होता है। Online AI support आगे जोड़ा जाएगा।
+    </string>
+
+    <string name="ask_saathi_question_required">
+        अपना प्रश्न लिखें।
+    </string>
+
+    <string name="ask_saathi_selection_required">
+        पहले Subject और Chapter चुनें।
+    </string>
+
+    <string name="ask_saathi_profile_required">
+        Ask Study Saathi इस्तेमाल करने के लिए active student profile आवश्यक है।
+    </string>
+
+    <string name="ask_saathi_profile_load_failed">
+        Active student profile load नहीं हो सकी।
+    </string>
+
+</resources>

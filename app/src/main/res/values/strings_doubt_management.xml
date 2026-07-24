@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="clear_doubt_history">
+        Clear All
+    </string>
+
+    <string name="delete_saved_doubt">
+        Delete saved question
+    </string>
+
+    <string name="delete_doubt_title">
+        Delete this question?
+    </string>
+
+    <string name="delete_doubt_message_format">
+        “%1$s” को Doubt History से स्थायी रूप से हटाया जाएगा।
+    </string>
+
+    <string name="clear_history_title">
+        Clear complete history?
+    </string>
+
+    <string name="clear_history_message_format">
+        %1$s की सभी saved questions और answers स्थायी रूप से delete हो जाएँगे।
+    </string>
+
+    <string name="doubt_action_delete">
+        Delete
+    </string>
+
+    <string name="doubt_action_clear_all">
+        Clear All
+    </string>
+
+    <string name="doubt_action_cancel">
+        Cancel
+    </string>
+
+    <string name="deleting_saved_doubt">
+        Deleting question…
+    </string>
+
+    <string name="clearing_doubt_history">
+        Clearing history…
+    </string>
+
+    <string name="saved_doubt_deleted">
+        Saved question delete कर दिया गया।
+    </string>
+
+    <string name="complete_doubt_history_cleared">
+        Complete doubt history clear कर दी गई।
+    </string>
+
+    <string name="delete_doubt_failed">
+        Saved question delete नहीं हो सका।
+    </string>
+
+    <string name="clear_doubt_history_failed">
+        Doubt history clear नहीं हो सकी।
+    </string>
+
+</resources>

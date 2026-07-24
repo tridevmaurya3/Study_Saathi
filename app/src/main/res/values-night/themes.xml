@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.StudySaathi"
+        parent="Theme.Material3.Light.NoActionBar">
+
+        <!-- Study Saathi remains light-theme-first -->
+        <item name="colorPrimary">@color/ss_primary</item>
+        <item name="colorOnPrimary">@color/ss_on_primary</item>
+        <item name="colorPrimaryContainer">@color/ss_blue_soft</item>
+        <item name="colorOnPrimaryContainer">@color/ss_primary_dark</item>
+
+        <item name="colorSecondary">@color/ss_secondary</item>
+        <item name="colorOnSecondary">@color/ss_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/ss_teal_soft</item>
+        <item name="colorOnSecondaryContainer">@color/ss_secondary</item>
+
+        <item name="colorTertiary">@color/ss_tertiary</item>
+        <item name="colorOnTertiary">@color/ss_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/ss_yellow_soft</item>
+        <item name="colorOnTertiaryContainer">@color/ss_tertiary</item>
+
+        <item name="android:colorBackground">@color/ss_background</item>
+        <item name="colorSurface">@color/ss_surface</item>
+        <item name="colorSurfaceVariant">@color/ss_surface_soft</item>
+        <item name="colorOnSurface">@color/ss_text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/ss_text_secondary</item>
+
+        <item name="colorOutline">@color/ss_outline</item>
+        <item name="colorError">@color/ss_error</item>
+        <item name="colorOnError">@color/white</item>
+        <item name="colorErrorContainer">@color/ss_red_soft</item>
+        <item name="colorOnErrorContainer">@color/ss_error</item>
+
+        <item name="android:windowBackground">@color/ss_background</item>
+        <item name="android:statusBarColor">@color/ss_background</item>
+        <item name="android:navigationBarColor">@color/ss_background</item>
+
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:forceDarkAllowed">false</item>
+
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowActionModeOverlay">true</item>
+
+        <item name="android:colorAccent">@color/ss_primary</item>
+        <item name="colorControlActivated">@color/ss_primary</item>
+        <item name="colorControlNormal">@color/ss_text_secondary</item>
+
+    </style>
+
+</resources>

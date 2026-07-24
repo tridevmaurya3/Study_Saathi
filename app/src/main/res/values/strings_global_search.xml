@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="settings_global_search_button">
+        Global Learning Search
+    </string>
+
+    <string name="global_search_title">
+        Global Search
+    </string>
+
+    <string name="global_search_subtitle">
+        Find subjects, chapters and saved notes
+    </string>
+
+    <string name="global_search_student_format">
+        %1$s • %2$s • %3$s
+    </string>
+
+    <string name="global_search_card_title">
+        Search Your Learning Content
+    </string>
+
+    <string name="global_search_card_description">
+        Subject, chapter, lesson topic या personal note का कोई शब्द लिखें।
+    </string>
+
+    <string name="global_search_hint">
+        Search subjects, chapters or notes
+    </string>
+
+    <string name="global_search_index_count_format">
+        %1$d searchable learning items तैयार हैं
+    </string>
+
+    <string name="global_search_result_count_format">
+        %1$d search results
+    </string>
+
+    <string name="global_search_profile_required_count">
+        Active profile required
+    </string>
+
+    <string name="global_search_start_title">
+        Start searching
+    </string>
+
+    <string name="global_search_start_description">
+        ऊपर search box में subject, chapter, topic, definition या अपने saved note का कोई शब्द लिखें।
+    </string>
+
+    <string name="global_search_no_results_title">
+        No matching content
+    </string>
+
+    <string name="global_search_no_results_description">
+        अलग spelling या छोटा keyword लिखें। Subjects screen से उपलब्ध content भी देख सकते हैं।
+    </string>
+
+    <string name="global_search_profile_required_title">
+        Student profile required
+    </string>
+
+    <string name="global_search_profile_required_description">
+        Global Search इस्तेमाल करने के लिए पहले student profile active करें।
+    </string>
+
+    <string name="global_search_profile_failed">
+        Active student profile load नहीं हो सकी।
+    </string>
+
+    <string name="global_search_type_subject">
+        SUBJECT
+    </string>
+
+    <string name="global_search_type_chapter">
+        CHAPTER
+    </string>
+
+    <string name="global_search_type_note">
+        SAVED NOTE
+    </string>
+
+    <string name="global_search_subject_subtitle_format">
+        Class %1$s Subject
+    </string>
+
+    <string name="global_search_subject_description_format">
+        %1$s के chapters, lessons और practice content देखें।
+    </string>
+
+    <string name="global_search_chapter_default_description">
+        इस chapter का Smart Lesson खोलकर learning शुरू करें।
+    </string>
+
+    <string name="global_search_note_subtitle_format">
+        Personal note • %1$s
+    </string>
+
+    <string name="global_search_open_result">
+        Open Result
+    </string>
+
+</resources>

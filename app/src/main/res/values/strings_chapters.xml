@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="chapters">Chapters</string>
+    <string name="chapters_screen_subtitle">Choose a chapter to start learning</string>
+
+    <string name="default_subject_name">Subject</string>
+
+    <string name="available_chapters">Available Chapters</string>
+    <string name="available_chapters_description">
+        Chapter खोलकर lessons, examples, practice और revision शुरू करें।
+    </string>
+
+    <string name="default_chapter_count">0 Chapters</string>
+    <string name="chapter_count_format">%1$d Chapters</string>
+
+    <string name="default_lesson_count">0 Lessons</string>
+    <string name="lesson_count_format">%1$d Lessons</string>
+
+    <string name="default_progress_percent">0% complete</string>
+    <string name="progress_percent_format">%1$d%% complete</string>
+
+    <string name="chapter_status_start">START</string>
+    <string name="chapter_status_continue">CONTINUE</string>
+    <string name="chapter_status_completed">COMPLETED</string>
+
+    <string name="no_chapters_available">No chapters available</string>
+    <string name="no_chapters_available_description">
+        इस Subject के chapters अभी उपलब्ध नहीं हैं।
+    </string>
+
+    <string name="lesson_screen_coming_soon_format">
+        “%1$s” की smart lesson screen अगले step में बनेगी।
+    </string>
+
+</resources>

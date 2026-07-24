@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="doubt_history_title">
+        Doubt History
+    </string>
+
+    <string name="doubt_history_subtitle">
+        Your saved questions and answers
+    </string>
+
+    <string name="doubt_history_student_format">
+        %1$s • %2$s • %3$s
+    </string>
+
+    <string name="saved_questions">
+        Saved Questions
+    </string>
+
+    <string name="no_saved_doubts_count">
+        0 saved doubts
+    </string>
+
+    <string name="doubt_history_count_format">
+        %1$d saved doubts
+    </string>
+
+    <string name="recent_doubts">
+        Recent Doubts
+    </string>
+
+    <string name="recent_doubts_description">
+        किसी पुराने question को दबाकर उसे दोबारा पूछें।
+    </string>
+
+    <string name="saved_doubt">
+        Saved question
+    </string>
+
+    <string name="no_doubt_history">
+        No saved questions yet
+    </string>
+
+    <string name="no_doubt_history_description">
+        Ask Study Saathi में कोई प्रश्न पूछने के बाद उसका answer यहाँ सुरक्षित दिखाई देगा।
+    </string>
+
+    <string name="start_asking_questions">
+        Ask a Question
+    </string>
+
+    <string name="view_doubt_history">
+        View Doubt History
+    </string>
+
+    <string name="doubt_history_profile_failed">
+        Active student profile load नहीं हो सकी।
+    </string>
+
+    <string name="doubt_history_load_failed">
+        Saved doubt history load नहीं हो सकी।
+    </string>
+
+    <string name="doubt_history_save_failed">
+        इस प्रश्न का answer history में save नहीं हो सका।
+    </string>
+
+    <string name="history_question_restored">
+        पुराना question restore कर दिया गया है।
+    </string>
+
+</resources>

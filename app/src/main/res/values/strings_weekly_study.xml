@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="settings_weekly_study_button">
+        7-Day Study Activity &amp; Streak
+    </string>
+
+    <string name="weekly_study_title">
+        Weekly Activity
+    </string>
+
+    <string name="weekly_study_subtitle">
+        Last 7 days study actions and streak
+    </string>
+
+    <string name="weekly_study_student_format">
+        %1$s • %2$s • %3$s
+    </string>
+
+    <string name="weekly_study_summary_title">
+        Your 7-Day Summary
+    </string>
+
+    <string name="weekly_study_total_actions">
+        Total Actions
+    </string>
+
+    <string name="weekly_study_active_days">
+        Active Days
+    </string>
+
+    <string name="weekly_study_current_streak">
+        Current Streak
+    </string>
+
+    <string name="weekly_study_active_days_value_format">
+        %1$d / %2$d
+    </string>
+
+    <string name="weekly_study_streak_value_format">
+        %1$d days
+    </string>
+
+    <string name="weekly_study_goal_days_value_format">
+        Daily goal completed on %1$d of %2$d days
+    </string>
+
+    <string name="weekly_study_target_status_format">
+        %1$d of %2$d weekly study actions completed
+    </string>
+
+    <string name="weekly_study_coach_title">
+        Study Coach
+    </string>
+
+    <string name="weekly_study_coach_start">
+        आज एक छोटा lesson, revision या quiz पूरा करके अपनी weekly activity शुरू करें।
+    </string>
+
+    <string name="weekly_study_coach_excellent">
+        Excellent consistency! आपने इस week के अधिकांश दिनों में अपना daily goal पूरा किया है।
+    </string>
+
+    <string name="weekly_study_coach_streak_format">
+        आपकी %1$d-day study streak चल रही है। आज का छोटा goal पूरा करके इसे जारी रखें।
+    </string>
+
+    <string name="weekly_study_coach_consistent">
+        अच्छी consistency है। एक और active day इस week को और मजबूत बनाएगा।
+    </string>
+
+    <string name="weekly_study_coach_continue">
+        आपने अच्छी शुरुआत की है। छोटे और नियमित study actions बड़े progress में बदलते हैं।
+    </string>
+
+    <string name="weekly_study_best_day_format">
+        Best day: %1$s, %2$s • %3$d study actions
+    </string>
+
+    <string name="weekly_study_no_best_day">
+        Best day आपकी पहली study activity के बाद दिखाई देगा।
+    </string>
+
+    <string name="weekly_study_last_seven_days">
+        Last 7 Days
+    </string>
+
+    <string name="weekly_study_today_format">
+        Today • %1$s
+    </string>
+
+    <string name="weekly_study_lessons_format">
+        Lessons %1$d
+    </string>
+
+    <string name="weekly_study_revisions_format">
+        Revisions %1$d
+    </string>
+
+    <string name="weekly_study_quizzes_format">
+        Quizzes %1$d
+    </string>
+
+    <string name="weekly_study_actions_format">
+        %1$d / %2$d actions
+    </string>
+
+    <string name="weekly_study_goal_completed">
+        Goal completed
+    </string>
+
+    <string name="weekly_study_goal_remaining_format">
+        %1$d remaining
+    </string>
+
+    <string name="weekly_study_start_today">
+        Start today
+    </string>
+
+    <string name="weekly_study_no_activity">
+        No activity
+    </string>
+
+    <string name="weekly_study_empty_title">
+        No study activity yet
+    </string>
+
+    <string name="weekly_study_empty_description">
+        Lesson complete करने, revision करने या quiz देने के बाद activity यहाँ दिखाई देगी।
+    </string>
+
+    <string name="weekly_study_open_plan">
+        Open Smart Study Plan
+    </string>
+
+    <string name="weekly_study_profile_required_title">
+        Student profile required
+    </string>
+
+    <string name="weekly_study_profile_required">
+        Weekly activity देखने के लिए पहले active student profile चुनें।
+    </string>
+
+    <string name="weekly_study_profile_failed">
+        Active student profile load नहीं हो सकी।
+    </string>
+
+    <string name="weekly_study_progress_failed">
+        Lesson और revision activity load नहीं हो सकी।
+    </string>
+
+    <string name="weekly_study_quiz_failed">
+        Quiz activity load नहीं हो सकी।
+    </string>
+
+</resources>

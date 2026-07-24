@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="settings_bookmarks_button">
+        Bookmarked Chapters
+    </string>
+
+    <string name="bookmarks_title">
+        Bookmarks
+    </string>
+
+    <string name="bookmarks_subtitle">
+        Save and revisit important chapters
+    </string>
+
+    <string name="bookmarks_student_format">
+        %1$s • %2$s • %3$s
+    </string>
+
+    <string name="bookmarks_add_title">
+        Add Chapter Bookmark
+    </string>
+
+    <string name="bookmarks_add_description">
+        Important chapter चुनें और उसे अपनी personal bookmark library में सुरक्षित करें।
+    </string>
+
+    <string name="bookmarks_subject_label">
+        Select Subject
+    </string>
+
+    <string name="bookmarks_chapter_label">
+        Select Chapter
+    </string>
+
+    <string name="bookmarks_add_button">
+        Add Bookmark
+    </string>
+
+    <string name="bookmarks_saved_button">
+        Already Bookmarked
+    </string>
+
+    <string name="bookmarks_search_hint">
+        Search saved bookmarks
+    </string>
+
+    <string name="bookmarks_count_format">
+        Showing %1$d of %2$d bookmarks
+    </string>
+
+    <string name="bookmarks_empty_title">
+        No bookmarks yet
+    </string>
+
+    <string name="bookmarks_empty_description">
+        ऊपर Subject और Chapter चुनकर अपना पहला important chapter bookmark करें।
+    </string>
+
+    <string name="bookmarks_no_matching_title">
+        No matching bookmarks
+    </string>
+
+    <string name="bookmarks_no_matching_description">
+        Search text बदलें या field clear करके सभी saved bookmarks देखें।
+    </string>
+
+    <string name="bookmarks_profile_required_title">
+        Student profile required
+    </string>
+
+    <string name="bookmarks_profile_required">
+        Bookmarks इस्तेमाल करने के लिए पहले active student profile चुनें।
+    </string>
+
+    <string name="bookmarks_profile_failed">
+        Active student profile load नहीं हो सकी।
+    </string>
+
+    <string name="bookmarks_no_subjects">
+        Active Class के subjects अभी उपलब्ध नहीं हैं।
+    </string>
+
+    <string name="bookmarks_no_chapters">
+        चुने हुए Subject के chapters अभी उपलब्ध नहीं हैं।
+    </string>
+
+    <string name="bookmarks_default_description">
+        इस chapter का lesson खोलकर अपनी पढ़ाई जारी रखें।
+    </string>
+
+    <string name="bookmarks_select_chapter_first">
+        पहले Subject और Chapter चुनें।
+    </string>
+
+    <string name="bookmarks_saved">
+        Chapter bookmark सुरक्षित कर दिया गया।
+    </string>
+
+    <string name="bookmarks_already_saved">
+        यह chapter पहले से bookmarked है।
+    </string>
+
+    <string name="bookmarks_open_lesson">
+        Open Lesson
+    </string>
+
+    <string name="bookmarks_remove_button">
+        Remove
+    </string>
+
+    <string name="bookmarks_remove_title">
+        Remove bookmark?
+    </string>
+
+    <string name="bookmarks_remove_message_format">
+        “%1$s” bookmark library से हटा दिया जाएगा। Lesson और progress सुरक्षित रहेंगे।
+    </string>
+
+    <string name="bookmarks_remove_action">
+        Remove
+    </string>
+
+    <string name="bookmarks_cancel">
+        Cancel
+    </string>
+
+    <string name="bookmarks_removed">
+        Chapter bookmark हटा दिया गया।
+    </string>
+
+</resources>

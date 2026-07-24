@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="search_saved_questions">
+        Search Saved Questions
+    </string>
+
+    <string name="search_doubt_hint">
+        Search question, answer or chapter
+    </string>
+
+    <string name="filter_by_subject">
+        Filter by Subject
+    </string>
+
+    <string name="all_subjects">
+        All Subjects
+    </string>
+
+    <string name="clear_doubt_filters">
+        Clear Filters
+    </string>
+
+    <string name="filter_result_count_format">
+        Showing %1$d of %2$d saved questions
+    </string>
+
+    <string name="no_matching_doubts">
+        No matching questions
+    </string>
+
+    <string name="no_matching_doubts_description">
+        Search text या Subject Filter बदलें, या Clear Filters दबाकर पूरी history देखें।
+    </string>
+
+</resources>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="daily_study_goal_title">
+        Today’s Study Goal
+    </string>
+
+    <string name="daily_study_goal_description">
+        रोज़ के Smart Lessons, Revisions और Quiz attempts को track करें।
+    </string>
+
+    <string name="daily_goal_choose">
+        Choose daily target
+    </string>
+
+    <string name="daily_goal_one">
+        1 Action
+    </string>
+
+    <string name="daily_goal_three">
+        3 Actions
+    </string>
+
+    <string name="daily_goal_five">
+        5 Actions
+    </string>
+
+    <string name="daily_goal_value_format">
+        %1$d / %2$d
+    </string>
+
+    <string name="daily_goal_breakdown_format">
+        Lessons %1$d  •  Revisions %2$d  •  Quizzes %3$d
+    </string>
+
+    <string name="daily_goal_start_message">
+        आज की learning शुरू करने के लिए एक छोटा study action पूरा करें।
+    </string>
+
+    <string name="daily_goal_remaining_format">
+        Goal पूरा करने के लिए अभी %1$d study actions बाकी हैं।
+    </string>
+
+    <string name="daily_goal_completed_message">
+        Daily goal complete! आज की consistency बहुत अच्छी रही।
+    </string>
+
+    <string name="daily_goal_exceeded_format">
+        शानदार! आपने daily goal से %1$d extra study actions पूरे किए।
+    </string>
+
+    <string name="daily_goal_unavailable">
+        Daily goal के लिए active student profile आवश्यक है।
+    </string>
+
+</resources>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="study_tools_notes_option">
+        Chapter Quick Notes
+    </string>
+
+    <string name="chapter_notes_title">
+        Chapter Notes
+    </string>
+
+    <string name="chapter_notes_subtitle">
+        Personal offline notes for every chapter
+    </string>
+
+    <string name="chapter_notes_student_format">
+        %1$s • %2$s • %3$s
+    </string>
+
+    <string name="chapter_notes_card_title">
+        Your Personal Learning Notes
+    </string>
+
+    <string name="chapter_notes_card_description">
+        Important definitions, formulas, questions और याद रखने वाली बातें यहाँ लिखें।
+    </string>
+
+    <string name="chapter_notes_subject_label">
+        Select Subject
+    </string>
+
+    <string name="chapter_notes_chapter_label">
+        Select Chapter
+    </string>
+
+    <string name="chapter_notes_editor_title">
+        Quick Note
+    </string>
+
+    <string name="chapter_notes_editor_description">
+        Subject या Chapter बदलने पर edited note अपने-आप सुरक्षित हो जाएगा।
+    </string>
+
+    <string name="chapter_notes_hint">
+        Write important points, formulas, meanings or questions…
+    </string>
+
+    <string name="chapter_notes_character_count_format">
+        %1$d / %2$d
+    </string>
+
+    <string name="chapter_notes_save">
+        Save Note
+    </string>
+
+    <string name="chapter_notes_clear">
+        Clear Note
+    </string>
+
+    <string name="chapter_notes_open_lesson">
+        Open Lesson
+    </string>
+
+    <string name="chapter_notes_saved">
+        Chapter note सुरक्षित कर दिया गया।
+    </string>
+
+    <string name="chapter_notes_empty_removed">
+        Empty note storage से हटा दिया गया।
+    </string>
+
+    <string name="chapter_notes_already_empty">
+        इस chapter का note पहले से खाली है।
+    </string>
+
+    <string name="chapter_notes_clear_title">
+        Clear this note?
+    </string>
+
+    <string name="chapter_notes_clear_message_format">
+        “%1$s” के लिए लिखा पूरा personal note स्थायी रूप से हट जाएगा।
+    </string>
+
+    <string name="chapter_notes_clear_action">
+        Clear
+    </string>
+
+    <string name="chapter_notes_cleared">
+        Chapter note clear कर दिया गया।
+    </string>
+
+    <string name="chapter_notes_select_chapter_first">
+        पहले Subject और Chapter चुनें।
+    </string>
+
+    <string name="chapter_notes_profile_required">
+        Notes बनाने के लिए active student profile आवश्यक है।
+    </string>
+
+    <string name="chapter_notes_profile_failed">
+        Active student profile load नहीं हो सकी।
+    </string>
+
+    <string name="chapter_notes_no_subjects">
+        Active Class के subjects अभी उपलब्ध नहीं हैं।
+    </string>
+
+    <string name="chapter_notes_no_chapters">
+        चुने हुए Subject के chapters अभी उपलब्ध नहीं हैं।
+    </string>
+
+</resources>

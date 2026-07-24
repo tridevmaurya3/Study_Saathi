@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="lesson_progress_loading">
+        Checking lesson progress…
+    </string>
+
+    <string name="lesson_progress_saving">
+        Saving achievement…
+    </string>
+
+    <string name="lesson_progress_unavailable">
+        Lesson progress save करने के लिए active student profile आवश्यक है।
+    </string>
+
+    <string name="lesson_progress_load_failed">
+        पुरानी lesson progress load नहीं हो सकी।
+    </string>
+
+    <string name="lesson_progress_save_failed">
+        Lesson completion save नहीं हो सकी। दोबारा प्रयास करें।
+    </string>
+
+    <string name="lesson_completed_button">
+        Lesson Completed ✓
+    </string>
+
+    <string name="lesson_celebration_default_title">
+        बहुत बढ़िया!
+    </string>
+
+    <string name="lesson_celebration_title_format">
+        बहुत बढ़िया, %1$s!
+    </string>
+
+    <string name="lesson_celebration_subtitle">
+        YOU COMPLETED THIS LESSON
+    </string>
+
+    <string name="lesson_completed_badge">
+        LESSON COMPLETED
+    </string>
+
+    <string name="lesson_celebration_message_one">
+        कठिन विषय को समझने के लिए आपने जो प्रयास किया, वही आपकी असली सफलता है। आज की यह छोटी progress आगे बहुत बड़ा परिणाम देगी।
+    </string>
+
+    <string name="lesson_celebration_message_two">
+        आपने केवल एक lesson पूरा नहीं किया—आपने अपने ज्ञान और आत्मविश्वास को एक कदम आगे बढ़ाया है।
+    </string>
+
+    <string name="lesson_celebration_message_three">
+        हर पूरा किया गया lesson आपके सपनों के और करीब ले जाता है। आपकी मेहनत सच में दिखाई दे रही है।
+    </string>
+
+    <string name="lesson_celebration_message_four">
+        शानदार प्रयास! मुश्किल concepts को छोटे steps में समझना ही एक smart learner की पहचान है।
+    </string>
+
+    <string name="keep_learning">Keep Learning</string>
+    <string name="back_to_chapters">Back to Chapters</string>
+
+</resources>

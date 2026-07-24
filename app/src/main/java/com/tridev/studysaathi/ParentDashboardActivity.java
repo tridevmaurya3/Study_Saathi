@@ -1,0 +1,971 @@
+package com.tridev.studysaathi;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+
+import com.google.android.material.snackbar.Snackbar;
+import com.tridev.studysaathi.adapter.ParentProfileSummaryAdapter;
+import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
+import com.tridev.studysaathi.data.local.entity.QuizAttemptEntity;
+import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
+import com.tridev.studysaathi.data.repository.LessonProgressRepository;
+import com.tridev.studysaathi.data.repository.QuizAttemptRepository;
+import com.tridev.studysaathi.data.repository.StudentProfileRepository;
+import com.tridev.studysaathi.databinding.ActivityParentDashboardBinding;
+import com.tridev.studysaathi.model.ParentProfileSummary;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+public class ParentDashboardActivity
+        extends AppCompatActivity {
+
+    private static final String GOAL_PREFERENCES_NAME =
+            "study_saathi_daily_goals";
+
+    private static final String GOAL_KEY_PREFIX =
+            "daily_goal_profile_";
+
+    private static final int DEFAULT_DAILY_GOAL = 3;
+
+    private ActivityParentDashboardBinding binding;
+
+    private StudentProfileRepository studentProfileRepository;
+    private LessonProgressRepository lessonProgressRepository;
+    private QuizAttemptRepository quizAttemptRepository;
+
+    private SharedPreferences goalPreferences;
+
+    private ParentProfileSummaryAdapter profileSummaryAdapter;
+
+    private final List<ParentProfileSummary> loadedSummaries =
+            new ArrayList<>();
+
+    private int pendingProfileCount;
+    private int loadGeneration;
+
+    private boolean partialLoadFailure;
+    private boolean profileActivationInProgress;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        binding =
+                ActivityParentDashboardBinding.inflate(
+                        getLayoutInflater()
+                );
+
+        setContentView(binding.getRoot());
+
+        studentProfileRepository =
+                new StudentProfileRepository(this);
+
+        lessonProgressRepository =
+                new LessonProgressRepository(this);
+
+        quizAttemptRepository =
+                new QuizAttemptRepository(this);
+
+        goalPreferences =
+                getSharedPreferences(
+                        GOAL_PREFERENCES_NAME,
+                        MODE_PRIVATE
+                );
+
+        setupRecyclerView();
+        setupClickListeners();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        profileActivationInProgress = false;
+        loadParentDashboard();
+    }
+
+    private void setupRecyclerView() {
+        profileSummaryAdapter =
+                new ParentProfileSummaryAdapter(
+                        new ArrayList<>(),
+                        this::openProfileProgress
+                );
+
+        binding.recyclerParentProfiles.setLayoutManager(
+                new LinearLayoutManager(this)
+        );
+
+        binding.recyclerParentProfiles.setAdapter(
+                profileSummaryAdapter
+        );
+
+        binding.recyclerParentProfiles.setHasFixedSize(
+                false
+        );
+
+        binding.recyclerParentProfiles.setNestedScrollingEnabled(
+                false
+        );
+    }
+
+    private void setupClickListeners() {
+        binding.buttonBack.setOnClickListener(view ->
+                getOnBackPressedDispatcher()
+                        .onBackPressed()
+        );
+
+        binding.buttonManageParentProfiles.setOnClickListener(view ->
+                openProfileManager()
+        );
+    }
+
+    private void loadParentDashboard() {
+        int currentGeneration =
+                ++loadGeneration;
+
+        showLoadingState(true);
+
+        loadedSummaries.clear();
+        profileSummaryAdapter.submitList(
+                new ArrayList<>()
+        );
+
+        studentProfileRepository.getAllProfiles(
+                new StudentProfileRepository.ProfilesCallback() {
+                    @Override
+                    public void onSuccess(
+                            @NonNull List<StudentProfileEntity> profiles
+                    ) {
+                        if (!isValidGeneration(
+                                currentGeneration
+                        )) {
+                            return;
+                        }
+
+                        if (profiles.isEmpty()) {
+                            showLoadingState(false);
+                            showEmptyProfilesState();
+                            return;
+                        }
+
+                        binding.cardParentEmpty.setVisibility(
+                                View.GONE
+                        );
+
+                        binding.recyclerParentProfiles.setVisibility(
+                                View.VISIBLE
+                        );
+
+                        pendingProfileCount =
+                                profiles.size();
+
+                        partialLoadFailure = false;
+
+                        for (StudentProfileEntity profile
+                                : profiles) {
+
+                            loadProfileProgress(
+                                    profile,
+                                    currentGeneration
+                            );
+                        }
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        if (!isValidGeneration(
+                                currentGeneration
+                        )) {
+                            return;
+                        }
+
+                        showLoadingState(false);
+                        showEmptyProfilesState();
+
+                        Snackbar.make(
+                                binding.getRoot(),
+                                R.string.parent_profiles_load_failed,
+                                Snackbar.LENGTH_LONG
+                        ).show();
+                    }
+                }
+        );
+    }
+
+    private void loadProfileProgress(
+            @NonNull StudentProfileEntity profile,
+            int generation
+    ) {
+        lessonProgressRepository.getProgressForProfile(
+                profile.getProfileId(),
+                new LessonProgressRepository.ProgressListCallback() {
+                    @Override
+                    public void onSuccess(
+                            @NonNull List<LessonProgressEntity> progressList
+                    ) {
+                        if (!isValidGeneration(generation)) {
+                            return;
+                        }
+
+                        loadProfileQuizAttempts(
+                                profile,
+                                progressList,
+                                generation,
+                                false
+                        );
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        if (!isValidGeneration(generation)) {
+                            return;
+                        }
+
+                        loadProfileQuizAttempts(
+                                profile,
+                                new ArrayList<>(),
+                                generation,
+                                true
+                        );
+                    }
+                }
+        );
+    }
+
+    private void loadProfileQuizAttempts(
+            @NonNull StudentProfileEntity profile,
+            @NonNull List<LessonProgressEntity> progressList,
+            int generation,
+            boolean progressLoadFailed
+    ) {
+        quizAttemptRepository.getProfileAttempts(
+                profile.getProfileId(),
+                new QuizAttemptRepository.QuizAttemptListCallback() {
+                    @Override
+                    public void onSuccess(
+                            @NonNull List<QuizAttemptEntity> quizAttempts
+                    ) {
+                        if (!isValidGeneration(generation)) {
+                            return;
+                        }
+
+                        onProfileSummaryReady(
+                                createProfileSummary(
+                                        profile,
+                                        progressList,
+                                        quizAttempts
+                                ),
+                                generation,
+                                progressLoadFailed
+                        );
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        if (!isValidGeneration(generation)) {
+                            return;
+                        }
+
+                        onProfileSummaryReady(
+                                createProfileSummary(
+                                        profile,
+                                        progressList,
+                                        new ArrayList<>()
+                                ),
+                                generation,
+                                true
+                        );
+                    }
+                }
+        );
+    }
+
+    private void onProfileSummaryReady(
+            @NonNull ParentProfileSummary profileSummary,
+            int generation,
+            boolean loadFailed
+    ) {
+        if (!isValidGeneration(generation)) {
+            return;
+        }
+
+        loadedSummaries.add(profileSummary);
+
+        if (loadFailed) {
+            partialLoadFailure = true;
+        }
+
+        pendingProfileCount--;
+
+        if (pendingProfileCount > 0) {
+            return;
+        }
+
+        showLoadingState(false);
+
+        sortProfileSummaries();
+        showLoadedProfileSummaries();
+
+        if (partialLoadFailure) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    R.string.parent_partial_data_failed,
+                    Snackbar.LENGTH_LONG
+            ).show();
+        }
+    }
+
+    @NonNull
+    private ParentProfileSummary createProfileSummary(
+            @NonNull StudentProfileEntity profile,
+            @NonNull List<LessonProgressEntity> progressList,
+            @NonNull List<QuizAttemptEntity> quizAttempts
+    ) {
+        int completedLessons = 0;
+        int revisionCount = 0;
+        int todayLessonCount = 0;
+        int todayRevisionCount = 0;
+
+        long lastActivityAt = 0L;
+
+        ZoneId zoneId =
+                ZoneId.systemDefault();
+
+        LocalDate today =
+                LocalDate.now(zoneId);
+
+        Set<LocalDate> activityDates =
+                new HashSet<>();
+
+        for (LessonProgressEntity progress
+                : progressList) {
+
+            if (progress.isCompleted()) {
+                completedLessons++;
+
+                if (isTimestampOnDate(
+                        progress.getCompletedAt(),
+                        today,
+                        zoneId
+                )) {
+                    todayLessonCount++;
+                }
+            }
+
+            revisionCount += Math.max(
+                    0,
+                    progress.getRevisionCount()
+            );
+
+            if (progress.getRevisionCount() > 0
+                    && isTimestampOnDate(
+                    progress.getLastRevisedAt(),
+                    today,
+                    zoneId
+            )) {
+                todayRevisionCount++;
+            }
+
+            lastActivityAt = Math.max(
+                    lastActivityAt,
+                    progress.getCompletedAt()
+            );
+
+            lastActivityAt = Math.max(
+                    lastActivityAt,
+                    progress.getLastStudiedAt()
+            );
+
+            lastActivityAt = Math.max(
+                    lastActivityAt,
+                    progress.getLastRevisedAt()
+            );
+
+            addActivityDate(
+                    activityDates,
+                    progress.getCompletedAt(),
+                    zoneId
+            );
+
+            addActivityDate(
+                    activityDates,
+                    progress.getLastStudiedAt(),
+                    zoneId
+            );
+
+            addActivityDate(
+                    activityDates,
+                    progress.getLastRevisedAt(),
+                    zoneId
+            );
+        }
+
+        int latestQuizScore = -1;
+        int bestQuizScore = -1;
+        int todayQuizCount = 0;
+
+        long latestQuizTime = 0L;
+
+        for (QuizAttemptEntity quizAttempt
+                : quizAttempts) {
+
+            int percentage =
+                    quizAttempt.getPercentage();
+
+            bestQuizScore = Math.max(
+                    bestQuizScore,
+                    percentage
+            );
+
+            if (quizAttempt.getAttemptedAt()
+                    >= latestQuizTime) {
+
+                latestQuizTime =
+                        quizAttempt.getAttemptedAt();
+
+                latestQuizScore =
+                        percentage;
+            }
+
+            if (isTimestampOnDate(
+                    quizAttempt.getAttemptedAt(),
+                    today,
+                    zoneId
+            )) {
+                todayQuizCount++;
+            }
+
+            lastActivityAt = Math.max(
+                    lastActivityAt,
+                    quizAttempt.getAttemptedAt()
+            );
+
+            addActivityDate(
+                    activityDates,
+                    quizAttempt.getAttemptedAt(),
+                    zoneId
+            );
+        }
+
+        WeakChapterResult weakChapterResult =
+                findWeakChapter(
+                        quizAttempts
+                );
+
+        int dailyGoal =
+                getDailyGoal(
+                        profile.getProfileId()
+                );
+
+        int todayActions =
+                todayLessonCount
+                        + todayRevisionCount
+                        + todayQuizCount;
+
+        return new ParentProfileSummary(
+                profile.getProfileId(),
+                profile.getStudentName(),
+                profile.getEducationBoard(),
+                profile.getStudentClass(),
+                profile.isActive(),
+                completedLessons,
+                revisionCount,
+                quizAttempts.size(),
+                latestQuizScore,
+                bestQuizScore,
+                calculateCurrentStreak(
+                        activityDates,
+                        today
+                ),
+                todayActions,
+                dailyGoal,
+                lastActivityAt,
+                weakChapterResult.subjectName,
+                weakChapterResult.chapterTitle,
+                weakChapterResult.averageScore
+        );
+    }
+
+    @NonNull
+    private WeakChapterResult findWeakChapter(
+            @NonNull List<QuizAttemptEntity> quizAttempts
+    ) {
+        Map<String, ChapterScoreAccumulator> chapterScores =
+                new HashMap<>();
+
+        for (QuizAttemptEntity quizAttempt
+                : quizAttempts) {
+
+            String subjectName =
+                    safeText(
+                            quizAttempt.getSubjectName()
+                    );
+
+            String chapterTitle =
+                    safeText(
+                            quizAttempt.getChapterTitle()
+                    );
+
+            if (chapterTitle.isEmpty()) {
+                continue;
+            }
+
+            String scoreKey =
+                    subjectName
+                            + "\u0000"
+                            + chapterTitle;
+
+            ChapterScoreAccumulator accumulator =
+                    chapterScores.get(scoreKey);
+
+            if (accumulator == null) {
+                accumulator =
+                        new ChapterScoreAccumulator(
+                                subjectName,
+                                chapterTitle
+                        );
+
+                chapterScores.put(
+                        scoreKey,
+                        accumulator
+                );
+            }
+
+            accumulator.addScore(
+                    quizAttempt.getPercentage()
+            );
+        }
+
+        WeakChapterResult weakResult =
+                new WeakChapterResult(
+                        "",
+                        "",
+                        -1
+                );
+
+        for (ChapterScoreAccumulator accumulator
+                : chapterScores.values()) {
+
+            int averageScore =
+                    accumulator.getAverageScore();
+
+            if (weakResult.averageScore < 0
+                    || averageScore
+                    < weakResult.averageScore) {
+
+                weakResult =
+                        new WeakChapterResult(
+                                accumulator.subjectName,
+                                accumulator.chapterTitle,
+                                averageScore
+                        );
+            }
+        }
+
+        return weakResult;
+    }
+
+    private int calculateCurrentStreak(
+            @NonNull Set<LocalDate> activityDates,
+            @NonNull LocalDate today
+    ) {
+        if (activityDates.isEmpty()) {
+            return 0;
+        }
+
+        LocalDate streakDate;
+
+        if (activityDates.contains(today)) {
+            streakDate = today;
+        } else if (activityDates.contains(
+                today.minusDays(1)
+        )) {
+            streakDate =
+                    today.minusDays(1);
+        } else {
+            return 0;
+        }
+
+        int streakCount = 0;
+
+        while (activityDates.contains(streakDate)) {
+            streakCount++;
+            streakDate =
+                    streakDate.minusDays(1);
+        }
+
+        return streakCount;
+    }
+
+    private void addActivityDate(
+            @NonNull Set<LocalDate> activityDates,
+            long timestamp,
+            @NonNull ZoneId zoneId
+    ) {
+        if (timestamp <= 0L) {
+            return;
+        }
+
+        activityDates.add(
+                Instant.ofEpochMilli(timestamp)
+                        .atZone(zoneId)
+                        .toLocalDate()
+        );
+    }
+
+    private boolean isTimestampOnDate(
+            long timestamp,
+            @NonNull LocalDate requiredDate,
+            @NonNull ZoneId zoneId
+    ) {
+        if (timestamp <= 0L) {
+            return false;
+        }
+
+        LocalDate activityDate =
+                Instant.ofEpochMilli(timestamp)
+                        .atZone(zoneId)
+                        .toLocalDate();
+
+        return activityDate.equals(
+                requiredDate
+        );
+    }
+
+    private int getDailyGoal(long profileId) {
+        int savedGoal =
+                goalPreferences.getInt(
+                        GOAL_KEY_PREFIX + profileId,
+                        DEFAULT_DAILY_GOAL
+                );
+
+        if (savedGoal == 1
+                || savedGoal == 3
+                || savedGoal == 5) {
+            return savedGoal;
+        }
+
+        return DEFAULT_DAILY_GOAL;
+    }
+
+    private void sortProfileSummaries() {
+        Collections.sort(
+                loadedSummaries,
+                (firstProfile, secondProfile) -> {
+                    if (firstProfile.isActiveProfile()
+                            && !secondProfile.isActiveProfile()) {
+                        return -1;
+                    }
+
+                    if (!firstProfile.isActiveProfile()
+                            && secondProfile.isActiveProfile()) {
+                        return 1;
+                    }
+
+                    return firstProfile
+                            .getStudentName()
+                            .compareToIgnoreCase(
+                                    secondProfile
+                                            .getStudentName()
+                            );
+                }
+        );
+    }
+
+    private void showLoadedProfileSummaries() {
+        profileSummaryAdapter.submitList(
+                new ArrayList<>(
+                        loadedSummaries
+                )
+        );
+
+        binding.recyclerParentProfiles.setVisibility(
+                View.VISIBLE
+        );
+
+        binding.cardParentEmpty.setVisibility(
+                View.GONE
+        );
+
+        showOverallSummary();
+    }
+
+    private void showOverallSummary() {
+        int totalStudents =
+                loadedSummaries.size();
+
+        int profilesWithActivity = 0;
+        int totalCompletedLessons = 0;
+
+        int totalBestScores = 0;
+        int profilesWithQuizScores = 0;
+
+        for (ParentProfileSummary summary
+                : loadedSummaries) {
+
+            if (summary.getLastActivityAt() > 0L) {
+                profilesWithActivity++;
+            }
+
+            totalCompletedLessons +=
+                    summary.getCompletedLessons();
+
+            if (summary.hasQuizData()) {
+                totalBestScores +=
+                        summary.getBestQuizScore();
+
+                profilesWithQuizScores++;
+            }
+        }
+
+        binding.textParentTotalStudents.setText(
+                String.valueOf(totalStudents)
+        );
+
+        binding.textParentProfilesWithActivity.setText(
+                String.valueOf(profilesWithActivity)
+        );
+
+        binding.textParentCompletedLessons.setText(
+                String.valueOf(totalCompletedLessons)
+        );
+
+        if (profilesWithQuizScores == 0) {
+            binding.textParentAverageBestScore.setText(
+                    "—"
+            );
+        } else {
+            int averageBestScore =
+                    Math.round(
+                            totalBestScores
+                                    * 1f
+                                    / profilesWithQuizScores
+                    );
+
+            binding.textParentAverageBestScore.setText(
+                    getString(
+                            R.string.parent_percentage_format,
+                            averageBestScore
+                    )
+            );
+        }
+
+        binding.textParentDashboardSubtitle.setText(
+                getString(
+                        R.string.parent_dashboard_profiles_format,
+                        totalStudents
+                )
+        );
+    }
+
+    private void openProfileProgress(
+            @NonNull ParentProfileSummary profileSummary
+    ) {
+        if (profileActivationInProgress) {
+            return;
+        }
+
+        if (profileSummary.isActiveProfile()) {
+            openLearningProgress();
+            return;
+        }
+
+        profileActivationInProgress = true;
+
+        Snackbar.make(
+                binding.getRoot(),
+                getString(
+                        R.string.parent_activating_profile_format,
+                        profileSummary.getStudentName()
+                ),
+                Snackbar.LENGTH_SHORT
+        ).show();
+
+        studentProfileRepository.activateProfile(
+                profileSummary.getProfileId(),
+                new StudentProfileRepository.OperationCallback() {
+                    @Override
+                    public void onSuccess() {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+
+                        profileActivationInProgress = false;
+                        openLearningProgress();
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+
+                        profileActivationInProgress = false;
+
+                        Snackbar.make(
+                                binding.getRoot(),
+                                R.string.parent_profile_activation_failed,
+                                Snackbar.LENGTH_LONG
+                        ).show();
+                    }
+                }
+        );
+    }
+
+    private void openLearningProgress() {
+        Intent progressIntent = new Intent(
+                ParentDashboardActivity.this,
+                LearningProgressActivity.class
+        );
+
+        startActivity(progressIntent);
+    }
+
+    private void openProfileManager() {
+        Intent profilesIntent = new Intent(
+                ParentDashboardActivity.this,
+                StudentProfilesActivity.class
+        );
+
+        startActivity(profilesIntent);
+    }
+
+    private void showEmptyProfilesState() {
+        loadedSummaries.clear();
+
+        profileSummaryAdapter.submitList(
+                new ArrayList<>()
+        );
+
+        binding.recyclerParentProfiles.setVisibility(
+                View.GONE
+        );
+
+        binding.cardParentEmpty.setVisibility(
+                View.VISIBLE
+        );
+
+        binding.textParentTotalStudents.setText("0");
+        binding.textParentProfilesWithActivity.setText("0");
+        binding.textParentCompletedLessons.setText("0");
+        binding.textParentAverageBestScore.setText("—");
+
+        binding.textParentDashboardSubtitle.setText(
+                R.string.parent_dashboard_no_profiles_subtitle
+        );
+    }
+
+    private boolean isValidGeneration(
+            int requiredGeneration
+    ) {
+        return !isFinishing()
+                && !isDestroyed()
+                && loadGeneration
+                == requiredGeneration;
+    }
+
+    @NonNull
+    private String safeText(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return value.trim();
+    }
+
+    private void showLoadingState(boolean loading) {
+        binding.progressParentDashboard.setVisibility(
+                loading
+                        ? View.VISIBLE
+                        : View.GONE
+        );
+
+        binding.contentParentDashboard.setVisibility(
+                loading
+                        ? View.INVISIBLE
+                        : View.VISIBLE
+        );
+    }
+
+    private static class ChapterScoreAccumulator {
+
+        @NonNull
+        private final String subjectName;
+
+        @NonNull
+        private final String chapterTitle;
+
+        private int totalScore;
+        private int attemptCount;
+
+        ChapterScoreAccumulator(
+                @NonNull String subjectName,
+                @NonNull String chapterTitle
+        ) {
+            this.subjectName = subjectName;
+            this.chapterTitle = chapterTitle;
+        }
+
+        void addScore(int score) {
+            totalScore += score;
+            attemptCount++;
+        }
+
+        int getAverageScore() {
+            if (attemptCount <= 0) {
+                return 0;
+            }
+
+            return Math.round(
+                    totalScore
+                            * 1f
+                            / attemptCount
+            );
+        }
+    }
+
+    private static class WeakChapterResult {
+
+        @NonNull
+        private final String subjectName;
+
+        @NonNull
+        private final String chapterTitle;
+
+        private final int averageScore;
+
+        WeakChapterResult(
+                @NonNull String subjectName,
+                @NonNull String chapterTitle,
+                int averageScore
+        ) {
+            this.subjectName = subjectName;
+            this.chapterTitle = chapterTitle;
+            this.averageScore = averageScore;
+        }
+    }
+}
