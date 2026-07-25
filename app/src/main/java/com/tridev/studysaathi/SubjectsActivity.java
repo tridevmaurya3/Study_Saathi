@@ -22,24 +22,39 @@ import java.util.List;
 public class SubjectsActivity extends AppCompatActivity {
 
     private ActivitySubjectsBinding binding;
-    private StudentProfileRepository studentProfileRepository;
+
+    private StudentProfileRepository
+            studentProfileRepository;
+
     private SubjectAdapter subjectAdapter;
 
-    private String activeEducationBoard = "CBSE";
-    private String activeStudentClass = "Class 6";
+    private String activeEducationBoard =
+            "CBSE";
+
+    private String activeStudentClass =
+            "Class 6";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        binding = ActivitySubjectsBinding.inflate(
-                getLayoutInflater()
+    protected void onCreate(
+            Bundle savedInstanceState
+    ) {
+        super.onCreate(
+                savedInstanceState
         );
 
-        setContentView(binding.getRoot());
+        binding =
+                ActivitySubjectsBinding.inflate(
+                        getLayoutInflater()
+                );
+
+        setContentView(
+                binding.getRoot()
+        );
 
         studentProfileRepository =
-                new StudentProfileRepository(this);
+                new StudentProfileRepository(
+                        this
+                );
 
         setupRecyclerView();
         setupClickListeners();
@@ -47,62 +62,114 @@ public class SubjectsActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        subjectAdapter = new SubjectAdapter(
-                new ArrayList<>(),
-                this::handleSubjectSelection
-        );
+        subjectAdapter =
+                new SubjectAdapter(
+                        new ArrayList<>(),
+                        this::handleSubjectSelection
+                );
 
         binding.recyclerSubjects.setLayoutManager(
-                new LinearLayoutManager(this)
+                new LinearLayoutManager(
+                        this
+                )
         );
 
-        binding.recyclerSubjects.setAdapter(subjectAdapter);
-        binding.recyclerSubjects.setHasFixedSize(false);
+        binding.recyclerSubjects.setAdapter(
+                subjectAdapter
+        );
+
+        binding.recyclerSubjects.setHasFixedSize(
+                false
+        );
     }
 
     private void setupClickListeners() {
-        binding.buttonBack.setOnClickListener(view ->
-                getOnBackPressedDispatcher().onBackPressed()
+        binding.buttonBack.setOnClickListener(
+                view ->
+                        getOnBackPressedDispatcher()
+                                .onBackPressed()
+        );
+
+        binding.cardScanSchoolBook
+                .setOnClickListener(
+                        view ->
+                                openBookCoverScanScreen()
+                );
+    }
+
+    private void openBookCoverScanScreen() {
+        if (isFinishing()
+                || isDestroyed()) {
+
+            return;
+        }
+
+        Intent scanBookIntent =
+                new Intent(
+                        SubjectsActivity.this,
+                        BookCoverScanActivity.class
+                );
+
+        startActivity(
+                scanBookIntent
         );
     }
 
     private void loadActiveStudentProfile() {
-        showLoadingState(true);
+        showLoadingState(
+                true
+        );
 
         studentProfileRepository.getActiveProfile(
-                new StudentProfileRepository.SingleProfileCallback() {
+                new StudentProfileRepository
+                        .SingleProfileCallback() {
+
                     @Override
                     public void onSuccess(
-                            StudentProfileEntity studentProfile
+                            StudentProfileEntity
+                                    studentProfile
                     ) {
-                        if (isFinishing() || isDestroyed()) {
+                        if (isFinishing()
+                                || isDestroyed()) {
+
                             return;
                         }
 
-                        showLoadingState(false);
+                        showLoadingState(
+                                false
+                        );
 
                         if (studentProfile == null) {
                             showNoProfileState();
+
                             return;
                         }
 
-                        showSubjectsForProfile(studentProfile);
+                        showSubjectsForProfile(
+                                studentProfile
+                        );
                     }
 
                     @Override
                     public void onError(
                             @NonNull Exception exception
                     ) {
-                        if (isFinishing() || isDestroyed()) {
+                        if (isFinishing()
+                                || isDestroyed()) {
+
                             return;
                         }
 
-                        showLoadingState(false);
+                        showLoadingState(
+                                false
+                        );
+
                         showNoProfileState();
 
                         Snackbar.make(
                                 binding.getRoot(),
-                                R.string.subject_profile_loading_failed,
+                                R.string
+                                        .subject_profile_loading_failed,
                                 Snackbar.LENGTH_LONG
                         ).show();
                     }
@@ -111,50 +178,66 @@ public class SubjectsActivity extends AppCompatActivity {
     }
 
     private void showSubjectsForProfile(
-            @NonNull StudentProfileEntity studentProfile
+            @NonNull StudentProfileEntity
+                    studentProfile
     ) {
         activeEducationBoard =
-                studentProfile.getEducationBoard();
+                studentProfile
+                        .getEducationBoard();
 
         activeStudentClass =
-                studentProfile.getStudentClass();
+                studentProfile
+                        .getStudentClass();
 
         String profileSummary =
                 activeEducationBoard
                         + "  •  "
                         + activeStudentClass;
 
-        binding.textSubjectProfile.setText(profileSummary);
+        binding.textSubjectProfile.setText(
+                profileSummary
+        );
 
         binding.textSubjectStudentName.setText(
                 getString(
-                        R.string.subjects_for_student_format,
-                        studentProfile.getStudentName()
+                        R.string
+                                .subjects_for_student_format,
+                        studentProfile
+                                .getStudentName()
                 )
         );
 
         List<SubjectItem> subjects =
-                SubjectCatalog.getSubjectsForClass(
-                        activeStudentClass
-                );
+                SubjectCatalog
+                        .getSubjectsForClass(
+                                activeStudentClass
+                        );
 
-        subjectAdapter.submitList(subjects);
+        subjectAdapter.submitList(
+                subjects
+        );
 
         binding.textSubjectCount.setText(
                 getString(
-                        R.string.subject_count_format,
+                        R.string
+                                .subject_count_format,
                         subjects.size()
                 )
         );
 
-        boolean subjectsAvailable = !subjects.isEmpty();
+        boolean subjectsAvailable =
+                !subjects.isEmpty();
 
         binding.recyclerSubjects.setVisibility(
-                subjectsAvailable ? View.VISIBLE : View.GONE
+                subjectsAvailable
+                        ? View.VISIBLE
+                        : View.GONE
         );
 
         binding.cardEmptySubjects.setVisibility(
-                subjectsAvailable ? View.GONE : View.VISIBLE
+                subjectsAvailable
+                        ? View.GONE
+                        : View.VISIBLE
         );
     }
 
@@ -168,20 +251,29 @@ public class SubjectsActivity extends AppCompatActivity {
         );
 
         binding.textSubjectCount.setText(
-                getString(R.string.subject_count_format, 0)
+                getString(
+                        R.string.subject_count_format,
+                        0
+                )
         );
 
-        binding.recyclerSubjects.setVisibility(View.GONE);
-        binding.cardEmptySubjects.setVisibility(View.VISIBLE);
+        binding.recyclerSubjects.setVisibility(
+                View.GONE
+        );
+
+        binding.cardEmptySubjects.setVisibility(
+                View.VISIBLE
+        );
     }
 
     private void handleSubjectSelection(
             @NonNull SubjectItem subjectItem
     ) {
-        Intent chaptersIntent = new Intent(
-                SubjectsActivity.this,
-                ChaptersActivity.class
-        );
+        Intent chaptersIntent =
+                new Intent(
+                        SubjectsActivity.this,
+                        ChaptersActivity.class
+                );
 
         chaptersIntent.putExtra(
                 ChaptersActivity.EXTRA_SUBJECT_NAME,
@@ -198,16 +290,24 @@ public class SubjectsActivity extends AppCompatActivity {
                 activeEducationBoard
         );
 
-        startActivity(chaptersIntent);
+        startActivity(
+                chaptersIntent
+        );
     }
 
-    private void showLoadingState(boolean loading) {
+    private void showLoadingState(
+            boolean loading
+    ) {
         binding.progressSubjects.setVisibility(
-                loading ? View.VISIBLE : View.GONE
+                loading
+                        ? View.VISIBLE
+                        : View.GONE
         );
 
         binding.contentSubjects.setVisibility(
-                loading ? View.INVISIBLE : View.VISIBLE
+                loading
+                        ? View.INVISIBLE
+                        : View.VISIBLE
         );
     }
 }

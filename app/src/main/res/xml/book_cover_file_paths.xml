@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Camera से ली गई book-cover images app की
+        internal files directory के इस folder में रहेंगी:
+
+        files/book_covers/
+    -->
+    <files-path
+        name="book_cover_images"
+        path="book_covers/" />
+
+    <!--
+        भविष्य में temporary processed images,
+        cropped covers या OCR-ready copies के लिए।
+    -->
+    <cache-path
+        name="book_cover_cache"
+        path="book_cover_cache/" />
+
+</paths>

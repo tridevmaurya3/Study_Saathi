@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bookMatchReviewRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ss_background">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollBookMatchReview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:id="@+id/contentBookMatchReview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="36dp">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbarBookMatchReview"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/ss_surface"
+                app:navigationIcon="@drawable/ic_arrow_back"
+                app:title="Review Book Match"
+                app:titleCentered="false" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="20dp"
+                android:paddingTop="18dp"
+                android:paddingEnd="20dp">
+
+                <!-- Review status header -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardReviewStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@color/ss_blue_soft"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_blue_border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="18dp">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="58dp"
+                            android:layout_height="58dp"
+                            app:cardBackgroundColor="@color/ss_surface"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/ss_blue_border"
+                            app:strokeWidth="1dp">
+
+                            <TextView
+                                android:id="@+id/textReviewStatusIcon"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:importantForAccessibility="no"
+                                android:text="✓"
+                                android:textColor="@color/ss_primary"
+                                android:textSize="28sp"
+                                android:textStyle="bold" />
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="15dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/textReviewStatusTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-rounded"
+                                android:text="Book match मिल गया"
+                                android:textColor="@color/ss_text_primary"
+                                android:textSize="19sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/textReviewStatusDescription"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dp"
+                                android:lineSpacingExtra="2dp"
+                                android:text="Book को subject में जोड़ने से पहले details जाँचें।"
+                                android:textColor="@color/ss_text_secondary"
+                                android:textSize="13sp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Scanned cover preview -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardReviewedBookCover"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/ss_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_outline"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="92dp"
+                            android:layout_height="126dp"
+                            app:cardBackgroundColor="@color/ss_blue_soft"
+                            app:cardCornerRadius="15dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/ss_blue_border"
+                            app:strokeWidth="1dp">
+
+                            <FrameLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <TextView
+                                    android:id="@+id/textReviewedCoverPlaceholder"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:importantForAccessibility="no"
+                                    android:text="📘"
+                                    android:textSize="37sp" />
+
+                                <ImageView
+                                    android:id="@+id/imageReviewedBookCover"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:contentDescription="Scanned school book cover"
+                                    android:scaleType="centerCrop"
+                                    android:visibility="gone" />
+
+                            </FrameLayout>
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/textReviewedBookTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-rounded"
+                                android:maxLines="3"
+                                android:text="Detected Book Title"
+                                android:textColor="@color/ss_text_primary"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/textReviewedBookSubtitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:lineSpacingExtra="2dp"
+                                android:maxLines="3"
+                                android:text="Subject • Class • Publisher"
+                                android:textColor="@color/ss_text_secondary"
+                                android:textSize="13sp" />
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="11dp"
+                                app:cardBackgroundColor="@color/ss_green_soft"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/ss_green_border"
+                                app:strokeWidth="1dp">
+
+                                <TextView
+                                    android:id="@+id/textMatchConfidenceChip"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:paddingStart="11dp"
+                                    android:paddingTop="6dp"
+                                    android:paddingEnd="11dp"
+                                    android:paddingBottom="6dp"
+                                    android:text="Match: --"
+                                    android:textColor="@color/ss_text_primary"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            </com.google.android.material.card.MaterialCardView>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Detected information -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:fontFamily="sans-serif-rounded"
+                    android:text="Scan से पहचानी गई जानकारी"
+                    android:textColor="@color/ss_text_primary"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardDetectedBookInformation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    app:cardBackgroundColor="@color/ss_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_outline"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="17dp">
+
+                        <TextView
+                            android:id="@+id/textDetectedBookName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Book Name: Not detected"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/textDetectedSubject"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="Subject: Not detected"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/textDetectedClass"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="Class: Not detected"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/textDetectedBoard"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="Board: Not detected"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/textDetectedPublisher"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="Publisher: Not detected"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/textDetectedIsbn"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="ISBN: Not detected"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Best online match -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:fontFamily="sans-serif-rounded"
+                    android:text="Best Online Match"
+                    android:textColor="@color/ss_text_primary"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardOnlineBookMatch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    app:cardBackgroundColor="@color/ss_teal_soft"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_teal_border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="17dp">
+
+                        <TextView
+                            android:id="@+id/textOnlineBookTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-rounded"
+                            android:text="No online match available"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/textOnlineBookAuthor"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Author: Not available"
+                            android:textColor="@color/ss_text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/textOnlineBookPublisher"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:text="Publisher: Not available"
+                            android:textColor="@color/ss_text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/textOnlineBookIsbn"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:text="ISBN: Not available"
+                            android:textColor="@color/ss_text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/textOnlineBookSource"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:text="Source: Not available"
+                            android:textColor="@color/ss_text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/textOnlineBookAccess"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:text="Access: Metadata only"
+                            android:textColor="@color/ss_text_secondary"
+                            android:textSize="13sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonPreviewOnlineBook"
+                            style="@style/Widget.StudySaathi.Button.Outlined"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:minHeight="48dp"
+                            android:text="Online Preview देखें"
+                            android:textAllCaps="false"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Review warnings -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardBookReviewWarnings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/ss_blue_soft"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_blue_border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="17dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-rounded"
+                            android:text="Parent Review Notes"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/textBookReviewWarnings"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:lineSpacingExtra="3dp"
+                            android:textColor="@color/ss_text_secondary"
+                            android:textSize="13sp" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Confirmation notice -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/ss_green_soft"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_green_border"
+                    app:strokeWidth="1dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lineSpacingExtra="3dp"
+                        android:padding="16dp"
+                        android:text="यह result केवल पुस्तक पहचानने के लिए है। Parent confirmation के बाद ही इसे student curriculum में जोड़ा जाएगा।"
+                        android:textColor="@color/ss_text_secondary"
+                        android:textSize="12sp" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonConfirmAndAddBook"
+                    style="@style/Widget.StudySaathi.Button.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:enabled="false"
+                    android:minHeight="54dp"
+                    android:text="Confirm करके Book जोड़ें"
+                    android:textAllCaps="false"
+                    android:textSize="16sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonEditBookInformation"
+                    style="@style/Widget.StudySaathi.Button.Outlined"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="11dp"
+                    android:minHeight="52dp"
+                    android:text="Book Information सुधारें"
+                    android:textAllCaps="false"
+                    android:textSize="15sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonScanAnotherCover"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:minHeight="48dp"
+                    android:text="दूसरा Book Cover Scan करें"
+                    android:textAllCaps="false"
+                    android:textColor="@color/ss_primary"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -20,12 +20,52 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StudySaathi">
 
+        <!--
+            Camera और Gallery से चुनी गई book-cover images के लिए
+            सुरक्षित private FileProvider.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/book_cover_file_paths" />
+
+        </provider>
+
         <receiver
             android:name=".reminder.StudyReminderActionReceiver"
             android:enabled="true"
             android:exported="false" />
 
-        <!-- School book cover scan and online discovery screen. -->
+        <!--
+            Online result न मिलने पर exact school book
+            manually जोड़ने की screen.
+        -->
+        <activity
+            android:name=".ManualSchoolBookActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Parent द्वारा exact school curriculum setup. -->
+        <activity
+            android:name=".SchoolCurriculumSetupActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Scanned book details की parent review screen. -->
+        <activity
+            android:name=".BookMatchReviewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- School book cover scan और online discovery screen. -->
         <activity
             android:name=".BookCoverScanActivity"
             android:exported="false"
