@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bookCoverScanRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ss_background">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollBookCoverScan"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:id="@+id/contentBookCoverScan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="36dp">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbarBookCoverScan"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/ss_surface"
+                app:navigationIcon="@drawable/ic_arrow_back"
+                app:title="Scan School Book"
+                app:titleCentered="false" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="20dp"
+                android:paddingTop="18dp"
+                android:paddingEnd="20dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@color/ss_blue_soft"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_blue_border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-rounded"
+                            android:text="अपनी school book पहचानें"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="Book का front cover या ISBN barcode scan करें। Study Saathi पुस्तक का नाम, subject, class और publisher पहचानकर सही online result खोजेगा।"
+                            android:textColor="@color/ss_text_secondary"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:background="@color/ss_surface"
+                            android:paddingStart="12dp"
+                            android:paddingTop="7dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="7dp"
+                            android:text="Parent confirmation required"
+                            android:textColor="@color/ss_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardBookCoverPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    app:cardBackgroundColor="@color/ss_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_outline"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="18dp">
+
+                        <FrameLayout
+                            android:id="@+id/containerBookCoverPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="240dp"
+                            android:background="@color/ss_blue_soft">
+
+                            <LinearLayout
+                                android:id="@+id/containerBookCoverPlaceholder"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:orientation="vertical"
+                                android:padding="24dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:importantForAccessibility="no"
+                                    android:text="📘"
+                                    android:textSize="54sp" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="10dp"
+                                    android:gravity="center"
+                                    android:text="अभी कोई book cover selected नहीं है"
+                                    android:textColor="@color/ss_text_primary"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:gravity="center"
+                                    android:lineSpacingExtra="2dp"
+                                    android:text="Clear और सीधी photo से बेहतर पहचान होगी।"
+                                    android:textColor="@color/ss_text_secondary"
+                                    android:textSize="13sp" />
+
+                            </LinearLayout>
+
+                            <ImageView
+                                android:id="@+id/imageSelectedBookCover"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:adjustViewBounds="true"
+                                android:contentDescription="Selected school book cover"
+                                android:scaleType="centerCrop"
+                                android:visibility="gone" />
+
+                            <com.google.android.material.progressindicator.CircularProgressIndicator
+                                android:id="@+id/progressBookCoverImage"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:layout_gravity="center"
+                                android:indeterminate="true"
+                                android:visibility="gone"
+                                app:indicatorColor="@color/ss_primary" />
+
+                        </FrameLayout>
+
+                        <TextView
+                            android:id="@+id/textSelectedImageSource"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="11dp"
+                            android:gravity="center"
+                            android:text="Camera या Gallery से cover चुनें"
+                            android:textColor="@color/ss_text_muted"
+                            android:textSize="12sp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/buttonCaptureBookCover"
+                                style="@style/Widget.StudySaathi.Button.Primary"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                android:minHeight="52dp"
+                                android:text="Camera"
+                                android:textAllCaps="false"
+                                android:textSize="15sp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/buttonChooseBookCover"
+                                style="@style/Widget.StudySaathi.Button.Outlined"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:minHeight="52dp"
+                                android:text="Gallery"
+                                android:textAllCaps="false"
+                                android:textSize="15sp" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonRemoveSelectedBookCover"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:text="Selected image हटाएँ"
+                            android:textAllCaps="false"
+                            android:textColor="@color/ss_text_secondary"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardBookScanProgress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/ss_teal_soft"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_teal_border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="18dp">
+
+                        <TextView
+                            android:id="@+id/textBookScanProgressTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Book cover scan हो रहा है"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/textBookScanProgressDescription"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:lineSpacingExtra="2dp"
+                            android:text="कृपया process पूरा होने तक इसी screen पर रहें।"
+                            android:textColor="@color/ss_text_secondary"
+                            android:textSize="13sp" />
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/progressBookScanDiscovery"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="15dp"
+                            android:indeterminate="true"
+                            app:indicatorColor="@color/ss_primary"
+                            app:trackColor="@color/ss_surface" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardBookScanTips"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/ss_green_soft"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_green_border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="18dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="बेहतर scan के लिए"
+                            android:textColor="@color/ss_text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="9dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="• पूरा cover photo में रखें&#10;• रोशनी साफ रखें और glare से बचें&#10;• Book title, class और publisher दिखाई देना चाहिए&#10;• ISBN के लिए back cover भी scan किया जा सकेगा"
+                            android:textColor="@color/ss_text_secondary"
+                            android:textSize="13sp" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonScanAndFindBook"
+                    style="@style/Widget.StudySaathi.Button.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:enabled="false"
+                    android:minHeight="54dp"
+                    android:text="Scan करके Book खोजें"
+                    android:textAllCaps="false"
+                    android:textSize="16sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonEnterBookManually"
+                    style="@style/Widget.StudySaathi.Button.Outlined"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="11dp"
+                    android:minHeight="52dp"
+                    android:text="Book की जानकारी manually डालें"
+                    android:textAllCaps="false"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="15dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="2dp"
+                    android:text="कोई भी online result parent confirmation के बिना subject में add या download नहीं किया जाएगा।"
+                    android:textColor="@color/ss_text_muted"
+                    android:textSize="11sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

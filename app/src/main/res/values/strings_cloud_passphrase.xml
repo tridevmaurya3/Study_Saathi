@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="cloud_backup_upload_passphrase_title">
+        Encrypt Cloud Backup
+    </string>
+
+    <string name="cloud_backup_upload_passphrase_message">
+        ऐसा private passphrase बनाएँ जो केवल आपको याद हो। Current backup इसी passphrase से AES-256-GCM encrypted होकर upload होगा।
+    </string>
+
+    <string name="cloud_backup_restore_passphrase_title">
+        Unlock Encrypted Backup
+    </string>
+
+    <string name="cloud_backup_restore_passphrase_message">
+        वही passphrase लिखें जिसका उपयोग इस cloud backup को encrypt करते समय किया गया था।
+    </string>
+
+    <string name="cloud_backup_passphrase_hint">
+        Private backup passphrase
+    </string>
+
+    <string name="cloud_backup_confirm_passphrase_hint">
+        Confirm backup passphrase
+    </string>
+
+    <string name="cloud_backup_passphrase_warning">
+        यह passphrase Study Saathi में save नहीं होगी। Passphrase भूल जाने पर encrypted backup recover नहीं किया जा सकेगा।
+    </string>
+
+    <string name="cloud_backup_passphrase_continue">
+        Encrypt &amp; Continue
+    </string>
+
+    <string name="cloud_backup_passphrase_unlock">
+        Unlock Backup
+    </string>
+
+    <string name="cloud_backup_passphrase_required">
+        Backup passphrase लिखें।
+    </string>
+
+    <string name="cloud_backup_passphrase_minimum_length">
+        Passphrase कम से कम 8 characters का होना चाहिए।
+    </string>
+
+    <string name="cloud_backup_passphrase_only_spaces">
+        Passphrase केवल spaces का नहीं हो सकता।
+    </string>
+
+    <string name="cloud_backup_passphrase_confirmation_required">
+        Passphrase दोबारा लिखें।
+    </string>
+
+    <string name="cloud_backup_passphrase_mismatch">
+        दोनों passphrases समान नहीं हैं।
+    </string>
+
+</resources>

@@ -20,10 +20,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.tridev.studysaathi.cloud.CloudBackupPayloadBuilder;
 import com.tridev.studysaathi.cloud.CloudBackupRestoreCoordinator;
+import com.tridev.studysaathi.cloud.CloudBackupSecurityGuard;
 import com.tridev.studysaathi.cloud.CloudBackupUploader;
 import com.tridev.studysaathi.data.local.database.StudySaathiDatabase;
 import com.tridev.studysaathi.databinding.ActivityCloudAccountBinding;
 
+import java.io.File;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -58,6 +60,9 @@ public class CloudAccountActivity
     private CloudBackupRestoreCoordinator
             cloudBackupRestoreCoordinator;
 
+    private CloudBackupSecurityGuard
+            cloudBackupSecurityGuard;
+
     private CloudBackupUploader.CloudBackupMetadata
             currentCloudBackupMetadata;
 
@@ -67,6 +72,12 @@ public class CloudAccountActivity
     private boolean operationInProgress;
     private boolean cloudBackupOperationInProgress;
     private boolean updatingModeSelection;
+    private boolean openingPreparedCloudRestore;
+    private boolean activityInForeground;
+
+    @NonNull
+    private String observedFirebaseUserId =
+            "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +102,12 @@ public class CloudAccountActivity
         cloudBackupRestoreCoordinator =
                 new CloudBackupRestoreCoordinator(this);
 
+        cloudBackupSecurityGuard =
+                new CloudBackupSecurityGuard();
+
+        observedFirebaseUserId =
+                getCurrentFirebaseUserId();
+
         setupClickListeners();
         setupModeSelection();
 
@@ -105,8 +122,58 @@ public class CloudAccountActivity
     protected void onResume() {
         super.onResume();
 
+        activityInForeground =
+                true;
+
+        openingPreparedCloudRestore =
+                false;
+
+        handlePossibleAccountChange();
         showCurrentAccountState();
         loadCloudBackupMetadataIfAvailable();
+    }
+
+    @Override
+    protected void onPause() {
+        activityInForeground =
+                false;
+
+        if (cloudBackupSecurityGuard != null) {
+            cloudBackupSecurityGuard
+                    .clearPassphraseMemory();
+        }
+
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        if (cloudBackupSecurityGuard != null
+                && !isChangingConfigurations()
+                && !openingPreparedCloudRestore) {
+
+            cloudBackupSecurityGuard
+                    .clearForAppBackground(this);
+        }
+
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (cloudBackupSecurityGuard != null) {
+            cloudBackupSecurityGuard
+                    .clearPassphraseMemory();
+
+            if (isFinishing()
+                    && !openingPreparedCloudRestore) {
+
+                cloudBackupSecurityGuard
+                        .clearForActivityClosed(this);
+            }
+        }
+
+        super.onDestroy();
     }
 
     private void setupClickListeners() {
@@ -242,7 +309,6 @@ public class CloudAccountActivity
 
         clearInputErrors();
     }
-
     private void submitAccountForm() {
         if (operationInProgress
                 || cloudBackupOperationInProgress) {
@@ -433,7 +499,11 @@ public class CloudAccountActivity
                 .updateProfile(profileChangeRequest)
                 .addOnCompleteListener(profileTask -> {
                     if (!profileTask.isSuccessful()) {
+                        clearSensitiveStateForAccountChange();
                         firebaseAuth.signOut();
+
+                        observedFirebaseUserId =
+                                "";
 
                         showOperationState(
                                 false,
@@ -805,7 +875,12 @@ public class CloudAccountActivity
             return;
         }
 
+        clearSensitiveStateForAccountChange();
+
         firebaseAuth.signOut();
+
+        observedFirebaseUserId =
+                "";
 
         currentCloudBackupMetadata = null;
 
@@ -821,7 +896,6 @@ public class CloudAccountActivity
                 R.string.cloud_sign_out_success
         );
     }
-
     private void requestCloudBackupUpload() {
         if (operationInProgress
                 || cloudBackupOperationInProgress) {
@@ -989,6 +1063,8 @@ public class CloudAccountActivity
                 || !expectedUserId.equals(
                 firebaseUser.getUid()
         )) {
+            clearSensitiveStateForAccountChange();
+
             showMessage(
                     R.string.cloud_backup_account_changed
             );
@@ -1021,6 +1097,23 @@ public class CloudAccountActivity
                             ) {
                                 if (isFinishing()
                                         || isDestroyed()) {
+                                    cloudBackupRestoreCoordinator
+                                            .deletePreparedBackup(
+                                                    result.getAbsoluteFilePath()
+                                            );
+
+                                    return;
+                                }
+
+                                if (!activityInForeground) {
+                                    cloudBackupRestoreCoordinator
+                                            .deletePreparedBackup(
+                                                    result.getAbsoluteFilePath()
+                                            );
+
+                                    cloudBackupOperationInProgress =
+                                            false;
+
                                     return;
                                 }
 
@@ -1037,6 +1130,8 @@ public class CloudAccountActivity
                                             .deletePreparedBackup(
                                                     result.getAbsoluteFilePath()
                                             );
+
+                                    clearSensitiveStateForAccountChange();
 
                                     setCloudBackupOperationState(
                                             false
@@ -1069,6 +1164,13 @@ public class CloudAccountActivity
                                     return;
                                 }
 
+                                if (!activityInForeground) {
+                                    cloudBackupOperationInProgress =
+                                            false;
+
+                                    return;
+                                }
+
                                 setCloudBackupOperationState(
                                         false
                                 );
@@ -1092,6 +1194,32 @@ public class CloudAccountActivity
             @NonNull CloudBackupRestoreCoordinator
                     .CloudRestorePreparationResult result
     ) {
+        File preparedRestoreFile =
+                new File(
+                        result.getAbsoluteFilePath()
+                );
+
+        try {
+            cloudBackupSecurityGuard
+                    .registerSensitiveFile(
+                            this,
+                            preparedRestoreFile
+                    );
+
+        } catch (IllegalArgumentException exception) {
+            cloudBackupRestoreCoordinator
+                    .deletePreparedBackup(
+                            result.getAbsoluteFilePath()
+                    );
+
+            showCloudBackupError(
+                    exception,
+                    R.string.cloud_backup_restore_prepare_failed
+            );
+
+            return;
+        }
+
         Intent restoreIntent =
                 new Intent(
                         CloudAccountActivity.this,
@@ -1108,9 +1236,33 @@ public class CloudAccountActivity
                 result.getDisplayFileName()
         );
 
-        startActivity(
-                restoreIntent
-        );
+        openingPreparedCloudRestore =
+                true;
+
+        try {
+            startActivity(
+                    restoreIntent
+            );
+
+        } catch (RuntimeException exception) {
+            openingPreparedCloudRestore =
+                    false;
+
+            cloudBackupSecurityGuard
+                    .unregisterSensitiveFile(
+                            preparedRestoreFile
+                    );
+
+            cloudBackupRestoreCoordinator
+                    .deletePreparedBackup(
+                            result.getAbsoluteFilePath()
+                    );
+
+            showCloudBackupError(
+                    exception,
+                    R.string.cloud_backup_restore_prepare_failed
+            );
+        }
     }
 
     private void prepareAndUploadCloudBackup(
@@ -1183,6 +1335,8 @@ public class CloudAccountActivity
                 || !expectedUserId.equals(
                 firebaseUser.getUid()
         )) {
+            clearSensitiveStateForAccountChange();
+
             setCloudBackupOperationState(
                     false
             );
@@ -1371,6 +1525,8 @@ public class CloudAccountActivity
     }
 
     private void showCurrentAccountState() {
+        handlePossibleAccountChange();
+
         FirebaseUser firebaseUser =
                 firebaseAuth.getCurrentUser();
 
@@ -1645,7 +1801,6 @@ public class CloudAccountActivity
 
         updateCloudBackupButtonsEnabled();
     }
-
     private void clearCloudBackupMetadataViews() {
         binding.textCloudBackupUploadedAt.setText(
                 R.string.cloud_backup_uploaded_at_none
@@ -1836,6 +1991,56 @@ public class CloudAccountActivity
                         ? 1f
                         : 0.55f
         );
+    }
+
+    private void handlePossibleAccountChange() {
+        String currentFirebaseUserId =
+                getCurrentFirebaseUserId();
+
+        if (observedFirebaseUserId.equals(
+                currentFirebaseUserId
+        )) {
+            return;
+        }
+
+        clearSensitiveStateForAccountChange();
+
+        observedFirebaseUserId =
+                currentFirebaseUserId;
+
+        currentCloudBackupMetadata =
+                null;
+    }
+
+    private void clearSensitiveStateForAccountChange() {
+        openingPreparedCloudRestore =
+                false;
+
+        if (cloudBackupSecurityGuard != null) {
+            cloudBackupSecurityGuard
+                    .clearForAccountChange(this);
+        }
+    }
+
+    @NonNull
+    private String getCurrentFirebaseUserId() {
+        if (firebaseAuth == null) {
+            return "";
+        }
+
+        FirebaseUser firebaseUser =
+                firebaseAuth.getCurrentUser();
+
+        if (firebaseUser == null) {
+            return "";
+        }
+
+        String firebaseUserId =
+                firebaseUser.getUid();
+
+        return firebaseUserId == null
+                ? ""
+                : firebaseUserId.trim();
     }
 
     private void clearInputErrors() {

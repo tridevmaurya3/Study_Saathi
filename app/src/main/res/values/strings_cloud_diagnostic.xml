@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="cloud_diagnostic_title">
+        Cloud Backup Diagnostics
+    </string>
+
+    <string name="cloud_diagnostic_header_title">
+        Check Cloud Backup Health
+    </string>
+
+    <string name="cloud_diagnostic_header_description">
+        यह सुरक्षित और non-destructive test account verification, Firebase connection, backup metadata, encryption status और restore cache protection को check करता है। इससे cloud backup upload, replace, restore या delete नहीं होगा।
+    </string>
+
+    <string name="cloud_diagnostic_run_action">
+        Run Diagnostic Test
+    </string>
+
+    <string name="cloud_diagnostic_running_action">
+        Running Tests…
+    </string>
+
+    <string name="cloud_diagnostic_overall_result">
+        Overall result
+    </string>
+
+    <string name="cloud_diagnostic_status_not_run">
+        NOT RUN
+    </string>
+
+    <string name="cloud_diagnostic_status_passed">
+        PASSED
+    </string>
+
+    <string name="cloud_diagnostic_status_failed">
+        FAILED
+    </string>
+
+    <string name="cloud_diagnostic_status_warning">
+        WARNING
+    </string>
+
+    <string name="cloud_diagnostic_status_incomplete">
+        INCOMPLETE
+    </string>
+
+    <string name="cloud_diagnostic_status_in_progress">
+        IN PROGRESS
+    </string>
+
+    <string name="cloud_diagnostic_status_completed_with_warnings">
+        COMPLETED WITH WARNINGS
+    </string>
+
+    <string name="cloud_diagnostic_passed">
+        Passed
+    </string>
+
+    <string name="cloud_diagnostic_failed">
+        Failed
+    </string>
+
+    <string name="cloud_diagnostic_warnings">
+        Warnings
+    </string>
+
+    <string name="cloud_diagnostic_pending">
+        Pending
+    </string>
+
+    <string name="cloud_diagnostic_test_results">
+        Diagnostic Test Results
+    </string>
+
+    <string name="cloud_diagnostic_empty_title">
+        No Diagnostic Report
+    </string>
+
+    <string name="cloud_diagnostic_empty_description">
+        Run Diagnostic Test दबाकर current cloud account और latest backup की health report बनाएँ।
+    </string>
+
+    <string name="cloud_diagnostic_loading_latest">
+        Latest diagnostic report load हो रही है…
+    </string>
+
+    <string name="cloud_diagnostic_refresh_report">
+        Refresh latest diagnostic report
+    </string>
+
+    <string name="cloud_diagnostic_clear_reports">
+        Clear Saved Diagnostic Reports
+    </string>
+
+    <string name="cloud_diagnostic_clear_title">
+        Clear diagnostic reports?
+    </string>
+
+    <string name="cloud_diagnostic_clear_message">
+        App-private storage में saved सभी cloud diagnostic reports delete हो जाएँगी। Cloud backup और local study data पर कोई प्रभाव नहीं पड़ेगा।
+    </string>
+
+    <string name="cloud_diagnostic_clear_confirm">
+        Clear Reports
+    </string>
+
+    <string name="cloud_diagnostic_cancel">
+        Cancel
+    </string>
+
+    <string name="cloud_diagnostic_completed_none">
+        Completed: Not available
+    </string>
+
+    <string name="cloud_diagnostic_completed_format">
+        Completed: %1$s
+    </string>
+
+    <string name="cloud_diagnostic_report_id_none">
+        Report ID: Not available
+    </string>
+
+    <string name="cloud_diagnostic_report_id_format">
+        Report ID: %1$s
+    </string>
+
+    <string name="cloud_diagnostic_duration_format">
+        Duration: %1$d ms
+    </string>
+
+    <string name="cloud_diagnostic_test_name_placeholder">
+        Diagnostic test
+    </string>
+
+    <string name="cloud_diagnostic_test_description_placeholder">
+        Test description
+    </string>
+
+    <string name="cloud_diagnostic_test_message_placeholder">
+        Test result message
+    </string>
+
+    <string name="cloud_diagnostic_technical_placeholder">
+        Technical details
+    </string>
+
+    <string name="cloud_diagnostic_test_completed">
+        Cloud backup diagnostic report successfully completed।
+    </string>
+
+    <string name="cloud_diagnostic_test_failed">
+        Cloud backup diagnostic test पूरा नहीं हो सका।
+    </string>
+
+    <string name="cloud_diagnostic_report_load_failed">
+        Latest diagnostic report load नहीं हो सकी।
+    </string>
+
+    <string name="cloud_diagnostic_reports_cleared">
+        Saved diagnostic reports clear हो गई हैं।
+    </string>
+
+    <string name="cloud_diagnostic_reports_clear_failed">
+        Diagnostic reports clear नहीं हो सकीं।
+    </string>
+
+    <string name="cloud_diagnostic_already_running">
+        Cloud diagnostic test पहले से चल रहा है।
+    </string>
+
+    <string name="cloud_diagnostic_error_format">
+        %1$s\n%2$s
+    </string>
+
+</resources>

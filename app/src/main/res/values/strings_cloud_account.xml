@@ -10,7 +10,7 @@
     </string>
 
     <string name="cloud_account_subtitle">
-        Secure account, manual backup and restore
+        Encrypted manual backup and secure restore
     </string>
 
     <string name="cloud_status_signed_out">
@@ -18,7 +18,7 @@
     </string>
 
     <string name="cloud_status_signed_out_description">
-        Sign in या नया account बनाएँ। आपका local Study Saathi data बिना आपकी permission के upload या replace नहीं होगा।
+        Sign in या नया account बनाएँ। आपका local Study Saathi data बिना permission के upload या replace नहीं होगा।
     </string>
 
     <string name="cloud_status_verified">
@@ -26,7 +26,7 @@
     </string>
 
     <string name="cloud_status_verified_description">
-        Account manual cloud backup और restore के लिए तैयार है।
+        Account client-side encrypted cloud backup और restore के लिए तैयार है।
     </string>
 
     <string name="cloud_status_verification_required">
@@ -226,11 +226,11 @@
     </string>
 
     <string name="cloud_backup_section_title">
-        Manual Cloud Backup
+        Encrypted Cloud Backup
     </string>
 
     <string name="cloud_backup_section_description">
-        Current profiles, progress, quizzes, doubts, notes, bookmarks और Study Saathi settings को private Firebase account में manually save या restore करें।
+        Profiles, progress, quizzes, doubts, notes, bookmarks और Study Saathi settings को private passphrase से encrypt करके Firebase account में save या restore करें।
     </string>
 
     <string name="cloud_backup_checking_status">
@@ -250,11 +250,19 @@
     </string>
 
     <string name="cloud_backup_available_status">
-        Cloud Backup Available
+        Legacy Cloud Backup Available
     </string>
 
     <string name="cloud_backup_available_description">
-        यह account एक complete और downloadable Study Saathi cloud backup रखता है।
+        यह पुराना compressed cloud backup है। इसे restore किया जा सकता है या नए encrypted backup से replace किया जा सकता है।
+    </string>
+
+    <string name="cloud_backup_available_encrypted_status">
+        AES-256 Encrypted Backup
+    </string>
+
+    <string name="cloud_backup_available_encrypted_description">
+        यह backup device पर encrypt होने के बाद Firebase में upload हुआ है। Restore करने के लिए वही private passphrase आवश्यक होगी।
     </string>
 
     <string name="cloud_backup_incomplete_status">
@@ -262,7 +270,7 @@
     </string>
 
     <string name="cloud_backup_incomplete_description">
-        Existing backup complete status में नहीं है। नया backup upload करके इसे replace करें।
+        Existing backup complete status में नहीं है। नया encrypted backup upload करके इसे replace करें।
     </string>
 
     <string name="cloud_backup_blocked_status">
@@ -270,7 +278,7 @@
     </string>
 
     <string name="cloud_backup_blocked_description">
-        Cloud backup बनाने या restore करने से पहले account email verify करें।
+        Encrypted cloud backup बनाने या restore करने से पहले account email verify करें।
     </string>
 
     <string name="cloud_backup_signed_out_status">
@@ -321,20 +329,28 @@
         Compressed size: %1$s • Firestore chunks: %2$d
     </string>
 
+    <string name="cloud_backup_storage_encrypted_format">
+        Encrypted size: %1$s • Firestore chunks: %2$d
+    </string>
+
     <string name="cloud_backup_upload_action">
-        Upload Current Data to Cloud
+        Create Encrypted Cloud Backup
     </string>
 
     <string name="cloud_backup_replace_action">
-        Replace Existing Cloud Backup
+        Replace with Encrypted Backup
     </string>
 
     <string name="cloud_backup_uploading_action">
-        Preparing or Transferring…
+        Encrypting or Transferring…
     </string>
 
     <string name="cloud_backup_restore_action">
         Download &amp; Restore Cloud Backup
+    </string>
+
+    <string name="cloud_backup_encrypted_restore_action">
+        Unlock &amp; Restore Encrypted Backup
     </string>
 
     <string name="cloud_backup_refresh_action">
@@ -342,11 +358,11 @@
     </string>
 
     <string name="cloud_backup_first_confirmation_title">
-        Create first cloud backup?
+        Create encrypted cloud backup?
     </string>
 
     <string name="cloud_backup_first_confirmation_message">
-        Current Study Saathi data compress होकर verified Firebase account में upload होगा। Local data में कोई बदलाव नहीं होगा।
+        अगली screen पर private passphrase माँगी जाएगी। Current Study Saathi data पहले compress और फिर AES-256-GCM से encrypt होकर verified Firebase account में upload होगा।
     </string>
 
     <string name="cloud_backup_replace_confirmation_title">
@@ -354,19 +370,43 @@
     </string>
 
     <string name="cloud_backup_replace_confirmation_message">
-        Existing cloud backup, uploaded on %1$s, current device data से replace हो जाएगा। Local data सुरक्षित रहेगा।
+        Existing cloud backup, uploaded on %1$s, current device के नए AES-256 encrypted backup से replace हो जाएगा। Local data में कोई बदलाव नहीं होगा।
     </string>
 
     <string name="cloud_backup_upload_confirm">
-        Upload Backup
+        Continue to Encryption
     </string>
 
     <string name="cloud_backup_replace_confirm">
-        Replace Backup
+        Encrypt &amp; Replace
     </string>
 
     <string name="cloud_backup_cancel">
         Cancel
+    </string>
+
+    <string name="cloud_backup_encrypting_status">
+        Encrypting Backup…
+    </string>
+
+    <string name="cloud_backup_encrypting_description">
+        Room database और Study Saathi preferences compress होकर private passphrase से AES-256-GCM encrypted हो रहे हैं।
+    </string>
+
+    <string name="cloud_backup_encrypted_uploading_status">
+        Uploading Encrypted Backup…
+    </string>
+
+    <string name="cloud_backup_encrypted_uploading_description_format">
+        Firebase पर %1$d encrypted chunks upload किए जा रहे हैं। Passphrase upload नहीं होगी।
+    </string>
+
+    <string name="cloud_backup_encrypted_prepare_failed">
+        Encrypted cloud backup तैयार नहीं हो सका।
+    </string>
+
+    <string name="cloud_backup_encrypted_upload_success">
+        AES-256 encrypted cloud backup successfully uploaded।
     </string>
 
     <string name="cloud_backup_preparing_status">
@@ -394,7 +434,7 @@
     </string>
 
     <string name="cloud_backup_upload_failed">
-        Cloud backup upload नहीं हो सका।
+        Encrypted cloud backup upload नहीं हो सका।
     </string>
 
     <string name="cloud_backup_status_load_failed">
@@ -422,15 +462,31 @@
     </string>
 
     <string name="cloud_backup_restore_confirmation_message">
-        Backup uploaded on: %1$s\n\nCloud data:\n• Profiles: %2$d\n• Lesson progress: %3$d\n• Quiz attempts: %4$d\n• Doubts: %5$d\n• Preference items: %6$d\n\nBackup पहले download और validate होगा। Local data केवल अगली Restore screen पर आपकी confirmation के बाद replace होगा।
+        Backup uploaded on: %1$s\n\nCloud data:\n• Profiles: %2$d\n• Lesson progress: %3$d\n• Quiz attempts: %4$d\n• Doubts: %5$d\n• Preference items: %6$d\n\nBackup पहले download और validate होगा। Local data केवल अगली Restore screen पर confirmation के बाद replace होगा।
     </string>
 
     <string name="cloud_backup_restore_confirm">
         Download &amp; Review
     </string>
 
+    <string name="cloud_backup_encrypted_restore_confirmation_title">
+        Unlock encrypted cloud backup?
+    </string>
+
+    <string name="cloud_backup_encrypted_restore_confirmation_message">
+        Backup uploaded on: %1$s\n\nEncrypted cloud data:\n• Profiles: %2$d\n• Lesson progress: %3$d\n• Quiz attempts: %4$d\n• Doubts: %5$d\n• Preference items: %6$d\n\nअगली screen पर private passphrase माँगी जाएगी। सही passphrase मिलने पर backup download, checksum validation और AES-256-GCM decryption होगा। Local data अभी नहीं बदलेगा।
+    </string>
+
+    <string name="cloud_backup_encrypted_restore_confirm">
+        Enter Passphrase
+    </string>
+
     <string name="cloud_backup_restore_unavailable">
-        Complete cloud backup उपलब्ध नहीं है। Cloud status refresh करें या नया backup upload करें।
+        Complete cloud backup उपलब्ध नहीं है। Cloud status refresh करें या नया encrypted backup upload करें।
+    </string>
+
+    <string name="cloud_backup_encrypted_restore_pending">
+        Encrypted backup सुरक्षित है। Passphrase-based restore अभी उपलब्ध नहीं है।
     </string>
 
     <string name="cloud_backup_downloading_status">
@@ -445,12 +501,28 @@
         Cloud backup download या validation पूरा नहीं हो सका।
     </string>
 
+    <string name="cloud_backup_encrypted_downloading_status">
+        Unlocking Encrypted Backup…
+    </string>
+
+    <string name="cloud_backup_encrypted_downloading_description">
+        Encrypted chunks download हो रहे हैं। Ciphertext checksum validate करके private passphrase से AES-256-GCM decryption की जा रही है।
+    </string>
+
+    <string name="cloud_backup_encrypted_restore_prepare_failed">
+        Encrypted cloud backup unlock या validate नहीं हो सका।
+    </string>
+
+    <string name="cloud_backup_encrypted_restore_invalid_result">
+        Downloaded backup encrypted restore result से मेल नहीं खाता।
+    </string>
+
     <string name="cloud_privacy_title">
-        Local-first privacy
+        Client-side encryption
     </string>
 
     <string name="cloud_privacy_description_updated">
-        Upload और restore दोनों manual confirmation से चलते हैं। Download करने से local data नहीं बदलता। Restore screen पर दूसरी confirmation के बाद ही local Room database replace होता है। Restore से पहले automatic safety backup भी बनाया जाता है। Cloud payload compressed और Base64 encoded है, लेकिन client-side encrypted नहीं है।
+        New cloud backups device पर AES-256-GCM से encrypt होते हैं। Passphrase Firebase, Room या SharedPreferences में save नहीं होती। Restore के समय passphrase केवल temporary memory में उपयोग होती है। Passphrase भूल जाने पर encrypted backup recover नहीं किया जा सकेगा।
     </string>
 
     <string name="cloud_error_format">

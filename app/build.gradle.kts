@@ -85,6 +85,39 @@ dependencies {
     )
 
     /*
+     * ML Kit Latin Text Recognition.
+     *
+     * This bundled model will read English text,
+     * numbers, publisher names, book titles,
+     * class information and ISBN text printed
+     * using the Latin script.
+     */
+    implementation(
+        "com.google.mlkit:text-recognition:16.0.1"
+    )
+
+    /*
+     * ML Kit Devanagari Text Recognition.
+     *
+     * This bundled model will read Hindi and
+     * Sanskrit text printed using Devanagari.
+     */
+    implementation(
+        "com.google.mlkit:text-recognition-devanagari:16.0.1"
+    )
+
+    /*
+     * ML Kit Barcode Scanning.
+     *
+     * This bundled scanner will be used for
+     * ISBN, EAN-13, EAN-8, UPC and other
+     * supported book barcodes.
+     */
+    implementation(
+        "com.google.mlkit:barcode-scanning:17.3.0"
+    )
+
+    /*
      * Firebase BoM manages compatible versions
      * of all Firebase Android libraries.
      */

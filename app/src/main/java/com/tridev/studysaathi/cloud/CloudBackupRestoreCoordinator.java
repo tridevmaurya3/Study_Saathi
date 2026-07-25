@@ -13,7 +13,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,10 +23,12 @@ import java.util.concurrent.Executors;
 public final class CloudBackupRestoreCoordinator {
 
     private static final String CACHE_FOLDER_NAME =
-            "cloud_restore_cache";
+            CloudBackupSecurityGuard
+                    .RESTORE_CACHE_FOLDER_NAME;
 
     private static final String CACHE_FILE_PREFIX =
-            "StudySaathi_Cloud_Backup_";
+            CloudBackupSecurityGuard
+                    .RESTORE_CACHE_FILE_PREFIX;
 
     private static final String CACHE_FILE_EXTENSION =
             ".json";
@@ -34,6 +38,9 @@ public final class CloudBackupRestoreCoordinator {
 
     private static final int MAX_BACKUP_BYTES =
             25 * 1024 * 1024;
+
+    private static final int FILE_OVERWRITE_BUFFER_SIZE =
+            8 * 1024;
 
     private static final ExecutorService
             cacheFileExecutor =
@@ -45,6 +52,9 @@ public final class CloudBackupRestoreCoordinator {
 
     private final CloudBackupDownloader
             cloudBackupDownloader;
+
+    private final CloudBackupSecurityGuard
+            cloudBackupSecurityGuard;
 
     public CloudBackupRestoreCoordinator(
             @NonNull Context context
@@ -61,6 +71,9 @@ public final class CloudBackupRestoreCoordinator {
                 new CloudBackupDownloader(
                         applicationContext
                 );
+
+        cloudBackupSecurityGuard =
+                new CloudBackupSecurityGuard();
     }
 
     /**
@@ -139,18 +152,22 @@ public final class CloudBackupRestoreCoordinator {
     ) {
         cacheFileExecutor.execute(() -> {
             File temporaryFile = null;
+            File finalBackupFile = null;
+            byte[] backupJsonBytes = null;
 
             try {
                 verifyCurrentAccount(
                         expectedUserId
                 );
 
+                clearManagedCacheBeforePreparation();
+
                 String backupJsonText =
                         downloadResult
                                 .getBackupJson()
                                 .toString();
 
-                byte[] backupJsonBytes =
+                backupJsonBytes =
                         backupJsonText.getBytes(
                                 StandardCharsets.UTF_8
                         );
@@ -183,7 +200,7 @@ public final class CloudBackupRestoreCoordinator {
                                 + safeBackupId
                                 + CACHE_FILE_EXTENSION;
 
-                File finalBackupFile =
+                finalBackupFile =
                         new File(
                                 cacheDirectory,
                                 finalFileName
@@ -196,7 +213,7 @@ public final class CloudBackupRestoreCoordinator {
                                         + TEMP_FILE_EXTENSION
                         );
 
-                deleteFileIfPresent(
+                securelyDeleteManagedFileIfPresent(
                         temporaryFile
                 );
 
@@ -210,10 +227,12 @@ public final class CloudBackupRestoreCoordinator {
                 );
 
                 if (finalBackupFile.exists()
-                        && !finalBackupFile.delete()) {
+                        && !securelyDeleteManagedFileIfPresent(
+                        finalBackupFile
+                )) {
 
                     throw new IOException(
-                            "Unable to replace the previous "
+                            "Unable to securely replace the previous "
                                     + "cached cloud backup."
                     );
                 }
@@ -232,7 +251,7 @@ public final class CloudBackupRestoreCoordinator {
                 if (!isManagedCacheFile(
                         finalBackupFile
                 )) {
-                    deleteFileIfPresent(
+                    securelyDeleteManagedFileIfPresent(
                             finalBackupFile
                     );
 
@@ -288,16 +307,29 @@ public final class CloudBackupRestoreCoordinator {
                         result
                 );
 
+                finalBackupFile = null;
+
             } catch (Exception exception) {
                 if (temporaryFile != null) {
-                    deleteFileIfPresent(
+                    securelyDeleteManagedFileIfPresent(
                             temporaryFile
+                    );
+                }
+
+                if (finalBackupFile != null) {
+                    securelyDeleteManagedFileIfPresent(
+                            finalBackupFile
                     );
                 }
 
                 dispatchError(
                         callback,
                         exception
+                );
+
+            } finally {
+                CloudBackupSecurityGuard.clearBytes(
+                        backupJsonBytes
                 );
             }
         });
@@ -334,6 +366,31 @@ public final class CloudBackupRestoreCoordinator {
         }
     }
 
+    /**
+     * Clears any previous temporary restore files before
+     * a new cloud backup is prepared.
+     */
+    private void clearManagedCacheBeforePreparation()
+            throws IOException {
+
+        CloudBackupSecurityGuard.CleanupResult
+                cleanupResult =
+                cloudBackupSecurityGuard
+                        .clearSensitiveState(
+                                applicationContext
+                        );
+
+        if (!cleanupResult.isFullySuccessful()) {
+            throw new IOException(
+                    "Unable to securely clear "
+                            + cleanupResult
+                            .getFailedFileCount()
+                            + " previous cloud restore "
+                            + "cache file(s)."
+            );
+        }
+    }
+
     @NonNull
     private File prepareCacheDirectory()
             throws IOException {
@@ -364,6 +421,15 @@ public final class CloudBackupRestoreCoordinator {
             @NonNull File temporaryFile,
             @NonNull String backupJsonText
     ) throws IOException {
+
+        if (!isManagedCachePath(
+                temporaryFile
+        )) {
+            throw new IOException(
+                    "Temporary cloud backup path "
+                            + "validation failed."
+            );
+        }
 
         try (FileOutputStream fileOutputStream =
                      new FileOutputStream(
@@ -400,7 +466,7 @@ public final class CloudBackupRestoreCoordinator {
         if (temporaryFile.length()
                 > MAX_BACKUP_BYTES) {
 
-            deleteFileIfPresent(
+            securelyDeleteManagedFileIfPresent(
                     temporaryFile
             );
 
@@ -445,7 +511,8 @@ public final class CloudBackupRestoreCoordinator {
     private void deleteOtherCacheFiles(
             @NonNull File cacheDirectory,
             @NonNull File fileToKeep
-    ) {
+    ) throws IOException {
+
         File[] cachedFiles =
                 cacheDirectory.listFiles();
 
@@ -453,59 +520,94 @@ public final class CloudBackupRestoreCoordinator {
             return;
         }
 
-        for (File cachedFile
-                : cachedFiles) {
+        String fileToKeepPath =
+                fileToKeep.getCanonicalPath();
 
-            if (cachedFile.equals(
-                    fileToKeep
+        for (File cachedFile : cachedFiles) {
+            String cachedFilePath;
+
+            try {
+                cachedFilePath =
+                        cachedFile.getCanonicalPath();
+
+            } catch (IOException exception) {
+                throw new IOException(
+                        "Unable to validate a previous "
+                                + "cloud restore cache file.",
+                        exception
+                );
+            }
+
+            if (fileToKeepPath.equals(
+                    cachedFilePath
             )) {
                 continue;
             }
 
-            if (cachedFile.isFile()
-                    && (cachedFile.getName()
-                    .endsWith(
-                            CACHE_FILE_EXTENSION
-                    )
-                    || cachedFile.getName()
-                    .endsWith(
-                            TEMP_FILE_EXTENSION
-                    ))) {
+            if (!cachedFile.isFile()) {
+                continue;
+            }
 
-                deleteFileIfPresent(
-                        cachedFile
+            if (!hasManagedCacheFileName(
+                    cachedFile.getName()
+            )) {
+                continue;
+            }
+
+            if (!securelyDeleteManagedFileIfPresent(
+                    cachedFile
+            )) {
+                throw new IOException(
+                        "Unable to securely remove an old "
+                                + "cloud restore cache file."
                 );
             }
         }
     }
 
     /**
-     * Deletes a previously prepared cloud backup file.
-     * Files outside the managed cloud cache are rejected.
+     * Securely deletes a previously prepared cloud
+     * backup file.
+     *
+     * Files outside Study Saathi's private managed
+     * restore-cache directory are rejected.
      */
     public boolean deletePreparedBackup(
             @NonNull String absoluteFilePath
     ) {
+        if (absoluteFilePath.trim().isEmpty()) {
+            return false;
+        }
+
         File backupFile =
                 new File(
                         absoluteFilePath
                 );
 
-        if (!isManagedCacheFile(
+        return securelyDeleteManagedFileIfPresent(
                 backupFile
-        )) {
-            return false;
-        }
-
-        return !backupFile.exists()
-                || backupFile.delete();
+        );
     }
 
     /**
-     * Confirms that a path belongs to Study Saathi's
-     * private cloud-restore cache folder.
+     * Confirms that an existing file belongs to Study
+     * Saathi's private cloud-restore cache directory.
      */
     public boolean isManagedCacheFile(
+            @NonNull File backupFile
+    ) {
+        return backupFile.exists()
+                && backupFile.isFile()
+                && isManagedCachePath(
+                backupFile
+        );
+    }
+
+    /**
+     * Validates the canonical location and permitted
+     * filename even when the target file does not exist.
+     */
+    private boolean isManagedCachePath(
             @NonNull File backupFile
     ) {
         try {
@@ -526,37 +628,148 @@ public final class CloudBackupRestoreCoordinator {
             return backupFilePath.startsWith(
                     managedDirectoryPath
             )
-                    && canonicalBackupFile
-                    .isFile()
-                    && canonicalBackupFile
-                    .getName()
-                    .startsWith(
-                            CACHE_FILE_PREFIX
-                    )
-                    && canonicalBackupFile
-                    .getName()
-                    .endsWith(
-                            CACHE_FILE_EXTENSION
-                    );
+                    && hasManagedCacheFileName(
+                    canonicalBackupFile.getName()
+            );
 
         } catch (IOException exception) {
             return false;
         }
     }
 
-    @NonNull
-    private File getManagedCacheDirectory() {
-        return new File(
-                applicationContext.getCacheDir(),
-                CACHE_FOLDER_NAME
+    private boolean hasManagedCacheFileName(
+            @NonNull String fileName
+    ) {
+        if (!fileName.startsWith(
+                CACHE_FILE_PREFIX
+        )) {
+            return false;
+        }
+
+        return fileName.endsWith(
+                CACHE_FILE_EXTENSION
+        )
+                || fileName.endsWith(
+                CACHE_FILE_EXTENSION
+                        + TEMP_FILE_EXTENSION
         );
     }
 
-    private void deleteFileIfPresent(
+    @NonNull
+    private File getManagedCacheDirectory() {
+        return CloudBackupSecurityGuard
+                .getManagedRestoreCacheDirectory(
+                        applicationContext
+                );
+    }
+
+    /**
+     * Best-effort zero overwrite followed by deletion.
+     */
+    private boolean securelyDeleteManagedFileIfPresent(
             @NonNull File file
     ) {
-        if (file.exists()) {
-            file.delete();
+        if (!file.exists()) {
+            return true;
+        }
+
+        if (!file.isFile()
+                || !isManagedCachePath(file)) {
+
+            return false;
+        }
+
+        overwriteFileWithZeros(
+                file
+        );
+
+        if (file.delete()) {
+            return true;
+        }
+
+        file.deleteOnExit();
+
+        return !file.exists();
+    }
+
+    private boolean overwriteFileWithZeros(
+            @NonNull File file
+    ) {
+        long fileLength =
+                file.length();
+
+        if (fileLength <= 0L) {
+            return true;
+        }
+
+        byte[] zeroBuffer =
+                new byte[
+                        FILE_OVERWRITE_BUFFER_SIZE
+                        ];
+
+        RandomAccessFile randomAccessFile =
+                null;
+
+        try {
+            randomAccessFile =
+                    new RandomAccessFile(
+                            file,
+                            "rws"
+                    );
+
+            randomAccessFile.seek(
+                    0L
+            );
+
+            long remainingBytes =
+                    fileLength;
+
+            while (remainingBytes > 0L) {
+                int writeSize =
+                        (int) Math.min(
+                                zeroBuffer.length,
+                                remainingBytes
+                        );
+
+                randomAccessFile.write(
+                        zeroBuffer,
+                        0,
+                        writeSize
+                );
+
+                remainingBytes -=
+                        writeSize;
+            }
+
+            randomAccessFile.setLength(
+                    fileLength
+            );
+
+            randomAccessFile
+                    .getFD()
+                    .sync();
+
+            return true;
+
+        } catch (IOException exception) {
+            return false;
+
+        } finally {
+            Arrays.fill(
+                    zeroBuffer,
+                    (byte) 0
+            );
+
+            if (randomAccessFile != null) {
+                try {
+                    randomAccessFile.close();
+
+                } catch (IOException ignored) {
+                    /*
+                     * Best-effort resource cleanup.
+                     */
+                }
+            }
         }
     }
 
@@ -751,7 +964,9 @@ public final class CloudBackupRestoreCoordinator {
         public CloudRestorePreparationException(
                 @NonNull String message
         ) {
-            super(message);
+            super(
+                    message
+            );
         }
 
         public CloudRestorePreparationException(
