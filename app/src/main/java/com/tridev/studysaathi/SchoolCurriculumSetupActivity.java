@@ -25,6 +25,11 @@ import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.repository.SchoolCurriculumProfileRepository;
 import com.tridev.studysaathi.data.repository.SchoolSubjectRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
+import com.tridev.studysaathi.data.schooldirectory.adapter.SchoolDirectorySchoolAdapter;
+import com.tridev.studysaathi.data.schooldirectory.entity.DistrictDirectoryEntity;
+import com.tridev.studysaathi.data.schooldirectory.entity.SchoolDirectoryEntity;
+import com.tridev.studysaathi.data.schooldirectory.entity.StateDirectoryEntity;
+import com.tridev.studysaathi.data.schooldirectory.repository.SchoolDirectoryRepository;
 import com.tridev.studysaathi.databinding.ActivitySchoolCurriculumSetupBinding;
 import com.tridev.studysaathi.databinding.DialogAddSchoolSubjectBinding;
 
@@ -51,6 +56,9 @@ public final class SchoolCurriculumSetupActivity
     private static final String CONTENT_SOURCE_SCHOOL_BOOK =
             "SCHOOL_BOOK";
 
+    private static final int SCHOOL_SEARCH_LIMIT =
+            100;
+
     private ActivitySchoolCurriculumSetupBinding binding;
 
     private StudentProfileRepository studentProfileRepository;
@@ -60,7 +68,11 @@ public final class SchoolCurriculumSetupActivity
 
     private SchoolSubjectRepository schoolSubjectRepository;
 
+    private SchoolDirectoryRepository schoolDirectoryRepository;
+
     private SchoolCurriculumSubjectAdapter subjectAdapter;
+
+    private SchoolDirectorySchoolAdapter schoolAdapter;
 
     private ActivityResultLauncher<Intent>
             bookSetupLauncher;
@@ -71,11 +83,38 @@ public final class SchoolCurriculumSetupActivity
     @Nullable
     private SchoolCurriculumProfileEntity curriculumProfile;
 
+    @Nullable
+    private StateDirectoryEntity selectedState;
+
+    @Nullable
+    private DistrictDirectoryEntity selectedDistrict;
+
+    @Nullable
+    private SchoolDirectoryEntity selectedDirectorySchool;
+
+    @NonNull
+    private String selectedEducationBoard =
+            "";
+
+    @NonNull
+    private List<StateDirectoryEntity> availableStates =
+            new ArrayList<>();
+
+    @NonNull
+    private List<DistrictDirectoryEntity> availableDistricts =
+            new ArrayList<>();
+
     private boolean operationInProgress;
+
+    private boolean directoryOperationInProgress;
 
     private boolean formBindingInProgress;
 
+    private boolean directoryBindingInProgress;
+
     private boolean saveAttempted;
+
+    private boolean manualSchoolEntryMode;
 
     @Override
     protected void onCreate(
@@ -109,13 +148,22 @@ public final class SchoolCurriculumSetupActivity
                         this
                 );
 
+        schoolDirectoryRepository =
+                new SchoolDirectoryRepository(
+                        this
+                );
+
         registerBookSetupLauncher();
         setupRecyclerView();
+        setupSchoolDirectoryAdapters();
         setupToolbar();
         setupClickListeners();
         setupFormValidation();
+        setupSchoolDirectoryListeners();
+        resetSchoolDirectorySelection();
 
         loadActiveStudent();
+        initializeSchoolDirectory();
     }
 
     private void registerBookSetupLauncher() {
@@ -205,6 +253,23 @@ public final class SchoolCurriculumSetupActivity
         updateSubjectListState();
     }
 
+    private void setupSchoolDirectoryAdapters() {
+        schoolAdapter =
+                new SchoolDirectorySchoolAdapter(
+                        this
+                );
+
+        binding.inputDirectorySchoolSearch
+                .setAdapter(
+                        schoolAdapter
+                );
+
+        binding.inputDirectorySchoolSearch
+                .setThreshold(
+                        0
+                );
+    }
+
     private void setupToolbar() {
         binding.toolbarSchoolCurriculumSetup
                 .setNavigationOnClickListener(
@@ -237,6 +302,18 @@ public final class SchoolCurriculumSetupActivity
                 .setOnClickListener(
                         view ->
                                 finish()
+                );
+
+        binding.buttonEnterSchoolManually
+                .setOnClickListener(
+                        view ->
+                                enableManualSchoolEntryMode()
+                );
+
+        binding.buttonChangeSelectedSchool
+                .setOnClickListener(
+                        view ->
+                                changeSelectedSchool()
                 );
     }
 
@@ -318,6 +395,1189 @@ public final class SchoolCurriculumSetupActivity
                     }
                 }
         );
+    }
+
+    private void setupSchoolDirectoryListeners() {
+        binding.inputDirectoryState
+                .setOnItemClickListener(
+                        (parent, view, position, id) -> {
+                            if (directoryBindingInProgress) {
+                                return;
+                            }
+
+                            if (position < 0
+                                    || position
+                                    >= availableStates.size()) {
+                                return;
+                            }
+
+                            StateDirectoryEntity state =
+                                    availableStates.get(
+                                            position
+                                    );
+
+                            selectState(
+                                    state
+                            );
+                        }
+                );
+
+        binding.inputDirectoryDistrict
+                .setOnItemClickListener(
+                        (parent, view, position, id) -> {
+                            if (directoryBindingInProgress) {
+                                return;
+                            }
+
+                            if (position < 0
+                                    || position
+                                    >= availableDistricts.size()) {
+                                return;
+                            }
+
+                            DistrictDirectoryEntity district =
+                                    availableDistricts.get(
+                                            position
+                                    );
+
+                            selectDistrict(
+                                    district
+                            );
+                        }
+                );
+
+        binding.inputDirectoryEducationBoard
+                .setOnItemClickListener(
+                        (parent, view, position, id) -> {
+                            if (directoryBindingInProgress) {
+                                return;
+                            }
+
+                            String board =
+                                    safeText(
+                                            parent.getItemAtPosition(
+                                                    position
+                                            )
+                                    );
+
+                            selectEducationBoard(
+                                    board
+                            );
+                        }
+                );
+
+        binding.inputDirectorySchoolSearch
+                .setOnItemClickListener(
+                        (parent, view, position, id) -> {
+                            SchoolDirectoryEntity school =
+                                    schoolAdapter.getSchoolAt(
+                                            position
+                                    );
+
+                            if (school != null) {
+                                selectDirectorySchool(
+                                        school
+                                );
+                            }
+                        }
+                );
+
+        binding.inputDirectorySchoolSearch
+                .setOnClickListener(
+                        view -> {
+                            if (binding.inputDirectorySchoolSearch
+                                    .isEnabled()
+                                    && schoolAdapter.hasSchools()) {
+
+                                binding.inputDirectorySchoolSearch
+                                        .showDropDown();
+                            }
+                        }
+                );
+
+        binding.inputDirectorySchoolSearch
+                .addTextChangedListener(
+                        new TextWatcher() {
+
+                            @Override
+                            public void beforeTextChanged(
+                                    CharSequence text,
+                                    int start,
+                                    int count,
+                                    int after
+                            ) {
+                                /*
+                                 * No action required.
+                                 */
+                            }
+
+                            @Override
+                            public void onTextChanged(
+                                    CharSequence text,
+                                    int start,
+                                    int before,
+                                    int count
+                            ) {
+                                /*
+                                 * Search afterTextChanged में होगी।
+                                 */
+                            }
+
+                            @Override
+                            public void afterTextChanged(
+                                    Editable editable
+                            ) {
+                                if (directoryBindingInProgress
+                                        || selectedDistrict == null
+                                        || selectedEducationBoard
+                                        .isEmpty()) {
+
+                                    return;
+                                }
+
+                                String searchText =
+                                        safeText(
+                                                editable
+                                        );
+
+                                searchSchools(
+                                        searchText
+                                );
+                            }
+                        }
+                );
+    }
+
+    private void initializeSchoolDirectory() {
+        setDirectoryLoadingState(
+                true,
+                "School directory तैयार की जा रही है"
+        );
+
+        schoolDirectoryRepository
+                .ensureStarterDirectory(
+                        new SchoolDirectoryRepository
+                                .StarterDirectoryCallback() {
+
+                            @Override
+                            public void onReady(
+                                    @NonNull SchoolDirectoryRepository
+                                            .StarterDirectoryResult result
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                loadStates();
+                            }
+
+                            @Override
+                            public void onError(
+                                    @NonNull Exception exception
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                setDirectoryLoadingState(
+                                        false,
+                                        ""
+                                );
+
+                                showDirectoryError(
+                                        "School directory तैयार नहीं हो सकी। Manual Entry का उपयोग करें।"
+                                );
+
+                                enableManualSchoolEntryMode();
+                            }
+                        }
+                );
+    }
+
+    private void loadStates() {
+        setDirectoryLoadingState(
+                true,
+                "States load किए जा रहे हैं"
+        );
+
+        schoolDirectoryRepository
+                .getActiveStates(
+                        new SchoolDirectoryRepository
+                                .StatesCallback() {
+
+                            @Override
+                            public void onSuccess(
+                                    @NonNull List<StateDirectoryEntity>
+                                            states
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                availableStates =
+                                        new ArrayList<>(
+                                                states
+                                        );
+
+                                List<String> stateNames =
+                                        new ArrayList<>();
+
+                                for (StateDirectoryEntity state :
+                                        states) {
+
+                                    stateNames.add(
+                                            state.getStateName()
+                                    );
+                                }
+
+                                ArrayAdapter<String> adapter =
+                                        new ArrayAdapter<>(
+                                                SchoolCurriculumSetupActivity
+                                                        .this,
+                                                android.R.layout
+                                                        .simple_list_item_1,
+                                                stateNames
+                                        );
+
+                                binding.inputDirectoryState
+                                        .setAdapter(
+                                                adapter
+                                        );
+
+                                binding.layoutDirectoryState
+                                        .setEnabled(
+                                                !states.isEmpty()
+                                        );
+
+                                setDirectoryLoadingState(
+                                        false,
+                                        ""
+                                );
+
+                                if (states.isEmpty()) {
+                                    showDirectoryError(
+                                            "State directory उपलब्ध नहीं है।"
+                                    );
+
+                                    enableManualSchoolEntryMode();
+
+                                    return;
+                                }
+
+                                selectPreferredDefaultState(
+                                        states
+                                );
+                            }
+
+                            @Override
+                            public void onError(
+                                    @NonNull Exception exception
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                setDirectoryLoadingState(
+                                        false,
+                                        ""
+                                );
+
+                                showDirectoryError(
+                                        "State list load नहीं हो सकी।"
+                                );
+
+                                enableManualSchoolEntryMode();
+                            }
+                        }
+                );
+    }
+
+    private void selectPreferredDefaultState(
+            @NonNull List<StateDirectoryEntity> states
+    ) {
+        for (StateDirectoryEntity state :
+                states) {
+
+            if ("UP".equalsIgnoreCase(
+                    state.getStateCode()
+            )) {
+                directoryBindingInProgress =
+                        true;
+
+                binding.inputDirectoryState
+                        .setText(
+                                state.getStateName(),
+                                false
+                        );
+
+                directoryBindingInProgress =
+                        false;
+
+                selectState(
+                        state
+                );
+
+                return;
+            }
+        }
+    }
+
+    private void selectState(
+            @NonNull StateDirectoryEntity state
+    ) {
+        selectedState =
+                state;
+
+        selectedDistrict =
+                null;
+
+        selectedDirectorySchool =
+                null;
+
+        selectedEducationBoard =
+                "";
+
+        availableDistricts =
+                new ArrayList<>();
+
+        directoryBindingInProgress =
+                true;
+
+        binding.inputDirectoryState
+                .setText(
+                        state.getStateName(),
+                        false
+                );
+
+        binding.inputDirectoryDistrict
+                .setText(
+                        "",
+                        false
+                );
+
+        binding.inputDirectoryEducationBoard
+                .setText(
+                        "",
+                        false
+                );
+
+        binding.inputDirectorySchoolSearch
+                .setText(
+                        "",
+                        false
+                );
+
+        directoryBindingInProgress =
+                false;
+
+        binding.layoutDirectoryDistrict
+                .setEnabled(
+                        false
+                );
+
+        binding.layoutDirectoryEducationBoard
+                .setEnabled(
+                        false
+                );
+
+        binding.layoutDirectorySchoolSearch
+                .setEnabled(
+                        false
+                );
+
+        schoolAdapter.clearSchools();
+
+        hideSelectedSchoolCard();
+        hideDirectoryNoResult();
+
+        loadDistricts(
+                state.getStateCode()
+        );
+    }
+
+    private void loadDistricts(
+            @NonNull String stateCode
+    ) {
+        setDirectoryLoadingState(
+                true,
+                "Districts load किए जा रहे हैं"
+        );
+
+        schoolDirectoryRepository
+                .getDistrictsForState(
+                        stateCode,
+                        new SchoolDirectoryRepository
+                                .DistrictsCallback() {
+
+                            @Override
+                            public void onSuccess(
+                                    @NonNull List<DistrictDirectoryEntity>
+                                            districts
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                availableDistricts =
+                                        new ArrayList<>(
+                                                districts
+                                        );
+
+                                List<String> districtNames =
+                                        new ArrayList<>();
+
+                                for (DistrictDirectoryEntity district :
+                                        districts) {
+
+                                    districtNames.add(
+                                            district.getDistrictName()
+                                    );
+                                }
+
+                                ArrayAdapter<String> adapter =
+                                        new ArrayAdapter<>(
+                                                SchoolCurriculumSetupActivity
+                                                        .this,
+                                                android.R.layout
+                                                        .simple_list_item_1,
+                                                districtNames
+                                        );
+
+                                binding.inputDirectoryDistrict
+                                        .setAdapter(
+                                                adapter
+                                        );
+
+                                binding.layoutDirectoryDistrict
+                                        .setEnabled(
+                                                !districts.isEmpty()
+                                        );
+
+                                setDirectoryLoadingState(
+                                        false,
+                                        ""
+                                );
+
+                                if (districts.isEmpty()) {
+                                    showDirectoryNoResult(
+                                            "इस State के districts अभी directory में उपलब्ध नहीं हैं। Manual Entry का उपयोग करें।"
+                                    );
+                                }
+                            }
+
+                            @Override
+                            public void onError(
+                                    @NonNull Exception exception
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                setDirectoryLoadingState(
+                                        false,
+                                        ""
+                                );
+
+                                showDirectoryNoResult(
+                                        "District list load नहीं हो सकी। Manual Entry का उपयोग करें।"
+                                );
+                            }
+                        }
+                );
+    }
+
+    private void selectDistrict(
+            @NonNull DistrictDirectoryEntity district
+    ) {
+        selectedDistrict =
+                district;
+
+        selectedDirectorySchool =
+                null;
+
+        selectedEducationBoard =
+                "";
+
+        directoryBindingInProgress =
+                true;
+
+        binding.inputDirectoryDistrict
+                .setText(
+                        district.getDistrictName(),
+                        false
+                );
+
+        binding.inputDirectoryEducationBoard
+                .setText(
+                        "",
+                        false
+                );
+
+        binding.inputDirectorySchoolSearch
+                .setText(
+                        "",
+                        false
+                );
+
+        directoryBindingInProgress =
+                false;
+
+        binding.layoutDirectoryEducationBoard
+                .setEnabled(
+                        false
+                );
+
+        binding.layoutDirectorySchoolSearch
+                .setEnabled(
+                        false
+                );
+
+        schoolAdapter.clearSchools();
+
+        hideSelectedSchoolCard();
+        hideDirectoryNoResult();
+
+        loadEducationBoards(
+                district.getDistrictCode()
+        );
+    }
+
+    private void loadEducationBoards(
+            @NonNull String districtCode
+    ) {
+        setDirectoryLoadingState(
+                true,
+                "Education Boards load किए जा रहे हैं"
+        );
+
+        schoolDirectoryRepository
+                .getEducationBoardsForDistrict(
+                        districtCode,
+                        new SchoolDirectoryRepository
+                                .BoardsCallback() {
+
+                            @Override
+                            public void onSuccess(
+                                    @NonNull List<String>
+                                            educationBoards
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                List<String> boardLabels =
+                                        new ArrayList<>();
+
+                                for (String board :
+                                        educationBoards) {
+
+                                    boardLabels.add(
+                                            formatBoardName(
+                                                    board
+                                            )
+                                    );
+                                }
+
+                                ArrayAdapter<String> adapter =
+                                        new ArrayAdapter<>(
+                                                SchoolCurriculumSetupActivity
+                                                        .this,
+                                                android.R.layout
+                                                        .simple_list_item_1,
+                                                boardLabels
+                                        );
+
+                                binding.inputDirectoryEducationBoard
+                                        .setAdapter(
+                                                adapter
+                                        );
+
+                                binding.inputDirectoryEducationBoard
+                                        .setTag(
+                                                new ArrayList<>(
+                                                        educationBoards
+                                                )
+                                        );
+
+                                binding.layoutDirectoryEducationBoard
+                                        .setEnabled(
+                                                !educationBoards.isEmpty()
+                                        );
+
+                                setDirectoryLoadingState(
+                                        false,
+                                        ""
+                                );
+
+                                if (educationBoards.isEmpty()) {
+                                    showDirectoryNoResult(
+                                            "Education Board list उपलब्ध नहीं है। Manual Entry का उपयोग करें।"
+                                    );
+                                }
+                            }
+
+                            @Override
+                            public void onError(
+                                    @NonNull Exception exception
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                setDirectoryLoadingState(
+                                        false,
+                                        ""
+                                );
+
+                                showDirectoryNoResult(
+                                        "Education Board list load नहीं हो सकी।"
+                                );
+                            }
+                        }
+                );
+    }
+
+    private void selectEducationBoard(
+            @NonNull String displayedBoard
+    ) {
+        String normalizedBoard =
+                normalizeBoard(
+                        displayedBoard
+                );
+
+        selectedEducationBoard =
+                normalizedBoard;
+
+        selectedDirectorySchool =
+                null;
+
+        directoryBindingInProgress =
+                true;
+
+        binding.inputDirectoryEducationBoard
+                .setText(
+                        formatBoardName(
+                                normalizedBoard
+                        ),
+                        false
+                );
+
+        binding.inputDirectorySchoolSearch
+                .setText(
+                        "",
+                        false
+                );
+
+        directoryBindingInProgress =
+                false;
+
+        binding.layoutDirectorySchoolSearch
+                .setEnabled(
+                        selectedDistrict != null
+                                && !normalizedBoard.isEmpty()
+                );
+
+        schoolAdapter.clearSchools();
+
+        hideSelectedSchoolCard();
+        hideDirectoryNoResult();
+
+        loadSchoolsForSelectedFilters();
+    }
+
+    private void loadSchoolsForSelectedFilters() {
+        DistrictDirectoryEntity district =
+                selectedDistrict;
+
+        if (district == null
+                || selectedEducationBoard.isEmpty()) {
+
+            return;
+        }
+
+        setDirectoryLoadingState(
+                true,
+                "Schools खोजे जा रहे हैं"
+        );
+
+        schoolDirectoryRepository
+                .getSchools(
+                        district.getDistrictCode(),
+                        selectedEducationBoard,
+                        new SchoolDirectoryRepository
+                                .SchoolsCallback() {
+
+                            @Override
+                            public void onSuccess(
+                                    @NonNull List<SchoolDirectoryEntity>
+                                            schools
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                schoolAdapter.submitSchools(
+                                        schools
+                                );
+
+                                setDirectoryLoadingState(
+                                        false,
+                                        ""
+                                );
+
+                                if (schools.isEmpty()) {
+                                    showDirectoryNoResult(
+                                            "इस District और Board के verified school records अभी import नहीं हुए हैं। School details manually भरें।"
+                                    );
+
+                                } else {
+                                    hideDirectoryNoResult();
+
+                                    binding.inputDirectorySchoolSearch
+                                            .showDropDown();
+                                }
+                            }
+
+                            @Override
+                            public void onError(
+                                    @NonNull Exception exception
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                setDirectoryLoadingState(
+                                        false,
+                                        ""
+                                );
+
+                                showDirectoryNoResult(
+                                        "School list load नहीं हो सकी। Manual Entry का उपयोग करें।"
+                                );
+                            }
+                        }
+                );
+    }
+
+    private void searchSchools(
+            @NonNull String searchText
+    ) {
+        DistrictDirectoryEntity district =
+                selectedDistrict;
+
+        if (district == null
+                || selectedEducationBoard.isEmpty()) {
+
+            return;
+        }
+
+        schoolDirectoryRepository
+                .searchSchools(
+                        district.getDistrictCode(),
+                        selectedEducationBoard,
+                        searchText,
+                        SCHOOL_SEARCH_LIMIT,
+                        new SchoolDirectoryRepository
+                                .SchoolsCallback() {
+
+                            @Override
+                            public void onSuccess(
+                                    @NonNull List<SchoolDirectoryEntity>
+                                            schools
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                schoolAdapter.submitSchools(
+                                        schools
+                                );
+
+                                if (schools.isEmpty()) {
+                                    showDirectoryNoResult(
+                                            "कोई matching school नहीं मिला। नाम या code जाँचें अथवा Manual Entry करें।"
+                                    );
+
+                                } else {
+                                    hideDirectoryNoResult();
+
+                                    if (binding.inputDirectorySchoolSearch
+                                            .hasFocus()) {
+
+                                        binding.inputDirectorySchoolSearch
+                                                .showDropDown();
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onError(
+                                    @NonNull Exception exception
+                            ) {
+                                if (!isActivityAvailable()) {
+                                    return;
+                                }
+
+                                showDirectoryNoResult(
+                                        "School search पूरी नहीं हो सकी।"
+                                );
+                            }
+                        }
+                );
+    }
+
+    private void selectDirectorySchool(
+            @NonNull SchoolDirectoryEntity school
+    ) {
+        selectedDirectorySchool =
+                school;
+
+        manualSchoolEntryMode =
+                false;
+
+        directoryBindingInProgress =
+                true;
+
+        binding.inputDirectorySchoolSearch
+                .setText(
+                        school.getSchoolName(),
+                        false
+                );
+
+        directoryBindingInProgress =
+                false;
+
+        formBindingInProgress =
+                true;
+
+        binding.inputSchoolName
+                .setText(
+                        school.getSchoolName()
+                );
+
+        binding.inputSchoolCode
+                .setText(
+                        school.getPreferredSchoolCode()
+                );
+
+        binding.inputEducationBoard
+                .setText(
+                        formatBoardName(
+                                school.getEducationBoard()
+                        )
+                );
+
+        formBindingInProgress =
+                false;
+
+        binding.inputSchoolName
+                .setEnabled(
+                        false
+                );
+
+        binding.inputSchoolCode
+                .setEnabled(
+                        false
+                );
+
+        binding.inputEducationBoard
+                .setEnabled(
+                        false
+                );
+
+        binding.textSchoolEntryMode
+                .setText(
+                        "School Directory Mode"
+                );
+
+        binding.textSelectedDirectorySchoolName
+                .setText(
+                        school.getSchoolName()
+                );
+
+        binding.textSelectedDirectorySchoolDetails
+                .setText(
+                        createSelectedSchoolDetails(
+                                school
+                        )
+                );
+
+        binding.textSelectedSchoolVerificationStatus
+                .setText(
+                        school.getVerificationLabel()
+                );
+
+        binding.textSelectedDirectorySchoolIcon
+                .setText(
+                        school.isOfficiallyVerified()
+                                ? "✓"
+                                : "i"
+                );
+
+        binding.cardSelectedDirectorySchool
+                .setVisibility(
+                        View.VISIBLE
+                );
+
+        hideDirectoryNoResult();
+
+        refreshValidationState(
+                saveAttempted
+        );
+    }
+
+    private void enableManualSchoolEntryMode() {
+        manualSchoolEntryMode =
+                true;
+
+        selectedDirectorySchool =
+                null;
+
+        hideSelectedSchoolCard();
+
+        binding.inputSchoolName
+                .setEnabled(
+                        true
+                );
+
+        binding.inputSchoolCode
+                .setEnabled(
+                        true
+                );
+
+        binding.inputEducationBoard
+                .setEnabled(
+                        true
+                );
+
+        binding.textSchoolEntryMode
+                .setText(
+                        "Manual School Entry"
+                );
+
+        binding.textSchoolDetailsFormDescription
+                .setText(
+                        "School directory में school न मिलने पर सही School Name और Education Board manually भरें। School Code optional है।"
+                );
+
+        if (!selectedEducationBoard.isEmpty()
+                && safeText(
+                binding.inputEducationBoard
+                        .getText()
+        ).isEmpty()) {
+
+            binding.inputEducationBoard
+                    .setText(
+                            formatBoardName(
+                                    selectedEducationBoard
+                            )
+                    );
+        }
+
+        binding.inputSchoolName
+                .requestFocus();
+
+        binding.scrollSchoolCurriculumSetup
+                .post(() ->
+                        binding.scrollSchoolCurriculumSetup
+                                .smoothScrollTo(
+                                        0,
+                                        binding.cardSchoolDetailsForm
+                                                .getTop()
+                                )
+                );
+
+        Snackbar.make(
+                binding.getRoot(),
+                "Manual School Entry चालू है।",
+                Snackbar.LENGTH_LONG
+        ).show();
+    }
+
+    private void changeSelectedSchool() {
+        selectedDirectorySchool =
+                null;
+
+        manualSchoolEntryMode =
+                false;
+
+        hideSelectedSchoolCard();
+
+        formBindingInProgress =
+                true;
+
+        binding.inputSchoolName
+                .setText(
+                        ""
+                );
+
+        binding.inputSchoolCode
+                .setText(
+                        ""
+                );
+
+        binding.inputEducationBoard
+                .setText(
+                        selectedEducationBoard.isEmpty()
+                                ? ""
+                                : formatBoardName(
+                                selectedEducationBoard
+                        )
+                );
+
+        formBindingInProgress =
+                false;
+
+        binding.inputSchoolName
+                .setEnabled(
+                        true
+                );
+
+        binding.inputSchoolCode
+                .setEnabled(
+                        true
+                );
+
+        binding.inputEducationBoard
+                .setEnabled(
+                        true
+                );
+
+        binding.textSchoolEntryMode
+                .setText(
+                        "School Directory Mode"
+                );
+
+        binding.textSchoolDetailsFormDescription
+                .setText(
+                        "Directory से school चुनने पर School Name, Code और Board अपने-आप भरेंगे।"
+                );
+
+        binding.inputDirectorySchoolSearch
+                .requestFocus();
+
+        if (schoolAdapter.hasSchools()) {
+            binding.inputDirectorySchoolSearch
+                    .showDropDown();
+        }
+
+        refreshValidationState(
+                saveAttempted
+        );
+    }
+
+    private void resetSchoolDirectorySelection() {
+        selectedState =
+                null;
+
+        selectedDistrict =
+                null;
+
+        selectedDirectorySchool =
+                null;
+
+        selectedEducationBoard =
+                "";
+
+        manualSchoolEntryMode =
+                false;
+
+        binding.layoutDirectoryState
+                .setEnabled(
+                        false
+                );
+
+        binding.layoutDirectoryDistrict
+                .setEnabled(
+                        false
+                );
+
+        binding.layoutDirectoryEducationBoard
+                .setEnabled(
+                        false
+                );
+
+        binding.layoutDirectorySchoolSearch
+                .setEnabled(
+                        false
+                );
+
+        hideSelectedSchoolCard();
+        hideDirectoryNoResult();
+    }
+
+    private void setDirectoryLoadingState(
+            boolean loading,
+            @Nullable String message
+    ) {
+        directoryOperationInProgress =
+                loading;
+
+        binding.containerSchoolDirectoryLoading
+                .setVisibility(
+                        loading
+                                ? View.VISIBLE
+                                : View.GONE
+                );
+
+        String safeMessage =
+                safeText(
+                        message
+                );
+
+        if (!safeMessage.isEmpty()) {
+            binding.textSchoolDirectoryLoading
+                    .setText(
+                            safeMessage
+                    );
+        }
+
+        binding.buttonEnterSchoolManually
+                .setEnabled(
+                        !loading
+                );
+    }
+
+    private void showDirectoryNoResult(
+            @NonNull String message
+    ) {
+        binding.textSchoolDirectoryNoResultDescription
+                .setText(
+                        message
+                );
+
+        binding.cardSchoolDirectoryNoResult
+                .setVisibility(
+                        View.VISIBLE
+                );
+    }
+
+    private void hideDirectoryNoResult() {
+        binding.cardSchoolDirectoryNoResult
+                .setVisibility(
+                        View.GONE
+                );
+    }
+
+    private void hideSelectedSchoolCard() {
+        binding.cardSelectedDirectorySchool
+                .setVisibility(
+                        View.GONE
+                );
+    }
+
+    private void showDirectoryError(
+            @NonNull String message
+    ) {
+        showDirectoryNoResult(
+                message
+        );
+
+        Snackbar.make(
+                binding.getRoot(),
+                message,
+                Snackbar.LENGTH_LONG
+        ).show();
     }
 
     private void loadActiveStudent() {
@@ -600,6 +1860,35 @@ public final class SchoolCurriculumSetupActivity
 
         formBindingInProgress =
                 false;
+
+        /*
+         * Existing saved profile में directory selection metadata
+         * अभी उपलब्ध नहीं है, इसलिए School fields editable रहेंगी।
+         */
+        binding.inputSchoolName
+                .setEnabled(
+                        true
+                );
+
+        binding.inputSchoolCode
+                .setEnabled(
+                        true
+                );
+
+        binding.inputEducationBoard
+                .setEnabled(
+                        true
+                );
+
+        if (!schoolName.isEmpty()) {
+            manualSchoolEntryMode =
+                    true;
+
+            binding.textSchoolEntryMode
+                    .setText(
+                            "Saved / Manual School Details"
+                    );
+        }
 
         refreshValidationState(
                 false
@@ -1185,12 +2474,28 @@ public final class SchoolCurriculumSetupActivity
         profile.setConfigured(
                 validationResult.isReadyForChildMode()
         );
+
+        profile.setUpdatedAt(
+                System.currentTimeMillis()
+        );
     }
 
     private void showCurriculumSaveResult(
             @NonNull SchoolCurriculumSetupValidator
                     .ValidationResult validationResult
     ) {
+        String schoolSelectionStatus;
+
+        if (selectedDirectorySchool != null) {
+            schoolSelectionStatus =
+                    selectedDirectorySchool
+                            .getVerificationLabel();
+
+        } else {
+            schoolSelectionStatus =
+                    "Parent Entered • Not Officially Verified";
+        }
+
         if (validationResult.isReadyForChildMode()) {
             new MaterialAlertDialogBuilder(
                     this
@@ -1201,8 +2506,9 @@ public final class SchoolCurriculumSetupActivity
                     .setMessage(
                             validationResult
                                     .getSetupStatusMessage()
-                                    + "\n\n"
-                                    + "अब बच्चे को केवल confirmed school subjects और उनकी exact books दिखाई जाएँगी।"
+                                    + "\n\nSchool Status: "
+                                    + schoolSelectionStatus
+                                    + "\n\nअब बच्चे को केवल confirmed school subjects और उनकी exact books दिखाई जाएँगी।"
                     )
                     .setPositiveButton(
                             "ठीक है",
@@ -1230,6 +2536,8 @@ public final class SchoolCurriculumSetupActivity
                 .setMessage(
                         validationResult
                                 .getSetupStatusMessage()
+                                + "\n\nSchool Status: "
+                                + schoolSelectionStatus
                                 + "\n\n"
                                 + pendingBookCount
                                 + " exact school "
@@ -1895,7 +3203,7 @@ public final class SchoolCurriculumSetupActivity
     private void showImportSubjectMessage() {
         Snackbar.make(
                 binding.getRoot(),
-                "School timetable या book list से subject import आगे जोड़ा जाएगा।",
+                "School directory और subject import अगले package में जोड़ा जाएगा।",
                 Snackbar.LENGTH_LONG
         ).show();
     }
@@ -2000,6 +3308,137 @@ public final class SchoolCurriculumSetupActivity
                 : hindiName;
     }
 
+    @NonNull
+    private String createSelectedSchoolDetails(
+            @NonNull SchoolDirectoryEntity school
+    ) {
+        StringBuilder details =
+                new StringBuilder();
+
+        if (selectedDistrict != null) {
+            appendSummaryPart(
+                    details,
+                    selectedDistrict.getDistrictName()
+            );
+        }
+
+        appendSummaryPart(
+                details,
+                formatBoardName(
+                        school.getEducationBoard()
+                )
+        );
+
+        appendSummaryPart(
+                details,
+                school.getPreferredSchoolCode()
+        );
+
+        appendSummaryPart(
+                details,
+                school.getAddressLine()
+        );
+
+        return details.length() == 0
+                ? "School directory record"
+                : details.toString();
+    }
+
+    @NonNull
+    private String normalizeBoard(
+            @Nullable Object value
+    ) {
+        String board =
+                safeText(
+                        value
+                )
+                        .toUpperCase(
+                                Locale.ROOT
+                        )
+                        .replace(
+                                "-",
+                                "_"
+                        )
+                        .replace(
+                                " ",
+                                "_"
+                        );
+
+        if (board.equals(
+                "CISCE_/_ICSE_/_ISC"
+        )
+                || board.equals(
+                "ICSE"
+        )
+                || board.equals(
+                "ISC"
+        )) {
+
+            return "CISCE";
+        }
+
+        if (board.equals(
+                "UP_BOARD"
+        )
+                || board.equals(
+                "UPMSP"
+        )) {
+
+            return "UPMSP";
+        }
+
+        if (board.equals(
+                "STATE_BOARD"
+        )) {
+
+            return "STATE_BOARD";
+        }
+
+        return board;
+    }
+
+    @NonNull
+    private String formatBoardName(
+            @Nullable Object value
+    ) {
+        String board =
+                normalizeBoard(
+                        value
+                );
+
+        switch (board) {
+            case "CBSE":
+                return "CBSE";
+
+            case "CISCE":
+                return "CISCE / ICSE / ISC";
+
+            case "UPMSP":
+                return "UP Board";
+
+            case "STATE_BOARD":
+                return "State Board";
+
+            case "IB":
+                return "IB";
+
+            case "CAMBRIDGE":
+                return "Cambridge";
+
+            case "NIOS":
+                return "NIOS";
+
+            case "OTHER":
+                return "Other";
+
+            default:
+                return board.replace(
+                        "_",
+                        " "
+                );
+        }
+    }
+
     private boolean isActivityAvailable() {
         return !isFinishing()
                 && !isDestroyed()
@@ -2008,7 +3447,7 @@ public final class SchoolCurriculumSetupActivity
 
     private void appendSummaryPart(
             @NonNull StringBuilder builder,
-            @Nullable String value
+            @Nullable Object value
     ) {
         String safeValue =
                 safeText(
@@ -2072,7 +3511,12 @@ public final class SchoolCurriculumSetupActivity
     ) {
         return value == null
                 ? ""
-                : value.toString().trim();
+                : value.toString()
+                .trim()
+                .replaceAll(
+                        "\\s+",
+                        " "
+                );
     }
 
     @Override

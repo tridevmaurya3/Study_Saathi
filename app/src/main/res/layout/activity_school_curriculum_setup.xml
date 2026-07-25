@@ -39,7 +39,7 @@
                 android:paddingTop="18dp"
                 android:paddingEnd="20dp">
 
-                <!-- Important curriculum rule -->
+                <!-- Curriculum rule -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -161,8 +161,361 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- School details heading -->
+                <!-- School selection heading -->
                 <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="23dp"
+                    android:fontFamily="sans-serif-rounded"
+                    android:text="School चुनें"
+                    android:textColor="@color/ss_text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="State, District और Education Board चुनकर बच्चे का school खोजें। School न मिलने पर manual entry उपलब्ध रहेगी।"
+                    android:textColor="@color/ss_text_secondary"
+                    android:textSize="13sp" />
+
+                <!-- School directory selector -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardSchoolDirectorySelector"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:cardBackgroundColor="@color/ss_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_outline"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="17dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="46dp"
+                                android:layout_height="46dp"
+                                android:gravity="center"
+                                android:importantForAccessibility="no"
+                                android:text="🏫"
+                                android:textSize="25sp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="sans-serif-rounded"
+                                    android:text="School Directory Search"
+                                    android:textColor="@color/ss_text_primary"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="3dp"
+                                    android:text="पहले State और District चुनें, फिर Board के अनुसार School खोजें।"
+                                    android:textColor="@color/ss_text_secondary"
+                                    android:textSize="12sp" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- State dropdown -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layoutDirectoryState"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:hint="State">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/inputDirectoryState"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:importantForAutofill="no"
+                                android:inputType="none"
+                                android:maxLines="1"
+                                android:textSize="15sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- District dropdown -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layoutDirectoryDistrict"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:enabled="false"
+                            android:hint="District">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/inputDirectoryDistrict"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:importantForAutofill="no"
+                                android:inputType="none"
+                                android:maxLines="1"
+                                android:textSize="15sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Board dropdown -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layoutDirectoryEducationBoard"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:enabled="false"
+                            android:hint="Education Board">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/inputDirectoryEducationBoard"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:importantForAutofill="no"
+                                android:inputType="none"
+                                android:maxLines="1"
+                                android:textSize="15sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- School search -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layoutDirectorySchoolSearch"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:enabled="false"
+                            android:hint="School Name या Code खोजें"
+                            app:endIconMode="dropdown_menu"
+                            app:helperText="School Name, UDISE Code या Affiliation Number से search करें">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/inputDirectorySchoolSearch"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:completionThreshold="0"
+                                android:importantForAutofill="no"
+                                android:inputType="textCapWords"
+                                android:maxLines="1"
+                                android:textSize="15sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Directory loading -->
+                        <LinearLayout
+                            android:id="@+id/containerSchoolDirectoryLoading"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:visibility="gone">
+
+                            <com.google.android.material.progressindicator.CircularProgressIndicator
+                                android:id="@+id/progressSchoolDirectory"
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:indeterminate="true"
+                                app:indicatorColor="@color/ss_primary"
+                                app:indicatorSize="30dp"
+                                app:trackThickness="3dp" />
+
+                            <TextView
+                                android:id="@+id/textSchoolDirectoryLoading"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="11dp"
+                                android:layout_weight="1"
+                                android:text="School directory load की जा रही है"
+                                android:textColor="@color/ss_text_secondary"
+                                android:textSize="13sp" />
+
+                        </LinearLayout>
+
+                        <!-- Empty / no match status -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardSchoolDirectoryNoResult"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:visibility="gone"
+                            app:cardBackgroundColor="@color/ss_teal_soft"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/ss_teal_border"
+                            app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="14dp">
+
+                                <TextView
+                                    android:id="@+id/textSchoolDirectoryNoResultTitle"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="School directory में नहीं मिला"
+                                    android:textColor="@color/ss_text_primary"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/textSchoolDirectoryNoResultDescription"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:lineSpacingExtra="2dp"
+                                    android:text="School Name या Code दोबारा जाँचें। School फिर भी न मिले तो details manually भरें।"
+                                    android:textColor="@color/ss_text_secondary"
+                                    android:textSize="12sp" />
+
+                            </LinearLayout>
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonEnterSchoolManually"
+                            style="@style/Widget.StudySaathi.Button.Outlined"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:minHeight="50dp"
+                            android:text="School नहीं मिला? Manually Enter करें"
+                            android:textAllCaps="false"
+                            android:textSize="14sp"
+                            app:backgroundTint="@color/ss_surface_soft"
+                            app:strokeColor="@color/ss_outline" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Selected school status -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardSelectedDirectorySchool"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/ss_green_soft"
+                    app:cardCornerRadius="19dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ss_green_border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/textSelectedDirectorySchoolIcon"
+                                android:layout_width="42dp"
+                                android:layout_height="42dp"
+                                android:gravity="center"
+                                android:importantForAccessibility="no"
+                                android:text="✓"
+                                android:textColor="@color/ss_success"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/textSelectedDirectorySchoolName"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="sans-serif-rounded"
+                                    android:text="Selected School"
+                                    android:textColor="@color/ss_text_primary"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/textSelectedDirectorySchoolDetails"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="District • Board • School Code"
+                                    android:textColor="@color/ss_text_secondary"
+                                    android:textSize="12sp" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/textSelectedSchoolVerificationStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="11dp"
+                            android:background="@color/ss_surface"
+                            android:paddingStart="10dp"
+                            android:paddingTop="5dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="5dp"
+                            android:text="Verified Directory Match"
+                            android:textColor="@color/ss_success"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonChangeSelectedSchool"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginTop="6dp"
+                            android:text="Change School"
+                            android:textAllCaps="false"
+                            android:textColor="@color/ss_primary" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Manual / auto-filled school form -->
+                <TextView
+                    android:id="@+id/textSchoolDetailsFormHeading"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="23dp"
@@ -173,11 +526,12 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/textSchoolDetailsFormDescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
                     android:lineSpacingExtra="2dp"
-                    android:text="ये details बच्चे के पूरे curriculum को सही class और school से जोड़ेंगी।"
+                    android:text="Directory से school चुनने पर School Name, Code और Board अपने-आप भरेंगे।"
                     android:textColor="@color/ss_text_secondary"
                     android:textSize="13sp" />
 
@@ -198,11 +552,26 @@
                         android:orientation="vertical"
                         android:padding="17dp">
 
+                        <TextView
+                            android:id="@+id/textSchoolEntryMode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@color/ss_blue_soft"
+                            android:paddingStart="10dp"
+                            android:paddingTop="5dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="5dp"
+                            android:text="School Directory Mode"
+                            android:textColor="@color/ss_primary"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
                         <com.google.android.material.textfield.TextInputLayout
                             android:id="@+id/layoutSchoolName"
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
                             android:hint="School Name">
 
                             <com.google.android.material.textfield.TextInputEditText
@@ -210,6 +579,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="textCapWords"
+                                android:maxLength="150"
                                 android:maxLines="2"
                                 android:textSize="15sp" />
 
@@ -221,13 +591,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:hint="School Code (optional)">
+                            android:hint="School Code / UDISE Code (optional)"
+                            app:helperText="UDISE, Affiliation Number या School Internal Code">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/inputSchoolCode"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="textCapCharacters"
+                                android:maxLength="30"
                                 android:maxLines="1"
                                 android:textSize="15sp" />
 
@@ -246,6 +618,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="textCapWords"
+                                android:maxLength="50"
                                 android:maxLines="1"
                                 android:textSize="15sp" />
 
@@ -313,6 +686,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="text"
+                                android:maxLength="15"
                                 android:maxLines="1"
                                 android:text="2026-27"
                                 android:textSize="15sp" />
@@ -332,6 +706,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="textCapWords"
+                                android:maxLength="40"
                                 android:maxLines="1"
                                 android:textSize="15sp" />
 
@@ -402,7 +777,6 @@
 
                 </LinearLayout>
 
-                <!-- Subject action buttons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -436,7 +810,6 @@
 
                 </LinearLayout>
 
-                <!-- Subject list -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardCurriculumSubjectList"
                     android:layout_width="match_parent"
@@ -506,7 +879,6 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Book rule -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

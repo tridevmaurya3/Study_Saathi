@@ -23,8 +23,16 @@ import com.tridev.studysaathi.databinding.ActivityBookCoverScanBinding;
 import java.io.File;
 import java.io.IOException;
 
-public final class BookCoverScanActivity
-        extends AppCompatActivity {
+public final class BookCoverScanActivity extends AppCompatActivity {
+
+    public static final String EXTRA_TARGET_SUBJECT_ROW_ID =
+            "extra_target_subject_row_id";
+
+    public static final String EXTRA_TARGET_PROFILE_ID =
+            "extra_target_profile_id";
+
+    public static final String EXTRA_TARGET_SUBJECT_NAME =
+            "extra_target_subject_name";
 
     private static final String STATE_SELECTED_IMAGE_URI =
             "selected_book_cover_uri";
@@ -52,6 +60,9 @@ public final class BookCoverScanActivity
     private ActivityResultLauncher<Uri>
             takeBookCoverPictureLauncher;
 
+    private ActivityResultLauncher<Intent>
+            bookSetupResultLauncher;
+
     private BookScanDiscoveryCoordinator
             scanDiscoveryCoordinator;
 
@@ -68,9 +79,16 @@ public final class BookCoverScanActivity
     private String pendingCameraImagePath;
 
     @NonNull
-    private BookCoverScanResult.ScanSource
-            selectedScanSource =
+    private BookCoverScanResult.ScanSource selectedScanSource =
             BookCoverScanResult.ScanSource.GALLERY;
+
+    private long targetSubjectRowId;
+
+    private long targetProfileId;
+
+    @NonNull
+    private String targetSubjectName =
+            "";
 
     private boolean operationInProgress;
 
@@ -96,6 +114,7 @@ public final class BookCoverScanActivity
                         this
                 );
 
+        readTargetSubjectContext();
         registerActivityResultLaunchers();
         setupToolbar();
         setupClickListeners();
@@ -111,19 +130,74 @@ public final class BookCoverScanActivity
         );
     }
 
+    private void readTargetSubjectContext() {
+        Intent intent =
+                getIntent();
+
+        if (intent == null) {
+            return;
+        }
+
+        targetSubjectRowId =
+                intent.getLongExtra(
+                        EXTRA_TARGET_SUBJECT_ROW_ID,
+                        0L
+                );
+
+        targetProfileId =
+                intent.getLongExtra(
+                        EXTRA_TARGET_PROFILE_ID,
+                        0L
+                );
+
+        targetSubjectName =
+                safeText(
+                        intent.getStringExtra(
+                                EXTRA_TARGET_SUBJECT_NAME
+                        )
+                );
+    }
+
     private void registerActivityResultLaunchers() {
         openBookCoverLauncher =
                 registerForActivityResult(
-                        new ActivityResultContracts
-                                .OpenDocument(),
+                        new ActivityResultContracts.OpenDocument(),
                         this::handleSelectedGalleryImage
                 );
 
         takeBookCoverPictureLauncher =
                 registerForActivityResult(
-                        new ActivityResultContracts
-                                .TakePicture(),
+                        new ActivityResultContracts.TakePicture(),
                         this::handleCameraCaptureResult
+                );
+
+        bookSetupResultLauncher =
+                registerForActivityResult(
+                        new ActivityResultContracts
+                                .StartActivityForResult(),
+                        result -> {
+                            if (result.getResultCode()
+                                    != RESULT_OK) {
+                                return;
+                            }
+
+                            Intent resultData =
+                                    result.getData();
+
+                            if (resultData == null) {
+                                setResult(
+                                        RESULT_OK
+                                );
+
+                            } else {
+                                setResult(
+                                        RESULT_OK,
+                                        resultData
+                                );
+                            }
+
+                            finish();
+                        }
                 );
     }
 
@@ -134,6 +208,14 @@ public final class BookCoverScanActivity
                                 getOnBackPressedDispatcher()
                                         .onBackPressed()
                 );
+
+        if (!targetSubjectName.isEmpty()) {
+            binding.toolbarBookCoverScan
+                    .setSubtitle(
+                            "Subject: "
+                                    + targetSubjectName
+                    );
+        }
     }
 
     private void setupClickListeners() {
@@ -164,7 +246,7 @@ public final class BookCoverScanActivity
         binding.buttonEnterBookManually
                 .setOnClickListener(
                         view ->
-                                showManualEntryComingNextMessage()
+                                openManualBookEntry()
                 );
     }
 
@@ -174,14 +256,14 @@ public final class BookCoverScanActivity
         }
 
         try {
-            CameraFileTarget cameraFileTarget =
+            CameraFileTarget target =
                     createCameraFileTarget();
 
             pendingCameraImageUri =
-                    cameraFileTarget.getContentUri();
+                    target.contentUri;
 
             pendingCameraImagePath =
-                    cameraFileTarget.getAbsoluteFilePath();
+                    target.absoluteFilePath;
 
             takeBookCoverPictureLauncher.launch(
                     pendingCameraImageUri
@@ -190,11 +272,9 @@ public final class BookCoverScanActivity
         } catch (IOException exception) {
             clearPendingCameraTarget();
 
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Camera photo के लिए सुरक्षित file नहीं बन सकी।",
-                    Snackbar.LENGTH_LONG
-            ).show();
+            showMessage(
+                    "Camera photo के लिए सुरक्षित file नहीं बन सकी।"
+            );
 
         } catch (RuntimeException exception) {
             deletePrivateCameraFileSafely(
@@ -203,11 +283,9 @@ public final class BookCoverScanActivity
 
             clearPendingCameraTarget();
 
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Camera app नहीं खोली जा सकी।",
-                    Snackbar.LENGTH_LONG
-            ).show();
+            showMessage(
+                    "Camera app नहीं खोली जा सकी।"
+            );
         }
     }
 
@@ -215,56 +293,56 @@ public final class BookCoverScanActivity
     private CameraFileTarget createCameraFileTarget()
             throws IOException {
 
-        File bookCoverDirectory =
+        File directory =
                 new File(
                         getFilesDir(),
                         BOOK_COVER_DIRECTORY_NAME
                 );
 
-        if (!bookCoverDirectory.exists()
-                && !bookCoverDirectory.mkdirs()) {
+        if (!directory.exists()
+                && !directory.mkdirs()) {
 
             throw new IOException(
                     "Book-cover directory could not be created."
             );
         }
 
-        if (!bookCoverDirectory.isDirectory()) {
+        if (!directory.isDirectory()) {
             throw new IOException(
                     "Book-cover path is not a directory."
             );
         }
 
-        File cameraImageFile =
+        File imageFile =
                 File.createTempFile(
                         "book_cover_"
                                 + System.currentTimeMillis()
                                 + "_",
                         ".jpg",
-                        bookCoverDirectory
+                        directory
                 );
 
-        Uri cameraContentUri =
+        Uri contentUri =
                 FileProvider.getUriForFile(
                         this,
                         getPackageName()
                                 + ".fileprovider",
-                        cameraImageFile
+                        imageFile
                 );
 
         return new CameraFileTarget(
-                cameraContentUri,
-                cameraImageFile.getAbsolutePath()
+                contentUri,
+                imageFile.getAbsolutePath()
         );
     }
 
     private void handleCameraCaptureResult(
             @Nullable Boolean pictureSaved
     ) {
-        Uri completedCameraUri =
+        Uri completedUri =
                 pendingCameraImageUri;
 
-        String completedCameraPath =
+        String completedPath =
                 safeNullableText(
                         pendingCameraImagePath
                 );
@@ -273,34 +351,30 @@ public final class BookCoverScanActivity
                 pictureSaved
         )) {
             deletePrivateCameraFileSafely(
-                    completedCameraPath
+                    completedPath
             );
 
             clearPendingCameraTarget();
 
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Camera photo capture cancel कर दिया गया।",
-                    Snackbar.LENGTH_SHORT
-            ).show();
+            showMessage(
+                    "Camera photo capture cancel कर दिया गया।"
+            );
 
             return;
         }
 
-        if (completedCameraUri == null
-                || completedCameraPath == null) {
+        if (completedUri == null
+                || completedPath == null) {
 
             deletePrivateCameraFileSafely(
-                    completedCameraPath
+                    completedPath
             );
 
             clearPendingCameraTarget();
 
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Camera photo सुरक्षित नहीं हो सकी।",
-                    Snackbar.LENGTH_LONG
-            ).show();
+            showMessage(
+                    "Camera photo सुरक्षित नहीं हो सकी।"
+            );
 
             return;
         }
@@ -308,10 +382,10 @@ public final class BookCoverScanActivity
         deletePreviousSelectedCameraFile();
 
         selectedBookCoverUri =
-                completedCameraUri;
+                completedUri;
 
         selectedPrivateImagePath =
-                completedCameraPath;
+                completedPath;
 
         selectedScanSource =
                 BookCoverScanResult
@@ -322,11 +396,9 @@ public final class BookCoverScanActivity
 
         updateSelectedImageState();
 
-        Snackbar.make(
-                binding.getRoot(),
-                "Book cover photo तैयार है। अब Scan करके Book खोजें।",
-                Snackbar.LENGTH_SHORT
-        ).show();
+        showMessage(
+                "Book cover photo तैयार है। अब Scan करके Book खोजें।"
+        );
     }
 
     private void clearPendingCameraTarget() {
@@ -375,11 +447,9 @@ public final class BookCoverScanActivity
 
         updateSelectedImageState();
 
-        Snackbar.make(
-                binding.getRoot(),
-                "Book cover selected है। अब Scan करके Book खोजें।",
-                Snackbar.LENGTH_SHORT
-        ).show();
+        showMessage(
+                "Book cover selected है। अब Scan करके Book खोजें।"
+        );
     }
 
     private void tryTakePersistableReadPermission(
@@ -394,11 +464,8 @@ public final class BookCoverScanActivity
 
         } catch (SecurityException ignored) {
             /*
-             * कुछ document providers persistent
-             * permission support नहीं करते।
-             *
-             * Current activity session में प्राप्त
-             * read permission फिर भी उपयोग की जाएगी।
+             * कुछ Gallery/Document providers
+             * permanent permission support नहीं करते।
              */
         }
     }
@@ -432,7 +499,8 @@ public final class BookCoverScanActivity
     private void deletePreviousSelectedCameraFile() {
         if (selectedScanSource
                 != BookCoverScanResult
-                .ScanSource.CAMERA) {
+                .ScanSource
+                .CAMERA) {
 
             selectedPrivateImagePath =
                     null;
@@ -451,12 +519,12 @@ public final class BookCoverScanActivity
     private void deletePrivateCameraFileSafely(
             @Nullable String filePath
     ) {
-        String safeFilePath =
+        String safePath =
                 safeNullableText(
                         filePath
                 );
 
-        if (safeFilePath == null) {
+        if (safePath == null) {
             return;
         }
 
@@ -469,24 +537,21 @@ public final class BookCoverScanActivity
 
             File requestedFile =
                     new File(
-                            safeFilePath
+                            safePath
                     );
 
-            String allowedDirectoryPath =
+            String allowedPath =
                     allowedDirectory
                             .getCanonicalPath();
 
-            String requestedFilePath =
+            String requestedPath =
                     requestedFile
                             .getCanonicalPath();
 
-            boolean fileInsideAllowedDirectory =
-                    requestedFilePath.startsWith(
-                            allowedDirectoryPath
-                                    + File.separator
-                    );
-
-            if (!fileInsideAllowedDirectory) {
+            if (!requestedPath.startsWith(
+                    allowedPath
+                            + File.separator
+            )) {
                 return;
             }
 
@@ -507,40 +572,41 @@ public final class BookCoverScanActivity
     }
 
     private void updateSelectedImageState() {
-        boolean hasSelectedImage =
+        boolean hasImage =
                 selectedBookCoverUri != null;
 
         binding.containerBookCoverPlaceholder
                 .setVisibility(
-                        hasSelectedImage
+                        hasImage
                                 ? View.GONE
                                 : View.VISIBLE
                 );
 
         binding.imageSelectedBookCover
                 .setVisibility(
-                        hasSelectedImage
+                        hasImage
                                 ? View.VISIBLE
                                 : View.GONE
                 );
 
         binding.buttonRemoveSelectedBookCover
                 .setVisibility(
-                        hasSelectedImage
+                        hasImage
                                 ? View.VISIBLE
                                 : View.GONE
                 );
 
         binding.buttonScanAndFindBook
                 .setEnabled(
-                        hasSelectedImage
+                        hasImage
                                 && !operationInProgress
                 );
 
-        if (!hasSelectedImage) {
-            binding.textSelectedImageSource.setText(
-                    "Camera या Gallery से cover चुनें"
-            );
+        if (!hasImage) {
+            binding.textSelectedImageSource
+                    .setText(
+                            "Camera या Gallery से cover चुनें"
+                    );
 
             return;
         }
@@ -556,13 +622,15 @@ public final class BookCoverScanActivity
                             selectedBookCoverUri
                     );
 
-            binding.textSelectedImageSource.setText(
-                    selectedScanSource
-                            == BookCoverScanResult
-                            .ScanSource.CAMERA
-                            ? "Camera से लिया गया cover"
-                            : "Gallery से चुना गया cover"
-            );
+            binding.textSelectedImageSource
+                    .setText(
+                            selectedScanSource
+                                    == BookCoverScanResult
+                                    .ScanSource
+                                    .CAMERA
+                                    ? "Camera से लिया गया cover"
+                                    : "Gallery से चुना गया cover"
+                    );
 
         } catch (RuntimeException exception) {
             deletePreviousSelectedCameraFile();
@@ -603,15 +671,14 @@ public final class BookCoverScanActivity
                             false
                     );
 
-            binding.textSelectedImageSource.setText(
-                    "Selected image खोली नहीं जा सकी"
-            );
+            binding.textSelectedImageSource
+                    .setText(
+                            "Selected image खोली नहीं जा सकी"
+                    );
 
-            Snackbar.make(
-                    binding.getRoot(),
-                    "यह image खोली नहीं जा सकी। दूसरी image चुनें।",
-                    Snackbar.LENGTH_LONG
-            ).show();
+            showMessage(
+                    "यह image खोली नहीं जा सकी। दूसरी image चुनें।"
+            );
         }
     }
 
@@ -620,15 +687,19 @@ public final class BookCoverScanActivity
             return;
         }
 
+        if (targetSubjectRowId <= 0L) {
+            showSubjectRequiredDialog();
+
+            return;
+        }
+
         Uri imageUri =
                 selectedBookCoverUri;
 
         if (imageUri == null) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "पहले book cover चुनें।",
-                    Snackbar.LENGTH_SHORT
-            ).show();
+            showMessage(
+                    "पहले book cover चुनें।"
+            );
 
             return;
         }
@@ -659,7 +730,8 @@ public final class BookCoverScanActivity
 
                     @Override
                     public void onStageChanged(
-                            @NonNull BookScanDiscoveryCoordinator
+                            @NonNull
+                            BookScanDiscoveryCoordinator
                                     .DiscoveryStage stage
                     ) {
                         updateProgressStage(
@@ -669,23 +741,20 @@ public final class BookCoverScanActivity
 
                     @Override
                     public void onCoverScanCompleted(
-                            @NonNull BookCoverScanResult
-                                    scanResult
+                            @NonNull
+                            BookCoverScanResult scanResult
                     ) {
                         /*
-                         * OCR और barcode scanning
-                         * पूरा हो चुका है।
-                         *
-                         * अभी online matching और
-                         * result ranking पूरी होगी।
+                         * OCR और barcode scan पूरा हो गया।
+                         * Online matching इसके बाद जारी रहेगी।
                          */
                     }
 
                     @Override
                     public void onDiscoveryCompleted(
-                            @NonNull BookScanDiscoveryCoordinator
-                                    .CompleteDiscoveryResult
-                                    result
+                            @NonNull
+                            BookScanDiscoveryCoordinator
+                                    .CompleteDiscoveryResult result
                     ) {
                         setOperationState(
                                 false
@@ -698,7 +767,8 @@ public final class BookCoverScanActivity
 
                     @Override
                     public void onDiscoveryFailed(
-                            @NonNull BookScanDiscoveryCoordinator
+                            @NonNull
+                            BookScanDiscoveryCoordinator
                                     .BookScanDiscoveryException
                                     exception
                     ) {
@@ -715,14 +785,15 @@ public final class BookCoverScanActivity
     }
 
     private void openBookMatchReviewScreen(
-            @NonNull BookScanDiscoveryCoordinator
-                    .CompleteDiscoveryResult completeResult
+            @NonNull
+            BookScanDiscoveryCoordinator
+                    .CompleteDiscoveryResult result
     ) {
         try {
             BookMatchReviewData reviewData =
                     BookMatchReviewData
                             .fromDiscoveryResult(
-                                    completeResult,
+                                    result,
                                     selectedBookCoverUri,
                                     selectedPrivateImagePath
                             );
@@ -730,21 +801,74 @@ public final class BookCoverScanActivity
             Intent reviewIntent =
                     BookMatchReviewActivity
                             .createIntent(
-                                    BookCoverScanActivity.this,
+                                    this,
                                     reviewData
                             );
 
-            startActivity(
+            reviewIntent.putExtra(
+                    EXTRA_TARGET_SUBJECT_ROW_ID,
+                    targetSubjectRowId
+            );
+
+            reviewIntent.putExtra(
+                    EXTRA_TARGET_PROFILE_ID,
+                    targetProfileId
+            );
+
+            reviewIntent.putExtra(
+                    EXTRA_TARGET_SUBJECT_NAME,
+                    targetSubjectName
+            );
+
+            bookSetupResultLauncher.launch(
                     reviewIntent
             );
 
         } catch (RuntimeException exception) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Book review screen तैयार नहीं की जा सकी।",
-                    Snackbar.LENGTH_LONG
-            ).show();
+            showMessage(
+                    "Book review screen तैयार नहीं की जा सकी।"
+            );
         }
+    }
+
+    private void openManualBookEntry() {
+        if (operationInProgress) {
+            return;
+        }
+
+        if (targetSubjectRowId <= 0L) {
+            showSubjectRequiredDialog();
+
+            return;
+        }
+
+        Intent manualBookIntent =
+                ManualSchoolBookActivity
+                        .createIntent(
+                                this,
+                                targetSubjectRowId
+                        );
+
+        bookSetupResultLauncher.launch(
+                manualBookIntent
+        );
+    }
+
+    private void showSubjectRequiredDialog() {
+        new MaterialAlertDialogBuilder(
+                this
+        )
+                .setTitle(
+                        "School subject चुनना आवश्यक है"
+                )
+                .setMessage(
+                        "Book जोड़ने के लिए Parent School Curriculum Setup से बच्चे का actual subject चुनें।"
+                )
+                .setPositiveButton(
+                        "ठीक है",
+                        null
+                )
+                .show();
     }
 
     private void setOperationState(
@@ -807,15 +931,18 @@ public final class BookCoverScanActivity
     }
 
     private void updateProgressStage(
-            @NonNull BookScanDiscoveryCoordinator
+            @NonNull
+            BookScanDiscoveryCoordinator
                     .DiscoveryStage stage
     ) {
         if (stage
                 == BookScanDiscoveryCoordinator
-                .DiscoveryStage.COMPLETED
+                .DiscoveryStage
+                .COMPLETED
                 || stage
                 == BookScanDiscoveryCoordinator
-                .DiscoveryStage.FAILED) {
+                .DiscoveryStage
+                .FAILED) {
 
             return;
         }
@@ -837,7 +964,8 @@ public final class BookCoverScanActivity
     }
 
     private void showDiscoveryFailure(
-            @NonNull BookScanDiscoveryCoordinator
+            @NonNull
+            BookScanDiscoveryCoordinator
                     .BookScanDiscoveryException exception
     ) {
         String hindiMessage =
@@ -850,11 +978,11 @@ public final class BookCoverScanActivity
                         exception.getMessage()
                 );
 
-        StringBuilder messageBuilder =
+        StringBuilder message =
                 new StringBuilder();
 
         if (!hindiMessage.isEmpty()) {
-            messageBuilder.append(
+            message.append(
                     hindiMessage
             );
         }
@@ -863,23 +991,23 @@ public final class BookCoverScanActivity
                 && !englishMessage.equalsIgnoreCase(
                 hindiMessage
         )) {
-            if (messageBuilder.length() > 0) {
-                messageBuilder.append(
+            if (message.length() > 0) {
+                message.append(
                         "\n\n"
                 );
             }
 
-            messageBuilder.append(
+            message.append(
                     englishMessage
             );
         }
 
         if (exception.hasHttpStatusCode()) {
-            messageBuilder.append(
+            message.append(
                     "\n\nHTTP Status: "
             );
 
-            messageBuilder.append(
+            message.append(
                     exception.getHttpStatusCode()
             );
         }
@@ -892,8 +1020,8 @@ public final class BookCoverScanActivity
                                 "Book search पूरी नहीं हुई"
                         )
                         .setMessage(
-                                messageBuilder.length() > 0
-                                        ? messageBuilder.toString()
+                                message.length() > 0
+                                        ? message.toString()
                                         : "पुस्तक खोज के दौरान समस्या हुई।"
                         )
                         .setNegativeButton(
@@ -915,19 +1043,11 @@ public final class BookCoverScanActivity
             dialogBuilder.setNeutralButton(
                     "Manual Entry",
                     (dialog, which) ->
-                            showManualEntryComingNextMessage()
+                            openManualBookEntry()
             );
         }
 
         dialogBuilder.show();
-    }
-
-    private void showManualEntryComingNextMessage() {
-        Snackbar.make(
-                binding.getRoot(),
-                "Manual Book Entry screen आगे के step में जोड़ी जाएगी।",
-                Snackbar.LENGTH_LONG
-        ).show();
     }
 
     private void restoreActivityState(
@@ -994,18 +1114,18 @@ public final class BookCoverScanActivity
     private Uri parseUriSafely(
             @Nullable String uriValue
     ) {
-        String safeUriValue =
+        String safeUri =
                 safeNullableText(
                         uriValue
                 );
 
-        if (safeUriValue == null) {
+        if (safeUri == null) {
             return null;
         }
 
         try {
             return Uri.parse(
-                    safeUriValue
+                    safeUri
             );
 
         } catch (RuntimeException ignored) {
@@ -1053,6 +1173,16 @@ public final class BookCoverScanActivity
                 STATE_SELECTED_SCAN_SOURCE,
                 selectedScanSource.name()
         );
+    }
+
+    private void showMessage(
+            @NonNull String message
+    ) {
+        Snackbar.make(
+                binding.getRoot(),
+                message,
+                Snackbar.LENGTH_LONG
+        ).show();
     }
 
     @NonNull
@@ -1107,16 +1237,6 @@ public final class BookCoverScanActivity
 
             this.absoluteFilePath =
                     absoluteFilePath;
-        }
-
-        @NonNull
-        private Uri getContentUri() {
-            return contentUri;
-        }
-
-        @NonNull
-        private String getAbsoluteFilePath() {
-            return absoluteFilePath;
         }
     }
 }

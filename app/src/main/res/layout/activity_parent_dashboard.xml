@@ -290,12 +290,43 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="26dp"
+                android:fontFamily="sans-serif-rounded"
+                android:text="Parent Controls"
+                android:textColor="@color/ss_text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Active student के exact school subjects, books और profile settings manage करें।"
+                android:textColor="@color/ss_text_secondary"
+                android:textSize="13sp" />
+
+            <com.tridev.studysaathi.view.SchoolCurriculumSetupButton
+                android:id="@+id/buttonOpenSchoolCurriculumSetup"
+                style="@style/Widget.StudySaathi.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="start|center_vertical"
+                android:text="School Curriculum Setup"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                app:backgroundTint="@color/ss_teal_soft"
+                app:strokeColor="@color/ss_teal_border" />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonManageParentProfiles"
                 style="@style/Widget.StudySaathi.Button.Outlined"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="11dp"
                 android:text="@string/parent_manage_profiles"
                 android:textAllCaps="false"
                 android:textSize="15sp" />

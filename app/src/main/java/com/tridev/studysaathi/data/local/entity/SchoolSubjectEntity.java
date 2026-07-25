@@ -152,7 +152,9 @@ public class SchoolSubjectEntity {
     private long updatedAt;
 
     public SchoolSubjectEntity() {
-        // Required empty constructor for Room.
+        /*
+         * Required empty constructor for Room.
+         */
     }
 
     public long getSubjectRowId() {
@@ -216,11 +218,17 @@ public class SchoolSubjectEntity {
         return subjectNameHindi;
     }
 
+    /**
+     * Hindi subject name optional है।
+     *
+     * Empty value database में empty String के रूप में
+     * सुरक्षित save होगी।
+     */
     public void setSubjectNameHindi(
             @NonNull String subjectNameHindi
     ) {
         this.subjectNameHindi =
-                normalizeRequiredText(
+                normalizeOptionalText(
                         subjectNameHindi
                 );
     }
@@ -324,6 +332,7 @@ public class SchoolSubjectEntity {
 
         if (normalizedContentPackId.isEmpty()) {
             this.contentPackId = "";
+
         } else {
             this.contentPackId =
                     normalizeIdentifier(
@@ -533,11 +542,16 @@ public class SchoolSubjectEntity {
         return !contentPackId.isEmpty();
     }
 
+    /**
+     * Hindi translation optional है।
+     *
+     * Minimum valid school subject के लिए:
+     * Profile, Subject ID और English name आवश्यक हैं।
+     */
     public boolean hasMinimumRequiredInformation() {
         return profileId > 0L
                 && !subjectId.isEmpty()
-                && !subjectNameEnglish.isEmpty()
-                && !subjectNameHindi.isEmpty();
+                && !subjectNameEnglish.isEmpty();
     }
 
     public void applyCoreSubjectDefaults() {
@@ -630,14 +644,18 @@ public class SchoolSubjectEntity {
                                 "_"
                         );
 
-        while (normalizedValue.startsWith("_")) {
+        while (normalizedValue.startsWith(
+                "_"
+        )) {
             normalizedValue =
                     normalizedValue.substring(
                             1
                     );
         }
 
-        while (normalizedValue.endsWith("_")) {
+        while (normalizedValue.endsWith(
+                "_"
+        )) {
             normalizedValue =
                     normalizedValue.substring(
                             0,
