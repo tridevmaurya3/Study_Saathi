@@ -8,6 +8,7 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.tridev.studysaathi.BuildConfig;
 import com.tridev.studysaathi.data.content.model.BookCoverScanResult;
 import com.tridev.studysaathi.data.content.scanner.BookCoverMetadataExtractor;
 import com.tridev.studysaathi.data.content.scanner.BookCoverScanner;
@@ -49,16 +50,19 @@ public final class BookScanDiscoveryCoordinator
     ) {
         this(
                 context,
-                ""
+                BuildConfig.GOOGLE_BOOKS_API_KEY
         );
     }
 
     /**
      * Google Books API key is optional.
      *
-     * Do not hard-code the key in this class.
-     * It can later be supplied through secure
-     * application configuration.
+     * Key को source code में hard-code नहीं किया जाता।
+     * Default constructor BuildConfig से local.properties
+     * में सुरक्षित रखी गई key प्राप्त करता है।
+     *
+     * Key खाली होने या Google Books unavailable होने पर
+     * BookDiscoveryCoordinator Open Library fallback उपयोग करेगा।
      */
     public BookScanDiscoveryCoordinator(
             @NonNull Context context,
