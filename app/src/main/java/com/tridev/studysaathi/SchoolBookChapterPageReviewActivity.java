@@ -157,6 +157,11 @@ public final class SchoolBookChapterPageReviewActivity
                 .setOnClickListener(
                         ignored -> saveCurrentApproval()
                 );
+
+        binding.chapterPageReviewApproveAllButton
+                .setOnClickListener(
+                        ignored -> approveAllPages()
+                );
     }
 
     private void loadPages() {
@@ -366,6 +371,82 @@ public final class SchoolBookChapterPageReviewActivity
         );
     }
 
+    private void approveAllPages() {
+        if (savingApproval
+                || pages.isEmpty()) {
+            return;
+        }
+
+        savingApproval = true;
+        updateButtons();
+
+        binding.chapterPageReviewApproveAllButton
+                .setText("Approving All…");
+
+        pageRepository.setAllPagesParentApproved(
+                chapterRowId,
+                true,
+                new SchoolBookChapterPageRepository
+                        .CountOperationCallback() {
+
+                    @Override
+                    public void onSuccess(
+                            int updatedPageCount
+                    ) {
+                        if (!canUpdateScreen()) {
+                            return;
+                        }
+
+                        for (SchoolBookChapterPageEntity page
+                                : pages) {
+                            page.setParentApproved(true);
+                        }
+
+                        savingApproval = false;
+
+                        binding.chapterPageReviewApproveAllButton
+                                .setText(
+                                        "All Chapter Pages Approved"
+                                );
+
+                        showCurrentPage();
+                        updateButtons();
+
+                        showMessage(
+                                updatedPageCount
+                                        + " pages approved for Child Mode."
+                        );
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        if (!canUpdateScreen()) {
+                            return;
+                        }
+
+                        savingApproval = false;
+
+                        binding.chapterPageReviewApproveAllButton
+                                .setText(
+                                        "Approve All Chapter Pages"
+                                );
+
+                        updateButtons();
+
+                        showMessage(
+                                readableMessage(
+                                        exception,
+                                        "All chapter pages could "
+                                                + "not be approved."
+                                )
+                        );
+                    }
+                }
+        );
+    }
+
     private void updateButtons() {
         boolean hasPages = !pages.isEmpty();
 
@@ -390,6 +471,11 @@ public final class SchoolBookChapterPageReviewActivity
                 );
 
         binding.chapterPageReviewApprovedCheckBox
+                .setEnabled(
+                        hasPages && !savingApproval
+                );
+
+        binding.chapterPageReviewApproveAllButton
                 .setEnabled(
                         hasPages && !savingApproval
                 );

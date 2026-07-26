@@ -72,6 +72,48 @@ public final class SchoolBookChapterProgressRepository {
         });
     }
 
+    public void getChapterProgressPercent(
+            long chapterRowId,
+            @NonNull ProgressCallback callback
+    ) {
+        StudySaathiDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                validateChapterRowId(
+                        chapterRowId
+                );
+
+                SchoolBookChapterEntity chapter =
+                        chapterDao.getChapterByRowId(
+                                chapterRowId
+                        );
+
+                if (chapter == null) {
+                    throw new IllegalStateException(
+                            "The exact school-book chapter was not found."
+                    );
+                }
+
+                int progressPercent =
+                        clampProgress(
+                                chapter.getProgressPercent()
+                        );
+
+                mainThreadHandler.post(
+                        () -> callback.onSuccess(
+                                progressPercent
+                        )
+                );
+
+            } catch (Exception exception) {
+                mainThreadHandler.post(
+                        () -> callback.onError(
+                                exception
+                        )
+                );
+            }
+        });
+    }
+
     public void updateChapterProgress(
             long chapterRowId,
             int requestedProgressPercent,
@@ -225,6 +267,17 @@ public final class SchoolBookChapterProgressRepository {
     public interface OperationCallback {
 
         void onSuccess();
+
+        void onError(
+                @NonNull Exception exception
+        );
+    }
+
+    public interface ProgressCallback {
+
+        void onSuccess(
+                int progressPercent
+        );
 
         void onError(
                 @NonNull Exception exception

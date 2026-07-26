@@ -23,6 +23,8 @@ import com.tridev.studysaathi.data.repository
 import com.tridev.studysaathi.data.repository.LessonProgressRepository;
 import com.tridev.studysaathi.data.repository
         .SchoolBookChapterContentRepository;
+import com.tridev.studysaathi.data.repository
+        .SchoolBookChapterPageRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 import com.tridev.studysaathi.databinding.ActivityLessonBinding;
 import com.tridev.studysaathi.databinding.DialogLessonCompletedBinding;
@@ -76,6 +78,8 @@ public class LessonActivity extends AppCompatActivity {
             exactLessonProgressCoordinator;
     private SchoolBookChapterContentRepository
             exactChapterContentRepository;
+    private SchoolBookChapterPageRepository
+            exactChapterPageRepository;
 
     private LessonContent lessonContent;
     private LessonProgressEntity currentLessonProgress;
@@ -137,6 +141,11 @@ public class LessonActivity extends AppCompatActivity {
                         this
                 );
 
+        exactChapterPageRepository =
+                new SchoolBookChapterPageRepository(
+                        this
+                );
+
         readScreenArguments();
         loadLessonContent();
         loadSavedReadingSize();
@@ -149,8 +158,86 @@ public class LessonActivity extends AppCompatActivity {
         showBookmarkLoadingState();
 
         loadApprovedExactChapterContent();
+        openPageReaderIfAvailable();
         markExactChapterOpened();
         loadActiveStudentAndProgress();
+    }
+
+    private void openPageReaderIfAvailable() {
+        if (!exactLessonProgressCoordinator
+                .isExactSchoolBookLesson()) {
+            return;
+        }
+
+        long exactChapterRowId =
+                exactLessonProgressCoordinator
+                        .getExactChapterRowId();
+
+        if (exactChapterRowId <= 0L) {
+            return;
+        }
+
+        exactChapterPageRepository
+                .getApprovedPagesForChapter(
+                        exactChapterRowId,
+                        new SchoolBookChapterPageRepository
+                                .PagesCallback() {
+
+                            @Override
+                            public void onSuccess(
+                                    @NonNull java.util.List<com.tridev
+                                            .studysaathi.data.local.entity
+                                            .SchoolBookChapterPageEntity>
+                                            pages
+                            ) {
+                                if (isFinishing()
+                                        || isDestroyed()
+                                        || pages.isEmpty()) {
+                                    return;
+                                }
+
+                                Intent readerIntent =
+                                        ChapterPageReaderActivity
+                                                .createIntent(
+                                                        LessonActivity.this,
+                                                        exactChapterRowId,
+                                                        chapterTitle
+                                                );
+
+                                try {
+                                    startActivity(readerIntent);
+                                    finish();
+                                } catch (RuntimeException exception) {
+                                    Snackbar.make(
+                                            binding.getRoot(),
+                                            "Kinder page reader could "
+                                                    + "not be opened. "
+                                                    + "Showing the standard "
+                                                    + "lesson instead.",
+                                            Snackbar.LENGTH_LONG
+                                    ).show();
+                                }
+                            }
+
+                            @Override
+                            public void onError(
+                                    @NonNull Exception exception
+                            ) {
+                                if (isFinishing()
+                                        || isDestroyed()) {
+                                    return;
+                                }
+
+                                Snackbar.make(
+                                        binding.getRoot(),
+                                        "Approved pages could not be "
+                                                + "checked. Showing the "
+                                                + "standard lesson instead.",
+                                        Snackbar.LENGTH_LONG
+                                ).show();
+                            }
+                        }
+                );
     }
 
     private void loadApprovedExactChapterContent() {

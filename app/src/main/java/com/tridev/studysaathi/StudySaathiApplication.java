@@ -1,114 +1,170 @@
 package com.tridev.studysaathi;
 
+import android.app.Activity;
 import android.app.Application;
+import android.os.Bundle;
+import android.view.View;
+import android.view.Window;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
-import com.tridev.studysaathi.cloud.CloudAccountCacheSecurityMonitor;
-import com.tridev.studysaathi.cloud.CloudRestoreActivitySecurityLifecycle;
-import com.tridev.studysaathi.cloud.SensitiveScreenSecurityLifecycle;
+import java.util.Collections;
+import java.util.Set;
+import java.util.WeakHashMap;
 
+/**
+ * App की सभी Activities को Android 15/16 edge-to-edge system bars से सुरक्षित रखता है.
+ */
 public final class StudySaathiApplication
-        extends Application {
+        extends Application
+        implements Application.ActivityLifecycleCallbacks {
 
-    private CloudAccountCacheSecurityMonitor
-            cloudAccountCacheSecurityMonitor;
-
-    private CloudRestoreActivitySecurityLifecycle
-            cloudRestoreActivitySecurityLifecycle;
-
-    private SensitiveScreenSecurityLifecycle
-            sensitiveScreenSecurityLifecycle;
+    @NonNull
+    private final Set<Activity> insetConfiguredActivities =
+            Collections.newSetFromMap(
+                    new WeakHashMap<>()
+            );
 
     @Override
     public void onCreate() {
         super.onCreate();
-
-        initializeCloudSecurity();
-        initializeRestoreActivitySecurity();
-        initializeSensitiveScreenSecurity();
+        registerActivityLifecycleCallbacks(this);
     }
 
-    private void initializeCloudSecurity() {
-        cloudAccountCacheSecurityMonitor =
-                CloudAccountCacheSecurityMonitor
-                        .getInstance(this);
-
-        cloudAccountCacheSecurityMonitor
-                .startMonitoring();
+    @Override
+    public void onActivityCreated(
+            @NonNull Activity activity,
+            @Nullable Bundle savedInstanceState
+    ) {
+        applySafeSystemBarInsets(activity);
     }
 
-    private void initializeRestoreActivitySecurity() {
-        cloudRestoreActivitySecurityLifecycle =
-                new CloudRestoreActivitySecurityLifecycle(
-                        this
+    @Override
+    public void onActivityPostCreated(
+            @NonNull Activity activity,
+            @Nullable Bundle savedInstanceState
+    ) {
+        applySafeSystemBarInsets(activity);
+    }
+
+    private void applySafeSystemBarInsets(
+            @NonNull Activity activity
+    ) {
+        if (!insetConfiguredActivities.add(activity)) {
+            return;
+        }
+
+        Window window = activity.getWindow();
+
+        /*
+         * Android 15/16 edge-to-edge को support करते हुए content root पर
+         * वास्तविक status/navigation/cutout insets लगाए जाते हैं.
+         */
+        WindowCompat.setDecorFitsSystemWindows(
+                window,
+                false
+        );
+
+        View contentRoot =
+                activity.findViewById(
+                        android.R.id.content
                 );
 
-        registerActivityLifecycleCallbacks(
-                cloudRestoreActivitySecurityLifecycle
-        );
-    }
-
-    private void initializeSensitiveScreenSecurity() {
-        sensitiveScreenSecurityLifecycle =
-                new SensitiveScreenSecurityLifecycle();
-
-        registerActivityLifecycleCallbacks(
-                sensitiveScreenSecurityLifecycle
-        );
-    }
-
-    /**
-     * Returns the process-wide cloud cache security
-     * monitor for app components that need an explicit
-     * security cleanup.
-     */
-    @NonNull
-    public CloudAccountCacheSecurityMonitor
-    getCloudAccountCacheSecurityMonitor() {
-
-        if (cloudAccountCacheSecurityMonitor == null) {
-            cloudAccountCacheSecurityMonitor =
-                    CloudAccountCacheSecurityMonitor
-                            .getInstance(this);
-
-            cloudAccountCacheSecurityMonitor
-                    .startMonitoring();
+        if (contentRoot == null) {
+            insetConfiguredActivities.remove(activity);
+            window.getDecorView().post(
+                    () -> applySafeSystemBarInsets(
+                            activity
+                    )
+            );
+            return;
         }
 
-        return cloudAccountCacheSecurityMonitor;
+        final int originalLeft =
+                contentRoot.getPaddingLeft();
+        final int originalTop =
+                contentRoot.getPaddingTop();
+        final int originalRight =
+                contentRoot.getPaddingRight();
+        final int originalBottom =
+                contentRoot.getPaddingBottom();
+
+        ViewCompat.setOnApplyWindowInsetsListener(
+                contentRoot,
+                (view, windowInsets) -> {
+                    Insets safeInsets =
+                            windowInsets.getInsets(
+                                    WindowInsetsCompat.Type
+                                            .systemBars()
+                                            | WindowInsetsCompat.Type
+                                            .displayCutout()
+                            );
+
+                    view.setPadding(
+                            originalLeft
+                                    + safeInsets.left,
+                            originalTop
+                                    + safeInsets.top,
+                            originalRight
+                                    + safeInsets.right,
+                            originalBottom
+                                    + safeInsets.bottom
+                    );
+
+                    return windowInsets;
+                }
+        );
+
+        ViewCompat.requestApplyInsets(
+                contentRoot
+        );
     }
 
-    /**
-     * Android normally terminates an application
-     * process without calling this method.
-     *
-     * It remains useful in emulated and controlled
-     * development environments.
-     */
     @Override
-    public void onTerminate() {
-        if (sensitiveScreenSecurityLifecycle != null) {
-            unregisterActivityLifecycleCallbacks(
-                    sensitiveScreenSecurityLifecycle
-            );
+    public void onActivityStarted(
+            @NonNull Activity activity
+    ) {
+        // No action required.
+    }
 
-            sensitiveScreenSecurityLifecycle = null;
-        }
+    @Override
+    public void onActivityResumed(
+            @NonNull Activity activity
+    ) {
+        // No action required.
+    }
 
-        if (cloudRestoreActivitySecurityLifecycle != null) {
-            unregisterActivityLifecycleCallbacks(
-                    cloudRestoreActivitySecurityLifecycle
-            );
+    @Override
+    public void onActivityPaused(
+            @NonNull Activity activity
+    ) {
+        // No action required.
+    }
 
-            cloudRestoreActivitySecurityLifecycle = null;
-        }
+    @Override
+    public void onActivityStopped(
+            @NonNull Activity activity
+    ) {
+        // No action required.
+    }
 
-        if (cloudAccountCacheSecurityMonitor != null) {
-            cloudAccountCacheSecurityMonitor
-                    .stopMonitoring();
-        }
+    @Override
+    public void onActivitySaveInstanceState(
+            @NonNull Activity activity,
+            @NonNull Bundle outState
+    ) {
+        // No action required.
+    }
 
-        super.onTerminate();
+    @Override
+    public void onActivityDestroyed(
+            @NonNull Activity activity
+    ) {
+        // No action required.
     }
 }

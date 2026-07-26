@@ -6,7 +6,9 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.snackbar.Snackbar;
 import com.tridev.studysaathi.data.catalog.ChapterCatalog;
 import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
@@ -14,6 +16,7 @@ import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.repository.LessonProgressRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 import com.tridev.studysaathi.databinding.ActivityDashboardBinding;
+import com.tridev.studysaathi.databinding.BottomSheetStudyToolsBinding;
 import com.tridev.studysaathi.model.ChapterItem;
 
 import java.time.Instant;
@@ -89,8 +92,12 @@ public class DashboardActivity extends AppCompatActivity {
                 openAskStudySaathi()
         );
 
-        binding.cardStudyCoach.setOnClickListener(view ->
-                openLearningProgress()
+        binding.buttonSmartStudyPlan.setOnClickListener(view ->
+                openSmartStudyPlan()
+        );
+
+        binding.buttonStudyTools.setOnClickListener(view ->
+                showStudyToolsBottomSheet()
         );
 
         /*
@@ -98,8 +105,221 @@ public class DashboardActivity extends AppCompatActivity {
          * screen खोलेगा।
          */
         binding.cardProfileShortcut.setOnClickListener(view ->
-                openSettingsCenter()
+                binding.dashboardRoot.openDrawer(
+                        GravityCompat.END
+                )
         );
+
+        binding.cardDashboardMenu.setOnClickListener(view ->
+                binding.dashboardRoot.openDrawer(
+                        GravityCompat.START
+                )
+        );
+
+        setupProfileDrawerActions();
+        setupStudyMenuActions();
+    }
+
+    private void setupStudyMenuActions() {
+        binding.studyMenuDrawerPanel.buttonMenuDashboard
+                .setOnClickListener(view ->
+                        binding.dashboardRoot.closeDrawer(
+                                GravityCompat.START
+                        )
+                );
+
+        binding.studyMenuDrawerPanel.buttonMenuSubjects
+                .setOnClickListener(view ->
+                        closeStudyMenuAndOpen(
+                                SubjectsActivity.class
+                        )
+                );
+
+        binding.studyMenuDrawerPanel.buttonMenuSmartStudyPlan
+                .setOnClickListener(view ->
+                        closeStudyMenuAndOpen(
+                                SmartStudyPlanActivity.class
+                        )
+                );
+
+        binding.studyMenuDrawerPanel.buttonMenuRevision
+                .setOnClickListener(view ->
+                        closeStudyMenuAndOpen(
+                                RevisionActivity.class
+                        )
+                );
+
+        binding.studyMenuDrawerPanel.buttonMenuWeeklyStudy
+                .setOnClickListener(view ->
+                        closeStudyMenuAndOpen(
+                                WeeklyStudyActivity.class
+                        )
+                );
+
+        binding.studyMenuDrawerPanel.buttonMenuLearningProgress
+                .setOnClickListener(view ->
+                        closeStudyMenuAndOpen(
+                                LearningProgressActivity.class
+                        )
+                );
+
+        binding.studyMenuDrawerPanel.buttonMenuAskSaathi
+                .setOnClickListener(view ->
+                        closeStudyMenuAndOpen(
+                                AskStudySaathiActivity.class
+                        )
+                );
+
+        binding.studyMenuDrawerPanel.buttonMenuChapterNotes
+                .setOnClickListener(view ->
+                        closeStudyMenuAndOpen(
+                                ChapterNotesActivity.class
+                        )
+                );
+
+        binding.studyMenuDrawerPanel.buttonMenuReminders
+                .setOnClickListener(view ->
+                        closeStudyMenuAndOpen(
+                                ReminderSettingsActivity.class
+                        )
+                );
+    }
+
+    private void closeStudyMenuAndOpen(
+            @NonNull Class<?> destinationActivity
+    ) {
+        binding.dashboardRoot.closeDrawer(
+                GravityCompat.START
+        );
+
+        startActivity(
+                new Intent(
+                        DashboardActivity.this,
+                        destinationActivity
+                )
+        );
+    }
+
+    private void setupProfileDrawerActions() {
+        binding.profileDrawerPanel.buttonDrawerChangeProfile
+                .setOnClickListener(view ->
+                        closeProfileDrawerAndOpen(
+                                StudentProfilesActivity.class
+                        )
+                );
+
+        binding.profileDrawerPanel.buttonDrawerParentDashboard
+                .setOnClickListener(view ->
+                        closeProfileDrawerAndOpen(
+                                ParentDashboardActivity.class
+                        )
+                );
+
+        binding.profileDrawerPanel.buttonDrawerManageProfiles
+                .setOnClickListener(view ->
+                        closeProfileDrawerAndOpen(
+                                StudentProfilesActivity.class
+                        )
+                );
+
+        binding.profileDrawerPanel.cardDrawerDailyStudyGoal
+                .setOnClickListener(view ->
+                        closeProfileDrawerAndOpen(
+                                LearningProgressActivity.class
+                        )
+                );
+
+        binding.profileDrawerPanel.buttonDrawerLocalBackup
+                .setOnClickListener(view ->
+                        closeProfileDrawerAndOpen(
+                                BackupExportActivity.class
+                        )
+                );
+
+        binding.profileDrawerPanel.buttonDrawerRestoreImport
+                .setOnClickListener(view ->
+                        closeProfileDrawerAndOpen(
+                                BackupRestoreActivity.class
+                        )
+                );
+
+        binding.profileDrawerPanel.buttonDrawerCloudSync
+                .setOnClickListener(view ->
+                        closeProfileDrawerAndOpen(
+                                CloudAccountActivity.class
+                        )
+                );
+    }
+
+    private void closeProfileDrawerAndOpen(
+            @NonNull Class<?> destinationActivity
+    ) {
+        binding.dashboardRoot.closeDrawer(
+                GravityCompat.END
+        );
+
+        startActivity(
+                new Intent(
+                        DashboardActivity.this,
+                        destinationActivity
+                )
+        );
+    }
+
+    private void openSmartStudyPlan() {
+        Intent planIntent =
+                new Intent(
+                        DashboardActivity.this,
+                        SmartStudyPlanActivity.class
+                );
+
+        startActivity(planIntent);
+    }
+
+    private void showStudyToolsBottomSheet() {
+        BottomSheetStudyToolsBinding toolsBinding =
+                BottomSheetStudyToolsBinding.inflate(
+                        getLayoutInflater()
+                );
+
+        BottomSheetDialog toolsDialog =
+                new BottomSheetDialog(this);
+
+        toolsDialog.setContentView(
+                toolsBinding.getRoot()
+        );
+
+        toolsBinding.cardToolRevisionPlanner
+                .setOnClickListener(view -> {
+                    toolsDialog.dismiss();
+                    openRevision();
+                });
+
+        toolsBinding.cardToolStudyReminders
+                .setOnClickListener(view -> {
+                    toolsDialog.dismiss();
+
+                    startActivity(
+                            new Intent(
+                                    DashboardActivity.this,
+                                    ReminderSettingsActivity.class
+                            )
+                    );
+                });
+
+        toolsBinding.cardToolChapterNotes
+                .setOnClickListener(view -> {
+                    toolsDialog.dismiss();
+
+                    startActivity(
+                            new Intent(
+                                    DashboardActivity.this,
+                                    ChapterNotesActivity.class
+                            )
+                    );
+                });
+
+        toolsDialog.show();
     }
 
     private void loadActiveStudentProfile() {
@@ -191,6 +411,17 @@ public class DashboardActivity extends AppCompatActivity {
         binding.textProfileInitial.setText(
                 getStudentInitial(studentName)
         );
+
+        binding.profileDrawerPanel.textDrawerProfileInitial
+                .setText(
+                        getStudentInitial(studentName)
+                );
+
+        binding.profileDrawerPanel.textDrawerProfileName
+                .setText(studentName);
+
+        binding.profileDrawerPanel.textDrawerProfileDetails
+                .setText(profileDetails);
 
         showProgressLoadingState();
     }
