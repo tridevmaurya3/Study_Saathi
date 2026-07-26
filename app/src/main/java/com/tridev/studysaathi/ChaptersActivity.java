@@ -5,18 +5,34 @@ import android.os.Bundle;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.tridev.studysaathi.adapter.ChapterAdapter;
 import com.tridev.studysaathi.data.catalog.ChapterCatalog;
-import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
-import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
-import com.tridev.studysaathi.data.repository.LessonProgressRepository;
-import com.tridev.studysaathi.data.repository.StudentProfileRepository;
-import com.tridev.studysaathi.databinding.ActivityChaptersBinding;
+import com.tridev.studysaathi.data.local.entity
+        .LessonProgressEntity;
+import com.tridev.studysaathi.data.local.entity
+        .SchoolBookChapterEntity;
+import com.tridev.studysaathi.data.local.entity
+        .SchoolBookEntity;
+import com.tridev.studysaathi.data.local.entity
+        .StudentProfileEntity;
+import com.tridev.studysaathi.data.repository
+        .ChildSchoolBookChapterRepository;
+import com.tridev.studysaathi.data.repository
+        .LessonProgressRepository;
+import com.tridev.studysaathi.data.repository
+        .StudentProfileRepository;
+import com.tridev.studysaathi.databinding
+        .ActivityChaptersBinding;
 import com.tridev.studysaathi.model.ChapterItem;
+import com.tridev.studysaathi.navigation
+        .ExactSchoolBookLessonIntentFactory;
+import com.tridev.studysaathi.ui.adapter
+        .ChildSchoolBookChapterAdapter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +40,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class ChaptersActivity extends AppCompatActivity {
+public class ChaptersActivity
+        extends AppCompatActivity {
 
     public static final String EXTRA_SUBJECT_NAME =
             "extra_subject_name";
@@ -35,125 +52,227 @@ public class ChaptersActivity extends AppCompatActivity {
     public static final String EXTRA_EDUCATION_BOARD =
             "extra_education_board";
 
+    /**
+     * à¤¯à¤¹ extra à¤®à¤¿à¤²à¤¨à¥‡ à¤ªà¤° generic catalog à¤•à¥‡ à¤¬à¤œà¤¾à¤¯ exact confirmed
+     * school-book chapters load à¤¹à¥‹à¤‚à¤—à¥‡à¥¤
+     */
+    public static final String EXTRA_SCHOOL_SUBJECT_ROW_ID =
+            "extra_school_subject_row_id";
+
+    private static final long INVALID_ROW_ID =
+            0L;
+
     private ActivityChaptersBinding binding;
-    private ChapterAdapter chapterAdapter;
+
+    private ChapterAdapter genericChapterAdapter;
+
+    private ChildSchoolBookChapterAdapter exactChapterAdapter;
 
     private StudentProfileRepository studentProfileRepository;
+
     private LessonProgressRepository lessonProgressRepository;
 
-    private String subjectName;
-    private String studentClass;
-    private String educationBoard;
+    private ChildSchoolBookChapterRepository
+            childChapterRepository;
 
-    private long activeProfileId = -1L;
+    @NonNull
+    private String subjectName =
+            "";
 
+    @NonNull
+    private String studentClass =
+            "";
+
+    @NonNull
+    private String educationBoard =
+            "";
+
+    private long schoolSubjectRowId =
+            INVALID_ROW_ID;
+
+    private long activeProfileId =
+            -1L;
+
+    @NonNull
     private List<ChapterItem> baseChapterList =
             new ArrayList<>();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    private boolean exactChaptersLoading;
 
-        binding = ActivityChaptersBinding.inflate(
-                getLayoutInflater()
+    @Override
+    protected void onCreate(
+            @Nullable Bundle savedInstanceState
+    ) {
+        super.onCreate(
+                savedInstanceState
         );
 
-        setContentView(binding.getRoot());
+        binding =
+                ActivityChaptersBinding.inflate(
+                        getLayoutInflater()
+                );
+
+        setContentView(
+                binding.getRoot()
+        );
 
         studentProfileRepository =
-                new StudentProfileRepository(this);
+                new StudentProfileRepository(
+                        this
+                );
 
         lessonProgressRepository =
-                new LessonProgressRepository(this);
+                new LessonProgressRepository(
+                        this
+                );
+
+        childChapterRepository =
+                new ChildSchoolBookChapterRepository(
+                        this
+                );
 
         readScreenArguments();
         setupRecyclerView();
         setupClickListeners();
-        prepareChapterCatalog();
+        prepareChapterSource();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        /*
-         * Lesson screen से वापस आने पर progress तुरंत refresh होगी।
-         */
-        loadActiveProfileAndProgress();
+        if (isExactSchoolBookMode()) {
+            loadExactSchoolBookChapters();
+
+        } else {
+            loadActiveProfileAndProgress();
+        }
     }
 
     private void readScreenArguments() {
-        subjectName = getIntent().getStringExtra(
-                EXTRA_SUBJECT_NAME
-        );
+        Intent intent =
+                getIntent();
 
-        studentClass = getIntent().getStringExtra(
-                EXTRA_STUDENT_CLASS
-        );
+        subjectName =
+                safeText(
+                        intent.getStringExtra(
+                                EXTRA_SUBJECT_NAME
+                        )
+                );
 
-        educationBoard = getIntent().getStringExtra(
-                EXTRA_EDUCATION_BOARD
-        );
+        studentClass =
+                safeText(
+                        intent.getStringExtra(
+                                EXTRA_STUDENT_CLASS
+                        )
+                );
 
-        if (subjectName == null
-                || subjectName.trim().isEmpty()) {
-            subjectName = getString(
-                    R.string.default_subject_name
-            );
+        educationBoard =
+                safeText(
+                        intent.getStringExtra(
+                                EXTRA_EDUCATION_BOARD
+                        )
+                );
+
+        schoolSubjectRowId =
+                intent.getLongExtra(
+                        EXTRA_SCHOOL_SUBJECT_ROW_ID,
+                        INVALID_ROW_ID
+                );
+
+        if (subjectName.isEmpty()) {
+            subjectName =
+                    getString(
+                            R.string.default_subject_name
+                    );
         }
 
-        if (studentClass == null
-                || studentClass.trim().isEmpty()) {
-            studentClass = "Class 6";
+        if (studentClass.isEmpty()) {
+            studentClass =
+                    "Class 6";
         }
 
-        if (educationBoard == null
-                || educationBoard.trim().isEmpty()) {
-            educationBoard = "CBSE";
+        if (educationBoard.isEmpty()) {
+            educationBoard =
+                    "CBSE";
         }
     }
 
     private void setupRecyclerView() {
-        chapterAdapter = new ChapterAdapter(
-                new ArrayList<>(),
-                this::handleChapterSelection
-        );
-
         binding.recyclerChapters.setLayoutManager(
-                new LinearLayoutManager(this)
-        );
-
-        binding.recyclerChapters.setAdapter(
-                chapterAdapter
+                new LinearLayoutManager(
+                        this
+                )
         );
 
         binding.recyclerChapters.setHasFixedSize(
                 false
         );
+
+        if (isExactSchoolBookMode()) {
+            exactChapterAdapter =
+                    new ChildSchoolBookChapterAdapter(
+                            this::handleExactChapterSelection
+                    );
+
+            binding.recyclerChapters.setAdapter(
+                    exactChapterAdapter
+            );
+
+        } else {
+            genericChapterAdapter =
+                    new ChapterAdapter(
+                            new ArrayList<>(),
+                            this::handleGenericChapterSelection
+                    );
+
+            binding.recyclerChapters.setAdapter(
+                    genericChapterAdapter
+            );
+        }
     }
 
     private void setupClickListeners() {
         binding.buttonBack.setOnClickListener(view ->
-                getOnBackPressedDispatcher().onBackPressed()
+                getOnBackPressedDispatcher()
+                        .onBackPressed()
         );
     }
 
-    private void prepareChapterCatalog() {
+    private void prepareChapterSource() {
         binding.textSubjectName.setText(
                 subjectName
         );
 
         binding.textCurriculumDetails.setText(
                 educationBoard
-                        + "  •  "
+                        + "  â€¢  "
                         + studentClass
         );
 
-        baseChapterList = ChapterCatalog.getChapters(
-                educationBoard,
-                studentClass,
-                subjectName
-        );
+        if (isExactSchoolBookMode()) {
+            binding.textChapterCount.setText(
+                    getString(
+                            R.string.chapter_count_format,
+                            0
+                    )
+            );
+
+            showEmptyState();
+
+            return;
+        }
+
+        prepareGenericChapterCatalog();
+    }
+
+    private void prepareGenericChapterCatalog() {
+        baseChapterList =
+                ChapterCatalog.getChapters(
+                        educationBoard,
+                        studentClass,
+                        subjectName
+                );
 
         binding.textChapterCount.setText(
                 getString(
@@ -162,23 +281,189 @@ public class ChaptersActivity extends AppCompatActivity {
                 )
         );
 
-        showChapterList(baseChapterList);
+        showGenericChapterList(
+                baseChapterList
+        );
+    }
+
+    private void loadExactSchoolBookChapters() {
+        if (!isExactSchoolBookMode()
+                || exactChaptersLoading) {
+
+            return;
+        }
+
+        exactChaptersLoading =
+                true;
+
+        childChapterRepository.getChildChaptersForSubject(
+                schoolSubjectRowId,
+                new ChildSchoolBookChapterRepository
+                        .ChildChaptersCallback() {
+
+                    @Override
+                    public void onSuccess(
+                            @NonNull ChildSchoolBookChapterRepository
+                                    .ChildChapterResult result
+                    ) {
+                        if (!isActivityAvailable()) {
+                            return;
+                        }
+
+                        exactChaptersLoading =
+                                false;
+
+                        if (!result.isAvailable()) {
+                            showExactChapterUnavailableState(
+                                    result
+                            );
+
+                            return;
+                        }
+
+                        bindExactBookInformation(
+                                result.getSchoolBook()
+                        );
+
+                        showExactChapterList(
+                                result.getChapters()
+                        );
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        if (!isActivityAvailable()) {
+                            return;
+                        }
+
+                        exactChaptersLoading =
+                                false;
+
+                        showEmptyState();
+
+                        Snackbar.make(
+                                binding.getRoot(),
+                                getErrorMessage(
+                                        exception,
+                                        "Exact school-book chapters "
+                                                + "could not be loaded."
+                                ),
+                                Snackbar.LENGTH_LONG
+                        ).show();
+                    }
+                }
+        );
+    }
+
+    private void bindExactBookInformation(
+            @Nullable SchoolBookEntity schoolBook
+    ) {
+        if (schoolBook == null) {
+            return;
+        }
+
+        String bookTitle =
+                safeText(
+                        schoolBook.getBookTitle()
+                );
+
+        if (!bookTitle.isEmpty()) {
+            binding.textCurriculumDetails.setText(
+                    bookTitle
+            );
+        }
+    }
+
+    private void showExactChapterUnavailableState(
+            @NonNull ChildSchoolBookChapterRepository
+                    .ChildChapterResult result
+    ) {
+        if (exactChapterAdapter != null) {
+            exactChapterAdapter.clearChapters();
+        }
+
+        binding.textChapterCount.setText(
+                getString(
+                        R.string.chapter_count_format,
+                        0
+                )
+        );
+
+        showEmptyState();
+
+        String message =
+                result.getUnavailableMessage();
+
+        if (!message.isEmpty()) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    message,
+                    Snackbar.LENGTH_LONG
+            ).show();
+        }
+    }
+
+    private void showExactChapterList(
+            @NonNull List<SchoolBookChapterEntity> chapters
+    ) {
+        if (exactChapterAdapter == null) {
+            return;
+        }
+
+        exactChapterAdapter.submitChapters(
+                chapters
+        );
+
+        binding.textChapterCount.setText(
+                getString(
+                        R.string.chapter_count_format,
+                        exactChapterAdapter.getItemCount()
+                )
+        );
+
+        boolean chaptersAvailable =
+                exactChapterAdapter.getItemCount()
+                        > 0;
+
+        binding.recyclerChapters.setVisibility(
+                chaptersAvailable
+                        ? View.VISIBLE
+                        : View.GONE
+        );
+
+        binding.cardEmptyChapters.setVisibility(
+                chaptersAvailable
+                        ? View.GONE
+                        : View.VISIBLE
+        );
     }
 
     private void loadActiveProfileAndProgress() {
+        if (isExactSchoolBookMode()) {
+            return;
+        }
+
         studentProfileRepository.getActiveProfile(
                 new StudentProfileRepository.SingleProfileCallback() {
+
                     @Override
                     public void onSuccess(
-                            StudentProfileEntity studentProfile
+                            @Nullable StudentProfileEntity studentProfile
                     ) {
-                        if (isFinishing() || isDestroyed()) {
+                        if (!isActivityAvailable()) {
                             return;
                         }
 
                         if (studentProfile == null) {
-                            activeProfileId = -1L;
-                            showChapterList(baseChapterList);
+                            activeProfileId =
+                                    -1L;
+
+                            showGenericChapterList(
+                                    baseChapterList
+                            );
+
                             return;
                         }
 
@@ -192,12 +477,16 @@ public class ChaptersActivity extends AppCompatActivity {
                     public void onError(
                             @NonNull Exception exception
                     ) {
-                        if (isFinishing() || isDestroyed()) {
+                        if (!isActivityAvailable()) {
                             return;
                         }
 
-                        activeProfileId = -1L;
-                        showChapterList(baseChapterList);
+                        activeProfileId =
+                                -1L;
+
+                        showGenericChapterList(
+                                baseChapterList
+                        );
 
                         Snackbar.make(
                                 binding.getRoot(),
@@ -210,8 +499,15 @@ public class ChaptersActivity extends AppCompatActivity {
     }
 
     private void loadSavedSubjectProgress() {
+        if (isExactSchoolBookMode()) {
+            return;
+        }
+
         if (activeProfileId <= 0L) {
-            showChapterList(baseChapterList);
+            showGenericChapterList(
+                    baseChapterList
+            );
+
             return;
         }
 
@@ -221,11 +517,12 @@ public class ChaptersActivity extends AppCompatActivity {
                 studentClass,
                 subjectName,
                 new LessonProgressRepository.ProgressListCallback() {
+
                     @Override
                     public void onSuccess(
                             @NonNull List<LessonProgressEntity> progressList
                     ) {
-                        if (isFinishing() || isDestroyed()) {
+                        if (!isActivityAvailable()) {
                             return;
                         }
 
@@ -235,18 +532,22 @@ public class ChaptersActivity extends AppCompatActivity {
                                         progressList
                                 );
 
-                        showChapterList(updatedChapters);
+                        showGenericChapterList(
+                                updatedChapters
+                        );
                     }
 
                     @Override
                     public void onError(
                             @NonNull Exception exception
                     ) {
-                        if (isFinishing() || isDestroyed()) {
+                        if (!isActivityAvailable()) {
                             return;
                         }
 
-                        showChapterList(baseChapterList);
+                        showGenericChapterList(
+                                baseChapterList
+                        );
 
                         Snackbar.make(
                                 binding.getRoot(),
@@ -266,9 +567,7 @@ public class ChaptersActivity extends AppCompatActivity {
         Map<String, Integer> savedProgressMap =
                 new HashMap<>();
 
-        for (LessonProgressEntity lessonProgress
-                : progressList) {
-
+        for (LessonProgressEntity lessonProgress : progressList) {
             String normalizedChapterTitle =
                     normalizeChapterTitle(
                             lessonProgress.getChapterTitle()
@@ -284,6 +583,7 @@ public class ChaptersActivity extends AppCompatActivity {
 
             if (existingProgress == null
                     || savedProgress > existingProgress) {
+
                 savedProgressMap.put(
                         normalizedChapterTitle,
                         savedProgress
@@ -300,18 +600,16 @@ public class ChaptersActivity extends AppCompatActivity {
                             chapterItem.getChapterTitle()
                     );
 
-            int savedProgress =
-                    savedProgressMap.containsKey(
+            Integer savedProgress =
+                    savedProgressMap.get(
                             normalizedChapterTitle
-                    )
-                            ? savedProgressMap.get(
-                            normalizedChapterTitle
-                    )
-                            : 0;
+                    );
 
             updatedChapters.add(
                     chapterItem.copyWithProgress(
-                            savedProgress
+                            savedProgress == null
+                                    ? 0
+                                    : savedProgress
                     )
             );
         }
@@ -321,21 +619,32 @@ public class ChaptersActivity extends AppCompatActivity {
 
     @NonNull
     private String normalizeChapterTitle(
-            String chapterTitle
+            @Nullable String chapterTitle
     ) {
-        if (chapterTitle == null) {
-            return "";
-        }
-
-        return chapterTitle
-                .trim()
-                .toLowerCase(Locale.ROOT);
+        return safeText(
+                chapterTitle
+        ).toLowerCase(
+                Locale.ROOT
+        );
     }
 
-    private void showChapterList(
+    private void showGenericChapterList(
             @NonNull List<ChapterItem> chapters
     ) {
-        chapterAdapter.submitList(chapters);
+        if (genericChapterAdapter == null) {
+            return;
+        }
+
+        genericChapterAdapter.submitList(
+                chapters
+        );
+
+        binding.textChapterCount.setText(
+                getString(
+                        R.string.chapter_count_format,
+                        chapters.size()
+                )
+        );
 
         boolean chaptersAvailable =
                 !chapters.isEmpty();
@@ -353,13 +662,73 @@ public class ChaptersActivity extends AppCompatActivity {
         );
     }
 
-    private void handleChapterSelection(
+    private void showEmptyState() {
+        binding.recyclerChapters.setVisibility(
+                View.GONE
+        );
+
+        binding.cardEmptyChapters.setVisibility(
+                View.VISIBLE
+        );
+    }
+
+    private void handleGenericChapterSelection(
             @NonNull ChapterItem chapterItem
     ) {
-        Intent lessonIntent = new Intent(
-                ChaptersActivity.this,
-                LessonActivity.class
+        openLesson(
+                chapterItem.getChapterTitle(),
+                chapterItem.getChapterDescription()
         );
+    }
+
+    private void handleExactChapterSelection(
+            @NonNull SchoolBookChapterEntity chapter
+    ) {
+        if (!chapter.isReadyForChildMode()) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    "This chapter is not available in Child Mode.",
+                    Snackbar.LENGTH_LONG
+            ).show();
+
+            return;
+        }
+
+        try {
+            Intent lessonIntent =
+                    ExactSchoolBookLessonIntentFactory.create(
+                            ChaptersActivity.this,
+                            chapter,
+                            subjectName,
+                            studentClass,
+                            educationBoard
+                    );
+
+            startActivity(
+                    lessonIntent
+            );
+
+        } catch (Exception exception) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    getErrorMessage(
+                            exception,
+                            "This exact chapter could not be opened."
+                    ),
+                    Snackbar.LENGTH_LONG
+            ).show();
+        }
+    }
+
+    private void openLesson(
+            @NonNull String chapterTitle,
+            @Nullable String chapterDescription
+    ) {
+        Intent lessonIntent =
+                new Intent(
+                        ChaptersActivity.this,
+                        LessonActivity.class
+                );
 
         lessonIntent.putExtra(
                 LessonActivity.EXTRA_SUBJECT_NAME,
@@ -368,12 +737,14 @@ public class ChaptersActivity extends AppCompatActivity {
 
         lessonIntent.putExtra(
                 LessonActivity.EXTRA_CHAPTER_TITLE,
-                chapterItem.getChapterTitle()
+                chapterTitle
         );
 
         lessonIntent.putExtra(
                 LessonActivity.EXTRA_CHAPTER_DESCRIPTION,
-                chapterItem.getChapterDescription()
+                safeText(
+                        chapterDescription
+                )
         );
 
         lessonIntent.putExtra(
@@ -386,6 +757,54 @@ public class ChaptersActivity extends AppCompatActivity {
                 educationBoard
         );
 
-        startActivity(lessonIntent);
+        startActivity(
+                lessonIntent
+        );
+    }
+
+    private boolean isExactSchoolBookMode() {
+        return schoolSubjectRowId
+                > INVALID_ROW_ID;
+    }
+
+    private boolean isActivityAvailable() {
+        return binding != null
+                && !isFinishing()
+                && !isDestroyed();
+    }
+
+    @NonNull
+    private String getErrorMessage(
+            @NonNull Exception exception,
+            @NonNull String fallbackMessage
+    ) {
+        String message =
+                exception.getMessage();
+
+        if (message == null
+                || message.trim().isEmpty()) {
+
+            return fallbackMessage;
+        }
+
+        return message.trim();
+    }
+
+    @NonNull
+    private String safeText(
+            @Nullable Object value
+    ) {
+        return value == null
+                ? ""
+                : value.toString()
+                .trim();
+    }
+
+    @Override
+    protected void onDestroy() {
+        binding =
+                null;
+
+        super.onDestroy();
     }
 }

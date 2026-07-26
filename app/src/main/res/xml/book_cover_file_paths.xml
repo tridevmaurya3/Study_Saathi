@@ -2,8 +2,7 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-        Camera से ली गई book-cover images app की
-        internal files directory के इस folder में रहेंगी:
+        Camera से ली गई book-cover images:
 
         files/book_covers/
     -->
@@ -12,11 +11,30 @@
         path="book_covers/" />
 
     <!--
-        भविष्य में temporary processed images,
-        cropped covers या OCR-ready copies के लिए।
+        Camera से ली गई Contents/Index page images:
+
+        files/book_contents/
+    -->
+    <files-path
+        name="book_contents_images"
+        path="book_contents/" />
+
+    <!--
+        Temporary processed, cropped या OCR-ready cover images:
+
+        cache/book_cover_cache/
     -->
     <cache-path
         name="book_cover_cache"
         path="book_cover_cache/" />
+
+    <!--
+        Temporary processed या OCR-ready Contents page images:
+
+        cache/book_contents_cache/
+    -->
+    <cache-path
+        name="book_contents_cache"
+        path="book_contents_cache/" />
 
 </paths>

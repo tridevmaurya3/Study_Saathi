@@ -20,10 +20,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StudySaathi">
 
-        <!--
-            Camera और Gallery से चुनी गई book-cover images के लिए
-            सुरक्षित private FileProvider.
-        -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -41,31 +37,70 @@
             android:enabled="true"
             android:exported="false" />
 
-        <!--
-            Online result न मिलने पर exact school book
-            manually जोड़ने की screen.
-        -->
+        <!-- Camera/Gallery à¤¸à¥‡ Contents page à¤²à¥‡à¤•à¤° OCR à¤šà¤²à¤¾à¤¨à¥‡ à¤•à¥€ screen. -->
+        <activity
+            android:name=".BookContentsScanActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- OCR candidates à¤•à¥€ Parent review screen. -->
+        <activity
+            android:name=".BookContentsReviewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Parent full-book PDF/image learning-content import screen. -->
+        <activity
+            android:name=".BookLearningImportActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Parent review/edit screen for automatically detected chapter boundaries. -->
+        <activity
+            android:name=".BookChapterBoundaryReviewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Exact school-book chapter list à¤”à¤° management. -->
+        <activity
+            android:name=".SchoolBookChaptersActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Manual chapter Add/Edit screen. -->
+        <activity
+            android:name=".ManualSchoolBookChapterActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Manual exact school-book entry screen. -->
         <activity
             android:name=".ManualSchoolBookActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Parent द्वारा exact school curriculum setup. -->
+        <!-- Parent school-curriculum setup screen. -->
         <activity
             android:name=".SchoolCurriculumSetupActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Scanned book details की parent review screen. -->
+        <!-- Scanned book details à¤•à¥€ Parent review screen. -->
         <activity
             android:name=".BookMatchReviewActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- School book cover scan और online discovery screen. -->
+        <!-- School-book cover scan à¤”à¤° online discovery screen. -->
         <activity
             android:name=".BookCoverScanActivity"
             android:exported="false"
@@ -185,6 +220,19 @@
 
         </activity>
 
+        <!-- Parent editor and approval screen for exact chapter learning content. -->
+        <activity
+            android:name=".SchoolBookChapterContentEditorActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Parent review and approval screen for page-wise scanned chapter drafts. -->
+        <activity
+            android:name=".SchoolBookChapterPageReviewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

@@ -3,6 +3,7 @@ package com.tridev.studysaathi.adapter;
 import android.app.Activity;
 import android.content.Intent;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
@@ -15,9 +16,13 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.tridev.studysaathi.BookCoverScanActivity;
+import com.tridev.studysaathi.SchoolBookChaptersActivity;
+import com.tridev.studysaathi.data.local.entity.SchoolBookEntity;
 import com.tridev.studysaathi.data.local.entity.SchoolSubjectEntity;
+import com.tridev.studysaathi.data.repository.SchoolBookRepository;
 import com.tridev.studysaathi.data.repository.SchoolSubjectRepository;
-import com.tridev.studysaathi.databinding.ItemSchoolCurriculumSubjectBinding;
+import com.tridev.studysaathi.databinding
+        .ItemSchoolCurriculumSubjectBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,10 +45,15 @@ public final class SchoolCurriculumSubjectAdapter
     private final SchoolSubjectRepository schoolSubjectRepository;
 
     @Nullable
+    private final SchoolBookRepository schoolBookRepository;
+
+    @Nullable
     private final ActivityResultLauncher<Intent> bookScanLauncher;
 
     private long pendingBookScanSubjectRowId =
             -1L;
+
+    private boolean openingChapterScreen;
 
     public SchoolCurriculumSubjectAdapter(
             @NonNull SubjectActionListener actionListener
@@ -57,7 +67,10 @@ public final class SchoolCurriculumSubjectAdapter
         ComponentActivity resolvedHostActivity =
                 null;
 
-        SchoolSubjectRepository resolvedRepository =
+        SchoolSubjectRepository resolvedSubjectRepository =
+                null;
+
+        SchoolBookRepository resolvedBookRepository =
                 null;
 
         ActivityResultLauncher<Intent> resolvedBookScanLauncher =
@@ -67,8 +80,13 @@ public final class SchoolCurriculumSubjectAdapter
             resolvedHostActivity =
                     (ComponentActivity) actionListener;
 
-            resolvedRepository =
+            resolvedSubjectRepository =
                     new SchoolSubjectRepository(
+                            resolvedHostActivity
+                    );
+
+            resolvedBookRepository =
+                    new SchoolBookRepository(
                             resolvedHostActivity
                     );
 
@@ -88,7 +106,10 @@ public final class SchoolCurriculumSubjectAdapter
                 resolvedHostActivity;
 
         schoolSubjectRepository =
-                resolvedRepository;
+                resolvedSubjectRepository;
+
+        schoolBookRepository =
+                resolvedBookRepository;
 
         bookScanLauncher =
                 resolvedBookScanLauncher;
@@ -98,9 +119,6 @@ public final class SchoolCurriculumSubjectAdapter
         );
     }
 
-    /**
-     * Adapter की पूरी subject list safely replace करता है।
-     */
     public void submitList(
             @NonNull List<SchoolSubjectEntity> newSubjects
     ) {
@@ -113,9 +131,6 @@ public final class SchoolCurriculumSubjectAdapter
         notifyDataSetChanged();
     }
 
-    /**
-     * नई subject को list के अंत में जोड़ता है।
-     */
     public void addSubject(
             @NonNull SchoolSubjectEntity schoolSubject
     ) {
@@ -146,9 +161,6 @@ public final class SchoolCurriculumSubjectAdapter
         );
     }
 
-    /**
-     * Existing subject item update करता है।
-     */
     public void updateSubject(
             @NonNull SchoolSubjectEntity schoolSubject
     ) {
@@ -175,9 +187,6 @@ public final class SchoolCurriculumSubjectAdapter
         );
     }
 
-    /**
-     * Subject को list से हटाता है।
-     */
     public void removeSubject(
             long subjectRowId
     ) {
@@ -210,9 +219,7 @@ public final class SchoolCurriculumSubjectAdapter
         int selectedCount =
                 0;
 
-        for (SchoolSubjectEntity schoolSubject :
-                subjects) {
-
+        for (SchoolSubjectEntity schoolSubject : subjects) {
             if (schoolSubject.isEnabled()) {
                 selectedCount++;
             }
@@ -315,10 +322,7 @@ public final class SchoolCurriculumSubjectAdapter
     }
 
     /**
-     * Subject Card के Scan Book button से scanner सीधे खोलता है।
-     *
-     * Selected subject की row ID, profile ID और subject name scanner
-     * screen को भेजे जाते हैं। इससे save हुई book उसी subject से जुड़ेगी।
+     * Selected subject के लिए scanner सीधे खोलता है।
      */
     private void openBookScannerDirectly(
             @NonNull SchoolSubjectEntity schoolSubject
@@ -336,11 +340,6 @@ public final class SchoolCurriculumSubjectAdapter
                 || activity == null
                 || launcher == null) {
 
-            /*
-             * Non-Activity host या invalid row होने पर existing listener
-             * fallback रखा गया है। सामान्य app flow में direct scanner
-             * launcher ही उपयोग होगा।
-             */
             actionListener.onScanBookClicked(
                     schoolSubject
             );
@@ -388,15 +387,123 @@ public final class SchoolCurriculumSubjectAdapter
 
             Toast.makeText(
                     activity,
-                    "Book scanner नहीं खुल सका। दोबारा प्रयास करें।",
+                    "Book scanner नहीं खुल सका। "
+                            + "दोबारा प्रयास करें।",
                     Toast.LENGTH_LONG
             ).show();
         }
     }
 
     /**
-     * Scanner या Manual Book Entry से वापस आने पर केवल उसी subject
-     * को database से दोबारा load करके card refresh करता है।
+     * Subject की primary exact book load करके chapter-management
+     * screen खोलता है।
+     */
+    private void openManageChapters(
+            @NonNull SchoolSubjectEntity schoolSubject
+    ) {
+        if (openingChapterScreen) {
+            return;
+        }
+
+        long subjectRowId =
+                schoolSubject.getSubjectRowId();
+
+        ComponentActivity activity =
+                hostActivity;
+
+        SchoolBookRepository repository =
+                schoolBookRepository;
+
+        if (subjectRowId <= 0L
+                || activity == null
+                || repository == null) {
+
+            showHostMessage(
+                    "Exact school book की पहचान उपलब्ध नहीं है।"
+            );
+
+            return;
+        }
+
+        openingChapterScreen =
+                true;
+
+        repository.getPrimaryBookForSubject(
+                subjectRowId,
+                new SchoolBookRepository.SingleBookCallback() {
+
+                    @Override
+                    public void onSuccess(
+                            @Nullable SchoolBookEntity schoolBook
+                    ) {
+                        openingChapterScreen =
+                                false;
+
+                        if (activity.isFinishing()
+                                || activity.isDestroyed()) {
+
+                            return;
+                        }
+
+                        if (schoolBook == null
+                                || schoolBook.getBookRowId() <= 0L) {
+
+                            showHostMessage(
+                                    "इस subject की primary exact book "
+                                            + "नहीं मिली। पहले book को "
+                                            + "दोबारा confirm करें।"
+                            );
+
+                            return;
+                        }
+
+                        Intent chapterIntent =
+                                SchoolBookChaptersActivity
+                                        .createIntent(
+                                                activity,
+                                                schoolBook.getBookRowId(),
+                                                schoolBook.getBookTitle()
+                                        );
+
+                        try {
+                            activity.startActivity(
+                                    chapterIntent
+                            );
+
+                        } catch (RuntimeException exception) {
+                            showHostMessage(
+                                    "Chapter screen नहीं खुल सकी। "
+                                            + "दोबारा प्रयास करें।"
+                            );
+                        }
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        openingChapterScreen =
+                                false;
+
+                        if (activity.isFinishing()
+                                || activity.isDestroyed()) {
+
+                            return;
+                        }
+
+                        showHostMessage(
+                                getErrorMessage(
+                                        exception,
+                                        "Exact school book load नहीं हो सकी।"
+                                )
+                        );
+                    }
+                }
+        );
+    }
+
+    /**
+     * Scanner या Manual Book Entry के बाद subject card refresh करता है।
      */
     private void handleBookScanResult(
             @NonNull ActivityResult result
@@ -446,7 +553,8 @@ public final class SchoolCurriculumSubjectAdapter
                         if (schoolSubject == null) {
                             Toast.makeText(
                                     activity,
-                                    "Saved subject दोबारा load नहीं हो सका।",
+                                    "Saved subject दोबारा "
+                                            + "load नहीं हो सका।",
                                     Toast.LENGTH_LONG
                             ).show();
 
@@ -468,9 +576,11 @@ public final class SchoolCurriculumSubjectAdapter
 
                         String message =
                                 bookName.isEmpty()
-                                        ? "Exact school book update हो गई है।"
+                                        ? "Exact school book "
+                                          + "update हो गई है।"
                                         : bookName
-                                          + " subject के साथ save हो गई है।";
+                                          + " subject के साथ "
+                                          + "save हो गई है।";
 
                         Toast.makeText(
                                 activity,
@@ -491,12 +601,34 @@ public final class SchoolCurriculumSubjectAdapter
 
                         Toast.makeText(
                                 activity,
-                                "Book save हुई, लेकिन subject card refresh नहीं हो सका। Screen दोबारा खोलें।",
+                                "Book save हुई, लेकिन subject "
+                                        + "card refresh नहीं हो सका। "
+                                        + "Screen दोबारा खोलें।",
                                 Toast.LENGTH_LONG
                         ).show();
                     }
                 }
         );
+    }
+
+    private void showHostMessage(
+            @NonNull String message
+    ) {
+        ComponentActivity activity =
+                hostActivity;
+
+        if (activity == null
+                || activity.isFinishing()
+                || activity.isDestroyed()) {
+
+            return;
+        }
+
+        Toast.makeText(
+                activity,
+                message,
+                Toast.LENGTH_LONG
+        ).show();
     }
 
     @NonNull
@@ -652,8 +784,25 @@ public final class SchoolCurriculumSubjectAdapter
     }
 
     @NonNull
+    private static String getErrorMessage(
+            @NonNull Exception exception,
+            @NonNull String fallbackMessage
+    ) {
+        String message =
+                exception.getMessage();
+
+        if (message == null
+                || message.trim().isEmpty()) {
+
+            return fallbackMessage;
+        }
+
+        return message.trim();
+    }
+
+    @NonNull
     private static String safeText(
-            String value
+            @Nullable String value
     ) {
         return value == null
                 ? ""
@@ -683,8 +832,7 @@ public final class SchoolCurriculumSubjectAdapter
             extends RecyclerView.ViewHolder {
 
         @NonNull
-        private final ItemSchoolCurriculumSubjectBinding
-                binding;
+        private final ItemSchoolCurriculumSubjectBinding binding;
 
         private SubjectViewHolder(
                 @NonNull ItemSchoolCurriculumSubjectBinding binding
@@ -764,6 +912,13 @@ public final class SchoolCurriculumSubjectAdapter
                             )
                     );
 
+            binding.buttonManageCurriculumSubjectChapters
+                    .setOnClickListener(view ->
+                            openManageChapters(
+                                    schoolSubject
+                            )
+                    );
+
             binding.buttonEditCurriculumSubject
                     .setOnClickListener(view ->
                             actionListener
@@ -834,6 +989,11 @@ public final class SchoolCurriculumSubjectAdapter
                                 "Scan Book"
                         );
 
+                binding.buttonManageCurriculumSubjectChapters
+                        .setVisibility(
+                                View.GONE
+                        );
+
                 return;
             }
 
@@ -857,6 +1017,11 @@ public final class SchoolCurriculumSubjectAdapter
             binding.buttonScanCurriculumSubjectBook
                     .setText(
                             "Change Book"
+                    );
+
+            binding.buttonManageCurriculumSubjectChapters
+                    .setVisibility(
+                            View.VISIBLE
                     );
         }
     }

@@ -15,11 +15,19 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.tridev.studysaathi.data.catalog.LessonCatalog;
 import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
+import com.tridev.studysaathi.data.local.entity
+        .SchoolBookChapterContentEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
+import com.tridev.studysaathi.data.repository
+        .ExactSchoolBookLessonProgressCoordinator;
 import com.tridev.studysaathi.data.repository.LessonProgressRepository;
+import com.tridev.studysaathi.data.repository
+        .SchoolBookChapterContentRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 import com.tridev.studysaathi.databinding.ActivityLessonBinding;
 import com.tridev.studysaathi.databinding.DialogLessonCompletedBinding;
+import com.tridev.studysaathi.mapper
+        .SchoolBookChapterContentLessonMapper;
 import com.tridev.studysaathi.model.LessonContent;
 
 import java.util.Locale;
@@ -64,6 +72,10 @@ public class LessonActivity extends AppCompatActivity {
 
     private StudentProfileRepository studentProfileRepository;
     private LessonProgressRepository lessonProgressRepository;
+    private ExactSchoolBookLessonProgressCoordinator
+            exactLessonProgressCoordinator;
+    private SchoolBookChapterContentRepository
+            exactChapterContentRepository;
 
     private LessonContent lessonContent;
     private LessonProgressEntity currentLessonProgress;
@@ -114,6 +126,17 @@ public class LessonActivity extends AppCompatActivity {
         lessonProgressRepository =
                 new LessonProgressRepository(this);
 
+        exactLessonProgressCoordinator =
+                new ExactSchoolBookLessonProgressCoordinator(
+                        this,
+                        getIntent()
+                );
+
+        exactChapterContentRepository =
+                new SchoolBookChapterContentRepository(
+                        this
+                );
+
         readScreenArguments();
         loadLessonContent();
         loadSavedReadingSize();
@@ -125,7 +148,69 @@ public class LessonActivity extends AppCompatActivity {
         applyReadingTextSize();
         showBookmarkLoadingState();
 
+        loadApprovedExactChapterContent();
+        markExactChapterOpened();
         loadActiveStudentAndProgress();
+    }
+
+    private void loadApprovedExactChapterContent() {
+        if (!exactLessonProgressCoordinator
+                .isExactSchoolBookLesson()) {
+            return;
+        }
+
+        long exactChapterRowId =
+                exactLessonProgressCoordinator
+                        .getExactChapterRowId();
+
+        exactChapterContentRepository
+                .getApprovedContentForChapter(
+                        exactChapterRowId,
+                        new SchoolBookChapterContentRepository
+                                .SingleContentCallback() {
+
+                            @Override
+                            public void onSuccess(
+                                    SchoolBookChapterContentEntity
+                                            content
+                            ) {
+                                if (isFinishing()
+                                        || isDestroyed()
+                                        || content == null) {
+                                    return;
+                                }
+
+                                lessonContent =
+                                        SchoolBookChapterContentLessonMapper
+                                                .toLessonContent(
+                                                        chapterTitle,
+                                                        content
+                                                );
+
+                                showLessonHeader();
+                                showLessonContent();
+                            }
+
+                            @Override
+                            public void onError(
+                                    @NonNull Exception exception
+                            ) {
+                                if (isFinishing()
+                                        || isDestroyed()) {
+                                    return;
+                                }
+
+                                Snackbar.make(
+                                        binding.getRoot(),
+                                        "Approved exact chapter content "
+                                                + "could not be loaded. "
+                                                + "Showing the standard "
+                                                + "lesson instead.",
+                                        Snackbar.LENGTH_LONG
+                                ).show();
+                            }
+                        }
+                );
     }
 
     @Override
@@ -588,9 +673,9 @@ public class LessonActivity extends AppCompatActivity {
 
         binding.textLessonCurriculum.setText(
                 educationBoard
-                        + "  •  "
+                        + "  â€¢  "
                         + studentClass
-                        + "  •  "
+                        + "  â€¢  "
                         + subjectName
         );
 
@@ -883,6 +968,7 @@ public class LessonActivity extends AppCompatActivity {
                         currentLessonProgress =
                                 lessonProgress;
 
+                        syncExactChapterCompletion();
                         showCompletedState();
                         showAchievementDialog(false);
                     }
@@ -1330,6 +1416,66 @@ public class LessonActivity extends AppCompatActivity {
 
         binding.buttonIncreaseFont.setEnabled(
                 readingSizeSp < MAX_READING_SIZE
+        );
+    }
+
+    private void markExactChapterOpened() {
+        exactLessonProgressCoordinator.markLessonOpened(
+                new ExactSchoolBookLessonProgressCoordinator
+                        .OperationCallback() {
+
+                    @Override
+                    public void onSuccess() {
+                        // Exact chapter open time saved successfully.
+                    }
+
+                    @Override
+                    public void onSkipped() {
+                        // Generic catalog lessons do not require exact sync.
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        // Opening the lesson must remain available even if
+                        // the non-critical timestamp update fails.
+                    }
+                }
+        );
+    }
+
+    private void syncExactChapterCompletion() {
+        exactLessonProgressCoordinator.markLessonCompleted(
+                new ExactSchoolBookLessonProgressCoordinator
+                        .OperationCallback() {
+
+                    @Override
+                    public void onSuccess() {
+                        // Exact chapter progress is now synchronized.
+                    }
+
+                    @Override
+                    public void onSkipped() {
+                        // Generic catalog progress was already saved.
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+
+                        Snackbar.make(
+                                binding.getRoot(),
+                                "Lesson completed, but exact chapter "
+                                        + "progress could not be synchronized.",
+                                Snackbar.LENGTH_LONG
+                        ).show();
+                    }
+                }
         );
     }
 

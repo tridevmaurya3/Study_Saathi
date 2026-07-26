@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/chapterFormScrollView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F7FB"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="32dp">
+
+        <TextView
+            android:id="@+id/chapterFormTitleTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add School Book Chapter"
+            android:textColor="#152238"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/chapterFormSubtitleTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Enter the chapter exactly as it appears in the confirmed school book."
+            android:textColor="#5E6B7A"
+            android:textSize="14sp" />
+
+        <ProgressBar
+            android:id="@+id/chapterSaveProgressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Chapter identity"
+            android:textColor="#152238"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/chapterNumberEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@android:drawable/edit_text"
+            android:hint="Chapter number, e.g. 1 or 1.2"
+            android:inputType="text"
+            android:maxLength="40"
+            android:minHeight="52dp"
+            android:padding="12dp"
+            android:singleLine="true" />
+
+        <EditText
+            android:id="@+id/chapterTitleEnglishEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@android:drawable/edit_text"
+            android:hint="Chapter title in English"
+            android:inputType="textCapSentences"
+            android:maxLength="200"
+            android:minHeight="52dp"
+            android:padding="12dp"
+            android:singleLine="true" />
+
+        <EditText
+            android:id="@+id/chapterTitleHindiEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@android:drawable/edit_text"
+            android:hint="Chapter title in Hindi"
+            android:inputType="textCapSentences"
+            android:maxLength="200"
+            android:minHeight="52dp"
+            android:padding="12dp"
+            android:singleLine="true" />
+
+        <TextView
+            android:id="@+id/chapterTitleRequirementTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Enter the chapter title in at least one language."
+            android:textColor="#5E6B7A"
+            android:textSize="12sp" />
+
+        <EditText
+            android:id="@+id/chapterSubtitleEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@android:drawable/edit_text"
+            android:hint="Chapter subtitle (optional)"
+            android:inputType="textCapSentences"
+            android:maxLength="250"
+            android:minHeight="52dp"
+            android:padding="12dp"
+            android:singleLine="true" />
+
+        <EditText
+            android:id="@+id/unitNameEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@android:drawable/edit_text"
+            android:hint="Unit name (optional)"
+            android:inputType="textCapSentences"
+            android:maxLength="150"
+            android:minHeight="52dp"
+            android:padding="12dp"
+            android:singleLine="true" />
+
+        <TextView
+            android:id="@+id/chapterTypeLabelTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Chapter type"
+            android:textColor="#354052"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/chapterTypeSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="6dp"
+            android:background="@android:drawable/editbox_dropdown_light_frame"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:spinnerMode="dropdown" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/startPageNumberEditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:drawable/edit_text"
+                android:digits="0123456789"
+                android:hint="Start page"
+                android:inputType="number"
+                android:maxLength="6"
+                android:minHeight="52dp"
+                android:padding="12dp"
+                android:singleLine="true" />
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <EditText
+                android:id="@+id/endPageNumberEditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:drawable/edit_text"
+                android:digits="0123456789"
+                android:hint="End page"
+                android:inputType="number"
+                android:maxLength="6"
+                android:minHeight="52dp"
+                android:padding="12dp"
+                android:singleLine="true" />
+
+        </LinearLayout>
+
+        <CheckBox
+            android:id="@+id/optionalChapterCheckBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="This is an optional chapter"
+            android:textColor="#354052"
+            android:textSize="14sp" />
+
+        <CheckBox
+            android:id="@+id/revisionChapterCheckBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="This is a revision chapter"
+            android:textColor="#354052"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Learning information"
+            android:textColor="#152238"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/chapterDescriptionEditText"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginTop="12dp"
+            android:background="@android:drawable/edit_text"
+            android:gravity="top|start"
+            android:hint="Chapter description (optional)"
+            android:inputType="textCapSentences|textMultiLine"
+            android:maxLength="3000"
+            android:padding="12dp"
+            android:scrollbars="vertical" />
+
+        <EditText
+            android:id="@+id/learningObjectivesEditText"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginTop="12dp"
+            android:background="@android:drawable/edit_text"
+            android:gravity="top|start"
+            android:hint="Learning objectives, one per line (optional)"
+            android:inputType="textCapSentences|textMultiLine"
+            android:maxLength="3000"
+            android:padding="12dp"
+            android:scrollbars="vertical" />
+
+        <EditText
+            android:id="@+id/importantTopicsEditText"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginTop="12dp"
+            android:background="@android:drawable/edit_text"
+            android:gravity="top|start"
+            android:hint="Important topics, one per line (optional)"
+            android:inputType="textCapSentences|textMultiLine"
+            android:maxLength="3000"
+            android:padding="12dp"
+            android:scrollbars="vertical" />
+
+        <TextView
+            android:id="@+id/chapterFormErrorTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="#FFF1F0"
+            android:padding="12dp"
+            android:textColor="#B42318"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/cancelChapterButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="Cancel"
+                android:textAllCaps="false" />
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <Button
+                android:id="@+id/saveChapterButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="Save Chapter"
+                android:textAllCaps="false" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

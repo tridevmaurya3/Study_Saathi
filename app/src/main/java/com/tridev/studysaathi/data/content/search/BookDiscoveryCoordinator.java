@@ -18,55 +18,105 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class BookDiscoveryCoordinator implements AutoCloseable {
+public final class BookDiscoveryCoordinator
+        implements AutoCloseable {
 
-    private static final int DEFAULT_MAXIMUM_RESULTS = 20;
-    private static final int MINIMUM_RESULTS = 1;
-    private static final int MAXIMUM_RESULTS = 40;
+    private static final int DEFAULT_MAXIMUM_RESULTS =
+            20;
 
-    @NonNull
-    private final NetworkAvailabilityChecker networkAvailabilityChecker;
+    private static final int MINIMUM_RESULTS =
+            1;
 
-    @NonNull
-    private final BookCoverMetadataExtractor metadataExtractor;
-
-    @NonNull
-    private final GoogleBooksSearchClient googleBooksSearchClient;
+    private static final int MAXIMUM_RESULTS =
+            40;
 
     @NonNull
-    private final OpenLibrarySearchClient openLibrarySearchClient;
+    private final NetworkAvailabilityChecker
+            networkAvailabilityChecker;
 
     @NonNull
-    private final OnlineBookMatchEvaluator matchEvaluator;
+    private final BookCoverMetadataExtractor
+            metadataExtractor;
 
     @NonNull
-    private final AtomicBoolean searchInProgress = new AtomicBoolean(false);
+    private final GoogleBooksSearchClient
+            googleBooksSearchClient;
 
     @NonNull
-    private final AtomicBoolean closed = new AtomicBoolean(false);
+    private final OpenLibrarySearchClient
+            openLibrarySearchClient;
 
-    public BookDiscoveryCoordinator(@NonNull Context context) {
-        this(context, "");
+    @NonNull
+    private final OnlineBookMatchEvaluator
+            matchEvaluator;
+
+    @NonNull
+    private final AtomicBoolean searchInProgress =
+            new AtomicBoolean(
+                    false
+            );
+
+    @NonNull
+    private final AtomicBoolean closed =
+            new AtomicBoolean(
+                    false
+            );
+
+    public BookDiscoveryCoordinator(
+            @NonNull Context context
+    ) {
+        this(
+                context,
+                ""
+        );
     }
 
     /**
-     * Google Books key optional है। Key उपलब्ध न होने, HTTP 429 आने,
-     * no result मिलने या weak match मिलने पर Open Library fallback चलता है।
+     * Google Books API key optional है।
+     *
+     * Android-aware GoogleBooksSearchClient current installed APK का:
+     *
+     * 1. Package name
+     * 2. Signing certificate SHA-1
+     *
+     * अपने-आप तैयार करके Google API request headers में भेजता है।
+     *
+     * API key उपलब्ध न होने, HTTP 429 आने, authentication fail होने,
+     * no result मिलने या weak match मिलने पर Open Library fallback
+     * अपने-आप चलता है।
      */
     public BookDiscoveryCoordinator(
             @NonNull Context context,
             @Nullable String googleBooksApiKey
     ) {
-        Context applicationContext = context.getApplicationContext();
+        Context applicationContext =
+                context.getApplicationContext();
 
         networkAvailabilityChecker =
-                new NetworkAvailabilityChecker(applicationContext);
+                new NetworkAvailabilityChecker(
+                        applicationContext
+                );
 
         metadataExtractor =
                 new BookCoverMetadataExtractor();
 
+        /*
+         * महत्वपूर्ण बदलाव:
+         *
+         * पहले केवल API key दी जा रही थी:
+         *
+         * new GoogleBooksSearchClient(googleBooksApiKey)
+         *
+         * अब Context और API key दोनों दिए जा रहे हैं।
+         *
+         * इससे Google Books request में Android identity headers
+         * वास्तव में apply होंगे।
+         */
         googleBooksSearchClient =
-                new GoogleBooksSearchClient(googleBooksApiKey);
+                new GoogleBooksSearchClient(
+                        applicationContext,
+                        googleBooksApiKey
+                );
 
         openLibrarySearchClient =
                 new OpenLibrarySearchClient();
@@ -81,7 +131,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
     ) {
         discoverBooks(
                 scanResult,
-                BookCoverMetadataExtractor.ExtractionContext.empty(),
+                BookCoverMetadataExtractor
+                        .ExtractionContext
+                        .empty(),
                 DEFAULT_MAXIMUM_RESULTS,
                 callback
         );
@@ -89,7 +141,8 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
     public void discoverBooks(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor.ExtractionContext extractionContext,
+            @NonNull BookCoverMetadataExtractor
+                    .ExtractionContext extractionContext,
             @NonNull DiscoveryCallback callback
     ) {
         discoverBooks(
@@ -102,7 +155,8 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
     public void discoverBooks(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor.ExtractionContext extractionContext,
+            @NonNull BookCoverMetadataExtractor
+                    .ExtractionContext extractionContext,
             int maximumResults,
             @NonNull DiscoveryCallback callback
     ) {
@@ -117,7 +171,10 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             return;
         }
 
-        if (!searchInProgress.compareAndSet(false, true)) {
+        if (!searchInProgress.compareAndSet(
+                false,
+                true
+        )) {
             callback.onDiscoveryFailed(
                     new BookDiscoveryException(
                             FailureReason.SEARCH_ALREADY_RUNNING,
@@ -177,8 +234,10 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             return;
         }
 
-        NetworkAvailabilityChecker.NetworkState networkState =
-                networkAvailabilityChecker.getCurrentNetworkState();
+        NetworkAvailabilityChecker.NetworkState
+                networkState =
+                networkAvailabilityChecker
+                        .getCurrentNetworkState();
 
         if (networkState.isPermissionMissing()) {
             finishWithFailure(
@@ -225,8 +284,10 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
     private void searchGoogleBooks(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
-            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+            @NonNull BookCoverMetadataExtractor
+                    .DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker
+                    .NetworkState networkState,
             int maximumResults,
             @NonNull DiscoveryCallback callback
     ) {
@@ -237,7 +298,8 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
                     @Override
                     public void onSearchCompleted(
-                            @NonNull GoogleBooksSearchClient.SearchResponse response
+                            @NonNull GoogleBooksSearchClient
+                                    .SearchResponse response
                     ) {
                         handleGoogleSearchCompleted(
                                 scanResult,
@@ -260,7 +322,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
                                 maximumResults,
                                 null,
                                 exception,
-                                createGoogleFailureWarning(exception),
+                                createGoogleFailureWarning(
+                                        exception
+                                ),
                                 callback
                         );
                     }
@@ -270,10 +334,13 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
     private void handleGoogleSearchCompleted(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
-            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+            @NonNull BookCoverMetadataExtractor
+                    .DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker
+                    .NetworkState networkState,
             int maximumResults,
-            @NonNull GoogleBooksSearchClient.SearchResponse googleResponse,
+            @NonNull GoogleBooksSearchClient
+                    .SearchResponse googleResponse,
             @NonNull DiscoveryCallback callback
     ) {
         if (closed.get()) {
@@ -288,6 +355,24 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             return;
         }
 
+        List<String> googleWarnings =
+                new ArrayList<>();
+
+        if (googleResponse.isApiKeyUsed()) {
+            if (googleResponse.isAndroidIdentityApplied()) {
+                addUniqueWarning(
+                        googleWarnings,
+                        "Google Books search आपकी API key और Android app identity से पूरी हुई।"
+                );
+
+            } else {
+                addUniqueWarning(
+                        googleWarnings,
+                        "Google Books API key उपयोग हुई, लेकिन Android identity headers apply नहीं हुए।"
+                );
+            }
+        }
+
         if (hasStrongMatch(
                 detectedMetadata,
                 googleResponse.getBookResults()
@@ -299,7 +384,7 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
                     googleResponse.getSearchQuery(),
                     googleResponse.getTotalItems(),
                     googleResponse.getBookResults(),
-                    new ArrayList<>(),
+                    googleWarnings,
                     googleResponse.getSearchedAt(),
                     callback
             );
@@ -314,6 +399,11 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
                         : "Google Books पर matching result नहीं मिला। "
                           + "Open Library fallback search उपयोग की गई।";
 
+        addUniqueWarning(
+                googleWarnings,
+                fallbackWarning
+        );
+
         searchOpenLibrary(
                 scanResult,
                 detectedMetadata,
@@ -321,17 +411,22 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
                 maximumResults,
                 googleResponse,
                 null,
-                fallbackWarning,
+                joinWarnings(
+                        googleWarnings
+                ),
                 callback
         );
     }
 
     private void searchOpenLibrary(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
-            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+            @NonNull BookCoverMetadataExtractor
+                    .DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker
+                    .NetworkState networkState,
             int maximumResults,
-            @Nullable GoogleBooksSearchClient.SearchResponse googleResponse,
+            @Nullable GoogleBooksSearchClient
+                    .SearchResponse googleResponse,
             @Nullable Exception googleFailure,
             @Nullable String fallbackWarning,
             @NonNull DiscoveryCallback callback
@@ -355,8 +450,8 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
                     @Override
                     public void onSearchCompleted(
-                            @NonNull OpenLibrarySearchClient.SearchResponse
-                                    openLibraryResponse
+                            @NonNull OpenLibrarySearchClient
+                                    .SearchResponse openLibraryResponse
                     ) {
                         handleOpenLibrarySearchCompleted(
                                 scanResult,
@@ -391,12 +486,16 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
     private void handleOpenLibrarySearchCompleted(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
-            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
-            @Nullable GoogleBooksSearchClient.SearchResponse googleResponse,
+            @NonNull BookCoverMetadataExtractor
+                    .DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker
+                    .NetworkState networkState,
+            @Nullable GoogleBooksSearchClient
+                    .SearchResponse googleResponse,
             @Nullable Exception googleFailure,
             @Nullable String fallbackWarning,
-            @NonNull OpenLibrarySearchClient.SearchResponse openLibraryResponse,
+            @NonNull OpenLibrarySearchClient
+                    .SearchResponse openLibraryResponse,
             @NonNull DiscoveryCallback callback
     ) {
         if (closed.get()) {
@@ -425,7 +524,7 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
         List<String> providerWarnings =
                 new ArrayList<>();
 
-        addUniqueWarning(
+        addWarningsFromCombinedText(
                 providerWarnings,
                 fallbackWarning
         );
@@ -433,7 +532,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
         if (googleFailure != null) {
             addUniqueWarning(
                     providerWarnings,
-                    createGoogleFailureWarning(googleFailure)
+                    createGoogleFailureWarning(
+                            googleFailure
+                    )
             );
         }
 
@@ -490,9 +591,12 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
     private void handleOpenLibrarySearchFailed(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
-            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
-            @Nullable GoogleBooksSearchClient.SearchResponse googleResponse,
+            @NonNull BookCoverMetadataExtractor
+                    .DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker
+                    .NetworkState networkState,
+            @Nullable GoogleBooksSearchClient
+                    .SearchResponse googleResponse,
             @Nullable Exception googleFailure,
             @Nullable String fallbackWarning,
             @NonNull Exception openLibraryFailure,
@@ -518,7 +622,7 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             List<String> providerWarnings =
                     new ArrayList<>();
 
-            addUniqueWarning(
+            addWarningsFromCombinedText(
                     providerWarnings,
                     fallbackWarning
             );
@@ -526,7 +630,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             addUniqueWarning(
                     providerWarnings,
                     "Open Library fallback उपलब्ध नहीं हुई: "
-                            + safeErrorMessage(openLibraryFailure)
+                            + safeErrorMessage(
+                            openLibraryFailure
+                    )
             );
 
             completeDiscovery(
@@ -550,10 +656,14 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
         String googleMessage =
                 googleFailure == null
                         ? "Google Books search failed."
-                        : safeErrorMessage(googleFailure);
+                        : safeErrorMessage(
+                        googleFailure
+                );
 
         String openLibraryMessage =
-                safeErrorMessage(openLibraryFailure);
+                safeErrorMessage(
+                        openLibraryFailure
+                );
 
         int httpStatusCode =
                 firstHttpStatusCode(
@@ -579,8 +689,10 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
     private void completeDiscovery(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
-            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+            @NonNull BookCoverMetadataExtractor
+                    .DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker
+                    .NetworkState networkState,
             @Nullable String searchQuery,
             int totalOnlineItems,
             @NonNull List<OnlineBookSearchResult> rawResults,
@@ -614,7 +726,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
         OnlineBookMatchEvaluator.RankedBookResult bestMatch =
                 rankedResults.isEmpty()
                         ? null
-                        : rankedResults.get(0);
+                        : rankedResults.get(
+                        0
+                );
 
         List<String> warnings =
                 createDiscoveryWarnings(
@@ -630,7 +744,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
                         scanResult,
                         detectedMetadata,
                         networkState,
-                        safeText(searchQuery),
+                        safeText(
+                                searchQuery
+                        ),
                         totalOnlineItems,
                         rawResults,
                         rankedResults,
@@ -639,7 +755,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
                         searchedAt
                 );
 
-        searchInProgress.set(false);
+        searchInProgress.set(
+                false
+        );
 
         callback.onDiscoveryCompleted(
                 discoveryResult
@@ -647,7 +765,8 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
     }
 
     private boolean hasStrongMatch(
-            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+            @NonNull BookCoverMetadataExtractor
+                    .DetectedBookMetadata detectedMetadata,
             @NonNull List<OnlineBookSearchResult> results
     ) {
         if (results.isEmpty()) {
@@ -663,7 +782,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
          * Exact ISBN मिलने पर result को strong match माना जाएगा।
          */
         if (!scannedIsbn.isEmpty()) {
-            for (OnlineBookSearchResult result : results) {
+            for (OnlineBookSearchResult result :
+                    results) {
+
                 if (scannedIsbn.equals(
                         normalizeIsbn(
                                 result.getPreferredIsbn()
@@ -688,7 +809,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
             return !rankedResults.isEmpty()
                     && rankedResults
-                    .get(0)
+                    .get(
+                            0
+                    )
                     .getEvaluation()
                     .isHighConfidence();
 
@@ -724,11 +847,17 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             @NonNull Map<String, OnlineBookSearchResult> destination,
             @NonNull List<OnlineBookSearchResult> results
     ) {
-        for (OnlineBookSearchResult result : results) {
-            String key =
-                    createResultKey(result);
+        for (OnlineBookSearchResult result :
+                results) {
 
-            if (!destination.containsKey(key)) {
+            String key =
+                    createResultKey(
+                            result
+                    );
+
+            if (!destination.containsKey(
+                    key
+            )) {
                 destination.put(
                         key,
                         result
@@ -747,7 +876,8 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
                 );
 
         if (!isbn.isEmpty()) {
-            return "isbn:" + isbn;
+            return "isbn:"
+                    + isbn;
         }
 
         String providerBookId =
@@ -763,19 +893,28 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
         }
 
         return "metadata:"
-                + comparisonText(result.getBookTitle())
+                + comparisonText(
+                result.getBookTitle()
+        )
                 + "|"
-                + comparisonText(result.getPublisherName())
+                + comparisonText(
+                result.getPublisherName()
+        )
                 + "|"
-                + comparisonText(result.getAuthorsDisplayText());
+                + comparisonText(
+                result.getAuthorsDisplayText()
+        );
     }
 
     @NonNull
     private List<String> createDiscoveryWarnings(
-            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+            @NonNull BookCoverMetadataExtractor
+                    .DetectedBookMetadata detectedMetadata,
             @NonNull List<OnlineBookSearchResult> rawResults,
-            @NonNull List<OnlineBookMatchEvaluator.RankedBookResult> rankedResults,
-            @Nullable OnlineBookMatchEvaluator.RankedBookResult bestMatch,
+            @NonNull List<OnlineBookMatchEvaluator
+                    .RankedBookResult> rankedResults,
+            @Nullable OnlineBookMatchEvaluator
+                    .RankedBookResult bestMatch,
             @NonNull List<String> providerWarnings
     ) {
         List<String> warnings =
@@ -783,7 +922,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
                         detectedMetadata.getWarnings()
                 );
 
-        for (String providerWarning : providerWarnings) {
+        for (String providerWarning :
+                providerWarnings) {
+
             addUniqueWarning(
                     warnings,
                     providerWarning
@@ -828,10 +969,13 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             );
         }
 
-        OnlineBookMatchEvaluator.MatchEvaluation bestEvaluation =
+        OnlineBookMatchEvaluator.MatchEvaluation
+                bestEvaluation =
                 bestMatch.getEvaluation();
 
-        for (String warning : bestEvaluation.getWarnings()) {
+        for (String warning :
+                bestEvaluation.getWarnings()) {
+
             addUniqueWarning(
                     warnings,
                     warning
@@ -845,7 +989,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             );
         }
 
-        if (!bestEvaluation.isAutomaticSelectionRecommended()) {
+        if (!bestEvaluation
+                .isAutomaticSelectionRecommended()) {
+
             addUniqueWarning(
                     warnings,
                     "The book must not be added without parent confirmation."
@@ -878,9 +1024,23 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
     private String createGoogleFailureWarning(
             @NonNull Exception exception
     ) {
-        return getHttpStatusCode(exception) == 429
-                ? "Google Books quota समाप्त थी, इसलिए Open Library fallback search उपयोग की गई।"
-                : "Google Books उपलब्ध नहीं था, इसलिए Open Library fallback search उपयोग की गई।";
+        int httpStatusCode =
+                getHttpStatusCode(
+                        exception
+                );
+
+        if (httpStatusCode == 429) {
+            return "Google Books quota समाप्त थी, इसलिए Open Library fallback search उपयोग की गई।";
+        }
+
+        if (httpStatusCode == 401
+                || httpStatusCode == 403) {
+
+            return "Google Books API key या Android restriction स्वीकार नहीं हुई, "
+                    + "इसलिए Open Library fallback search उपयोग की गई।";
+        }
+
+        return "Google Books उपलब्ध नहीं था, इसलिए Open Library fallback search उपयोग की गई।";
     }
 
     private int firstHttpStatusCode(
@@ -888,29 +1048,35 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             @Nullable Exception secondException
     ) {
         int firstCode =
-                getHttpStatusCode(firstException);
+                getHttpStatusCode(
+                        firstException
+                );
 
         return firstCode > 0
                 ? firstCode
-                : getHttpStatusCode(secondException);
+                : getHttpStatusCode(
+                secondException
+        );
     }
 
     private int getHttpStatusCode(
             @Nullable Exception exception
     ) {
         if (exception
-                instanceof GoogleBooksSearchClient.GoogleBooksSearchException) {
+                instanceof GoogleBooksSearchClient
+                .GoogleBooksSearchException) {
 
-            return ((GoogleBooksSearchClient.GoogleBooksSearchException)
-                    exception)
+            return ((GoogleBooksSearchClient
+                    .GoogleBooksSearchException) exception)
                     .getHttpStatusCode();
         }
 
         if (exception
-                instanceof OpenLibrarySearchClient.OpenLibrarySearchException) {
+                instanceof OpenLibrarySearchClient
+                .OpenLibrarySearchException) {
 
-            return ((OpenLibrarySearchClient.OpenLibrarySearchException)
-                    exception)
+            return ((OpenLibrarySearchClient
+                    .OpenLibrarySearchException) exception)
                     .getHttpStatusCode();
         }
 
@@ -922,8 +1088,14 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             int secondValue
     ) {
         long sum =
-                (long) Math.max(0, firstValue)
-                        + Math.max(0, secondValue);
+                (long) Math.max(
+                        0,
+                        firstValue
+                )
+                        + Math.max(
+                        0,
+                        secondValue
+                );
 
         return sum > Integer.MAX_VALUE
                 ? Integer.MAX_VALUE
@@ -936,10 +1108,14 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             @Nullable String openLibraryQuery
     ) {
         String safeGoogleQuery =
-                safeText(googleQuery);
+                safeText(
+                        googleQuery
+                );
 
         String safeOpenLibraryQuery =
-                safeText(openLibraryQuery);
+                safeText(
+                        openLibraryQuery
+                );
 
         if (safeGoogleQuery.isEmpty()) {
             return safeOpenLibraryQuery;
@@ -963,7 +1139,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             @Nullable Object value
     ) {
         String isbn =
-                safeText(value)
+                safeText(
+                        value
+                )
                         .replaceAll(
                                 "[^0-9Xx]",
                                 ""
@@ -982,7 +1160,9 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
     private String comparisonText(
             @Nullable Object value
     ) {
-        return safeText(value)
+        return safeText(
+                value
+        )
                 .toLowerCase(
                         Locale.ROOT
                 )
@@ -1003,7 +1183,8 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
     ) {
         return value == null
                 ? ""
-                : value.toString().trim();
+                : value.toString()
+                .trim();
     }
 
     private void addUniqueWarning(
@@ -1011,13 +1192,17 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
             @Nullable String warning
     ) {
         String safeWarning =
-                safeText(warning);
+                safeText(
+                        warning
+                );
 
         if (safeWarning.isEmpty()) {
             return;
         }
 
-        for (String existingWarning : warnings) {
+        for (String existingWarning :
+                warnings) {
+
             if (existingWarning.equalsIgnoreCase(
                     safeWarning
             )) {
@@ -1030,11 +1215,74 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
         );
     }
 
+    private void addWarningsFromCombinedText(
+            @NonNull List<String> warnings,
+            @Nullable String combinedWarningText
+    ) {
+        String safeWarningText =
+                safeText(
+                        combinedWarningText
+                );
+
+        if (safeWarningText.isEmpty()) {
+            return;
+        }
+
+        String[] separatedWarnings =
+                safeWarningText.split(
+                        "\\n"
+                );
+
+        for (String separatedWarning :
+                separatedWarnings) {
+
+            addUniqueWarning(
+                    warnings,
+                    separatedWarning
+            );
+        }
+    }
+
+    @NonNull
+    private String joinWarnings(
+            @NonNull List<String> warnings
+    ) {
+        StringBuilder joinedWarnings =
+                new StringBuilder();
+
+        for (String warning :
+                warnings) {
+
+            String safeWarning =
+                    safeText(
+                            warning
+                    );
+
+            if (safeWarning.isEmpty()) {
+                continue;
+            }
+
+            if (joinedWarnings.length() > 0) {
+                joinedWarnings.append(
+                        '\n'
+                );
+            }
+
+            joinedWarnings.append(
+                    safeWarning
+            );
+        }
+
+        return joinedWarnings.toString();
+    }
+
     private void finishWithFailure(
             @NonNull DiscoveryCallback callback,
             @NonNull BookDiscoveryException exception
     ) {
-        searchInProgress.set(false);
+        searchInProgress.set(
+                false
+        );
 
         callback.onDiscoveryFailed(
                 exception
@@ -1069,13 +1317,46 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
                 .getCurrentNetworkState();
     }
 
+    /**
+     * Google Books client ने API key load की है या नहीं।
+     */
+    public boolean isGoogleBooksApiKeyAvailable() {
+        return googleBooksSearchClient
+                .hasApiKey();
+    }
+
+    /**
+     * Installed APK से package name और certificate SHA-1
+     * successfully तैयार हुए हैं या नहीं।
+     */
+    public boolean isGoogleAndroidIdentityAvailable() {
+        return googleBooksSearchClient
+                .hasCompleteAndroidIdentity();
+    }
+
+    /**
+     * Debugging के लिए package name और SHA-1 summary।
+     *
+     * इसमें API key शामिल नहीं होती।
+     */
+    @NonNull
+    public String getGoogleAndroidIdentityDiagnosticSummary() {
+        return googleBooksSearchClient
+                .getAndroidIdentityDiagnosticSummary();
+    }
+
     @Override
     public void close() {
-        if (!closed.compareAndSet(false, true)) {
+        if (!closed.compareAndSet(
+                false,
+                true
+        )) {
             return;
         }
 
-        searchInProgress.set(false);
+        searchInProgress.set(
+                false
+        );
 
         googleBooksSearchClient.close();
         openLibrarySearchClient.close();
@@ -1120,12 +1401,12 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
         private final BookCoverScanResult scanResult;
 
         @NonNull
-        private final BookCoverMetadataExtractor.DetectedBookMetadata
-                detectedMetadata;
+        private final BookCoverMetadataExtractor
+                .DetectedBookMetadata detectedMetadata;
 
         @NonNull
-        private final NetworkAvailabilityChecker.NetworkState
-                networkState;
+        private final NetworkAvailabilityChecker
+                .NetworkState networkState;
 
         @NonNull
         private final String searchQuery;
@@ -1137,12 +1418,12 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
                 rawBookResults;
 
         @NonNull
-        private final List<OnlineBookMatchEvaluator.RankedBookResult>
-                rankedBookResults;
+        private final List<OnlineBookMatchEvaluator
+                .RankedBookResult> rankedBookResults;
 
         @Nullable
-        private final OnlineBookMatchEvaluator.RankedBookResult
-                bestMatch;
+        private final OnlineBookMatchEvaluator
+                .RankedBookResult bestMatch;
 
         @NonNull
         private final List<String> warnings;
@@ -1151,14 +1432,18 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
 
         private BookDiscoveryResult(
                 @NonNull BookCoverScanResult scanResult,
-                @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
-                @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+                @NonNull BookCoverMetadataExtractor
+                        .DetectedBookMetadata detectedMetadata,
+                @NonNull NetworkAvailabilityChecker
+                        .NetworkState networkState,
                 @NonNull String searchQuery,
                 int totalOnlineItems,
-                @NonNull List<OnlineBookSearchResult> rawBookResults,
-                @NonNull List<OnlineBookMatchEvaluator.RankedBookResult>
-                        rankedBookResults,
-                @Nullable OnlineBookMatchEvaluator.RankedBookResult bestMatch,
+                @NonNull List<OnlineBookSearchResult>
+                        rawBookResults,
+                @NonNull List<OnlineBookMatchEvaluator
+                        .RankedBookResult> rankedBookResults,
+                @Nullable OnlineBookMatchEvaluator
+                        .RankedBookResult bestMatch,
                 @NonNull List<String> warnings,
                 long searchedAt
         ) {
@@ -1216,13 +1501,15 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
         }
 
         @NonNull
-        public BookCoverMetadataExtractor.DetectedBookMetadata
+        public BookCoverMetadataExtractor
+                .DetectedBookMetadata
         getDetectedMetadata() {
             return detectedMetadata;
         }
 
         @NonNull
-        public NetworkAvailabilityChecker.NetworkState
+        public NetworkAvailabilityChecker
+                .NetworkState
         getNetworkState() {
             return networkState;
         }
@@ -1243,13 +1530,15 @@ public final class BookDiscoveryCoordinator implements AutoCloseable {
         }
 
         @NonNull
-        public List<OnlineBookMatchEvaluator.RankedBookResult>
+        public List<OnlineBookMatchEvaluator
+                .RankedBookResult>
         getRankedBookResults() {
             return rankedBookResults;
         }
 
         @Nullable
-        public OnlineBookMatchEvaluator.RankedBookResult
+        public OnlineBookMatchEvaluator
+                .RankedBookResult
         getBestMatch() {
             return bestMatch;
         }

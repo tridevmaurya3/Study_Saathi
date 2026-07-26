@@ -19,6 +19,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
+import com.tridev.studysaathi.backup.BackupDatabaseTablePolicy;
 import com.tridev.studysaathi.cloud.CloudBackupRestoreCoordinator;
 import com.tridev.studysaathi.data.local.database.StudySaathiDatabase;
 import com.tridev.studysaathi.databinding.ActivityBackupRestoreBinding;
@@ -46,6 +47,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -64,7 +66,7 @@ public class BackupRestoreActivity
             "study_saathi_backup";
 
     private static final int BACKUP_FORMAT_VERSION = 1;
-    private static final int DATABASE_SCHEMA_VERSION = 5;
+    private static final int DATABASE_SCHEMA_VERSION = 7;
 
     private static final long MAX_BACKUP_FILE_SIZE =
             25L * 1024L * 1024L;
@@ -84,7 +86,11 @@ public class BackupRestoreActivity
             "student_profiles",
             "lesson_progress",
             "quiz_attempts",
-            "doubt_history"
+            "doubt_history",
+            "school_curriculum_profiles",
+            "school_subjects",
+            "school_books",
+            "school_book_chapters"
     };
 
     private ActivityBackupRestoreBinding binding;
@@ -667,8 +673,9 @@ public class BackupRestoreActivity
                         -1
                 );
 
-        if (schemaVersion
-                != DATABASE_SCHEMA_VERSION) {
+        if (!BackupDatabaseTablePolicy.isSupportedSchemaVersion(
+                schemaVersion
+        )) {
 
             throw new BackupValidationException(
                     getString(
@@ -711,7 +718,8 @@ public class BackupRestoreActivity
                 );
 
         for (String requiredTable
-                : DATABASE_TABLES) {
+                : BackupDatabaseTablePolicy
+                .getRequiredTables(schemaVersion)) {
 
             if (!tableObjects.containsKey(
                     requiredTable
@@ -1325,6 +1333,11 @@ public class BackupRestoreActivity
             @NonNull JSONObject databaseObject
     ) throws JSONException {
 
+        int schemaVersion =
+                databaseObject.getInt(
+                        "schema_version"
+                );
+
         JSONArray tableArray =
                 databaseObject.getJSONArray(
                         "tables"
@@ -1342,63 +1355,46 @@ public class BackupRestoreActivity
         writableDatabase.beginTransaction();
 
         try {
-            writableDatabase.execSQL(
-                    "DELETE FROM `doubt_history`"
-            );
+            for (String tableName
+                    : BackupDatabaseTablePolicy
+                    .getDeleteOrder(schemaVersion)) {
 
-            writableDatabase.execSQL(
-                    "DELETE FROM `quiz_attempts`"
-            );
+                writableDatabase.execSQL(
+                        "DELETE FROM `"
+                                + tableName
+                                + "`"
+                );
+            }
 
-            writableDatabase.execSQL(
-                    "DELETE FROM `lesson_progress`"
-            );
+            for (String tableName
+                    : BackupDatabaseTablePolicy
+                    .getInsertOrder(schemaVersion)) {
 
-            writableDatabase.execSQL(
-                    "DELETE FROM `student_profiles`"
-            );
+                insertTableRows(
+                        writableDatabase,
+                        tableName,
+                        tableObjects
+                );
+            }
 
-            insertTableRows(
-                    writableDatabase,
-                    "student_profiles",
-                    tableObjects
-            );
+            for (String tableName
+                    : BackupDatabaseTablePolicy
+                    .getInsertOrder(schemaVersion)) {
 
-            insertTableRows(
-                    writableDatabase,
-                    "lesson_progress",
-                    tableObjects
-            );
+                String idColumn =
+                        BackupDatabaseTablePolicy
+                                .getAutoIncrementIdColumn(
+                                        tableName
+                                );
 
-            insertTableRows(
-                    writableDatabase,
-                    "quiz_attempts",
-                    tableObjects
-            );
-
-            insertTableRows(
-                    writableDatabase,
-                    "doubt_history",
-                    tableObjects
-            );
-
-            resetAutoIncrementSequence(
-                    writableDatabase,
-                    "student_profiles",
-                    "profile_id"
-            );
-
-            resetAutoIncrementSequence(
-                    writableDatabase,
-                    "quiz_attempts",
-                    "attempt_id"
-            );
-
-            resetAutoIncrementSequence(
-                    writableDatabase,
-                    "doubt_history",
-                    "history_id"
-            );
+                if (idColumn != null) {
+                    resetAutoIncrementSequence(
+                            writableDatabase,
+                            tableName,
+                            idColumn
+                    );
+                }
+            }
 
             writableDatabase.setTransactionSuccessful();
 
@@ -1497,232 +1493,78 @@ public class BackupRestoreActivity
             @NonNull JSONObject row
     ) throws JSONException {
 
+        if (!BackupDatabaseTablePolicy.isSupportedTable(
+                BackupDatabaseTablePolicy.CURRENT_SCHEMA_VERSION,
+                tableName
+        )) {
+            throw new JSONException(
+                    "Unsupported table: "
+                            + tableName
+            );
+        }
+
         ContentValues values =
                 new ContentValues();
 
-        switch (tableName) {
-            case "student_profiles":
-                values.put(
-                        "profile_id",
-                        row.getLong("profile_id")
+        Iterator<String> keys =
+                row.keys();
+
+        while (keys.hasNext()) {
+            String columnName =
+                    keys.next();
+
+            Object value =
+                    row.get(
+                            columnName
+                    );
+
+            if (value == JSONObject.NULL) {
+                values.putNull(
+                        columnName
                 );
 
+            } else if (value instanceof Boolean) {
                 values.put(
-                        "student_name",
-                        row.getString("student_name")
+                        columnName,
+                        (Boolean) value
                 );
 
+            } else if (value instanceof Integer) {
                 values.put(
-                        "education_board",
-                        row.getString("education_board")
+                        columnName,
+                        (Integer) value
                 );
 
+            } else if (value instanceof Long) {
                 values.put(
-                        "student_class",
-                        row.getString("student_class")
+                        columnName,
+                        (Long) value
                 );
 
+            } else if (value instanceof Float) {
                 values.put(
-                        "study_medium",
-                        row.getString("study_medium")
+                        columnName,
+                        (Float) value
                 );
 
+            } else if (value instanceof Double) {
                 values.put(
-                        "explanation_language",
-                        row.getString(
-                                "explanation_language"
-                        )
+                        columnName,
+                        (Double) value
                 );
 
+            } else if (value instanceof Number) {
                 values.put(
-                        "is_active",
-                        row.getInt("is_active")
+                        columnName,
+                        ((Number) value).doubleValue()
                 );
 
+            } else {
                 values.put(
-                        "created_at",
-                        row.getLong("created_at")
+                        columnName,
+                        value.toString()
                 );
-
-                values.put(
-                        "updated_at",
-                        row.getLong("updated_at")
-                );
-                break;
-
-            case "lesson_progress":
-                values.put(
-                        "progress_key",
-                        row.getString("progress_key")
-                );
-
-                values.put(
-                        "profile_id",
-                        row.getLong("profile_id")
-                );
-
-                values.put(
-                        "education_board",
-                        row.getString("education_board")
-                );
-
-                values.put(
-                        "student_class",
-                        row.getString("student_class")
-                );
-
-                values.put(
-                        "subject_name",
-                        row.getString("subject_name")
-                );
-
-                values.put(
-                        "chapter_title",
-                        row.getString("chapter_title")
-                );
-
-                values.put(
-                        "progress_percent",
-                        row.getInt("progress_percent")
-                );
-
-                values.put(
-                        "is_completed",
-                        row.getInt("is_completed")
-                );
-
-                values.put(
-                        "last_studied_at",
-                        row.getLong("last_studied_at")
-                );
-
-                values.put(
-                        "completed_at",
-                        row.getLong("completed_at")
-                );
-
-                values.put(
-                        "revision_count",
-                        row.getInt("revision_count")
-                );
-
-                values.put(
-                        "last_revised_at",
-                        row.getLong("last_revised_at")
-                );
-                break;
-
-            case "quiz_attempts":
-                values.put(
-                        "attempt_id",
-                        row.getLong("attempt_id")
-                );
-
-                values.put(
-                        "profile_id",
-                        row.getLong("profile_id")
-                );
-
-                values.put(
-                        "education_board",
-                        row.getString("education_board")
-                );
-
-                values.put(
-                        "student_class",
-                        row.getString("student_class")
-                );
-
-                values.put(
-                        "subject_name",
-                        row.getString("subject_name")
-                );
-
-                values.put(
-                        "chapter_title",
-                        row.getString("chapter_title")
-                );
-
-                values.put(
-                        "correct_answers",
-                        row.getInt("correct_answers")
-                );
-
-                values.put(
-                        "total_questions",
-                        row.getInt("total_questions")
-                );
-
-                values.put(
-                        "percentage",
-                        row.getInt("percentage")
-                );
-
-                values.put(
-                        "attempted_at",
-                        row.getLong("attempted_at")
-                );
-                break;
-
-            case "doubt_history":
-                values.put(
-                        "history_id",
-                        row.getLong("history_id")
-                );
-
-                values.put(
-                        "profile_id",
-                        row.getLong("profile_id")
-                );
-
-                values.put(
-                        "education_board",
-                        row.getString("education_board")
-                );
-
-                values.put(
-                        "student_class",
-                        row.getString("student_class")
-                );
-
-                values.put(
-                        "subject_name",
-                        row.getString("subject_name")
-                );
-
-                values.put(
-                        "chapter_title",
-                        row.getString("chapter_title")
-                );
-
-                values.put(
-                        "question_text",
-                        row.getString("question_text")
-                );
-
-                values.put(
-                        "answer_text",
-                        row.getString("answer_text")
-                );
-
-                values.put(
-                        "explanation_language",
-                        row.getString(
-                                "explanation_language"
-                        )
-                );
-
-                values.put(
-                        "created_at",
-                        row.getLong("created_at")
-                );
-                break;
-
-            default:
-                throw new JSONException(
-                        "Unsupported table: "
-                                + tableName
-                );
+            }
         }
 
         return values;

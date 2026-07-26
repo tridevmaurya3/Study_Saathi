@@ -13,6 +13,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.tridev.studysaathi.backup.BackupDatabaseTablePolicy;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Source;
@@ -739,9 +740,9 @@ public final class EncryptedCloudBackupDownloader {
             );
         }
 
-        if (databaseSchemaVersion
-                != CloudBackupPayloadBuilder
-                .DATABASE_SCHEMA_VERSION) {
+        if (!BackupDatabaseTablePolicy.isSupportedSchemaVersion(
+                databaseSchemaVersion
+        )) {
 
             throw new EncryptedBackupDownloadException(
                     "Cloud backup database version "
@@ -1307,10 +1308,15 @@ public final class EncryptedCloudBackupDownloader {
                 );
             }
 
-            if (backupJson.getInt(
-                    "database_schema_version"
-            ) != CloudBackupPayloadBuilder
-                    .DATABASE_SCHEMA_VERSION) {
+            int backupSchemaVersion =
+                    backupJson.getInt(
+                            "database_schema_version"
+                    );
+
+            if (!BackupDatabaseTablePolicy
+                    .isSupportedSchemaVersion(
+                            backupSchemaVersion
+                    )) {
 
                 throw new EncryptedBackupDownloadException(
                         "Decrypted backup database "
@@ -1356,10 +1362,13 @@ public final class EncryptedCloudBackupDownloader {
                             "database"
                     );
 
-            if (databaseObject.getInt(
-                    "schema_version"
-            ) != CloudBackupPayloadBuilder
-                    .DATABASE_SCHEMA_VERSION) {
+            int databaseSchemaVersion =
+                    databaseObject.getInt(
+                            "schema_version"
+                    );
+
+            if (databaseSchemaVersion
+                    != backupSchemaVersion) {
 
                 throw new EncryptedBackupDownloadException(
                         "Decrypted database schema "
@@ -1372,10 +1381,23 @@ public final class EncryptedCloudBackupDownloader {
                             "tables"
                     );
 
-            Map<String, JSONArray> tableRows =
-                    validateDatabaseTables(
-                            tableArray
-                    );
+            Map<String, JSONArray> tableRows;
+
+            try {
+                tableRows =
+                        EncryptedBackupDatabaseValidator.validate(
+                                databaseSchemaVersion,
+                                tableArray
+                        );
+
+            } catch (EncryptedBackupDatabaseValidator
+                             .ValidationException exception) {
+
+                throw new EncryptedBackupDownloadException(
+                        exception.getMessage(),
+                        exception
+                );
+            }
 
             JSONArray preferencesArray =
                     backupJson.getJSONArray(
@@ -2621,3 +2643,4 @@ public final class EncryptedCloudBackupDownloader {
         }
     }
 }
+

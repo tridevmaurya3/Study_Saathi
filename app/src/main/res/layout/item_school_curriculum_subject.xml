@@ -187,7 +187,7 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Subject actions -->
+        <!-- Primary book actions -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -198,8 +198,9 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonScanCurriculumSubjectBook"
                 style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:minHeight="42dp"
                 android:text="Scan Book"
                 android:textAllCaps="false"
@@ -207,12 +208,35 @@
                 android:textSize="12sp" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonManageCurriculumSubjectChapters"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="42dp"
+                android:text="Manage Chapters"
+                android:textAllCaps="false"
+                android:textColor="@color/ss_primary"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- Subject edit/remove actions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonEditCurriculumSubject"
                 style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:minHeight="42dp"
-                android:text="Edit"
+                android:text="Edit Subject"
                 android:textAllCaps="false"
                 android:textColor="@color/ss_text_secondary"
                 android:textSize="12sp" />
@@ -220,10 +244,11 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonRemoveCurriculumSubject"
                 style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:minHeight="42dp"
-                android:text="Remove"
+                android:text="Remove Subject"
                 android:textAllCaps="false"
                 android:textColor="@color/ss_text_secondary"
                 android:textSize="12sp" />

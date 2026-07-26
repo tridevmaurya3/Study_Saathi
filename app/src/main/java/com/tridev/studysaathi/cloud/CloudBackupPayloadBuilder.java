@@ -39,7 +39,7 @@ public final class CloudBackupPayloadBuilder {
 
     public static final int BACKUP_FORMAT_VERSION = 1;
 
-    public static final int DATABASE_SCHEMA_VERSION = 5;
+    public static final int DATABASE_SCHEMA_VERSION = 7;
 
     public static final String COMPRESSION_TYPE =
             "gzip";
@@ -58,7 +58,7 @@ public final class CloudBackupPayloadBuilder {
     /*
      * Prevent unexpectedly large cloud uploads.
      *
-     * 40 chunks × 450,000 characters gives a maximum
+     * 40 chunks Ãƒâ€” 450,000 characters gives a maximum
      * encoded payload of about 18 million characters.
      */
     public static final int MAX_CHUNK_COUNT = 40;
@@ -83,7 +83,11 @@ public final class CloudBackupPayloadBuilder {
             "student_profiles",
             "lesson_progress",
             "quiz_attempts",
-            "doubt_history"
+            "doubt_history",
+            "school_curriculum_profiles",
+            "school_subjects",
+            "school_books",
+            "school_book_chapters"
     };
 
     private final Context applicationContext;
@@ -1116,3 +1120,4 @@ public final class CloudBackupPayloadBuilder {
         }
     }
 }
+

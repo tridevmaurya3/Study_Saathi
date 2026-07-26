@@ -11,22 +11,28 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.tridev.studysaathi.adapter.SubjectAdapter;
-import com.tridev.studysaathi.data.content.policy.ChildSubjectVisibilityPolicy;
-import com.tridev.studysaathi.data.local.entity.SchoolSubjectEntity;
-import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
-import com.tridev.studysaathi.data.repository.SchoolSubjectRepository;
-import com.tridev.studysaathi.data.repository.StudentProfileRepository;
-import com.tridev.studysaathi.databinding.ActivitySubjectsBinding;
+import com.tridev.studysaathi.data.content.policy
+        .ChildSubjectVisibilityPolicy;
+import com.tridev.studysaathi.data.local.entity
+        .SchoolSubjectEntity;
+import com.tridev.studysaathi.data.local.entity
+        .StudentProfileEntity;
+import com.tridev.studysaathi.data.repository
+        .SchoolSubjectRepository;
+import com.tridev.studysaathi.data.repository
+        .StudentProfileRepository;
+import com.tridev.studysaathi.databinding
+        .ActivitySubjectsBinding;
 import com.tridev.studysaathi.model.SubjectItem;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public final class SubjectsActivity extends AppCompatActivity {
+public final class SubjectsActivity
+        extends AppCompatActivity {
 
     private ActivitySubjectsBinding binding;
 
@@ -36,8 +42,7 @@ public final class SubjectsActivity extends AppCompatActivity {
 
     private SubjectAdapter subjectAdapter;
 
-    private ActivityResultLauncher<Intent>
-            bookScanLauncher;
+    private ActivityResultLauncher<Intent> bookScanLauncher;
 
     @NonNull
     private List<SchoolSubjectEntity> visibleSchoolSubjects =
@@ -112,13 +117,6 @@ public final class SubjectsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        /*
-         * Parent Curriculum Setup या Book Scanner से वापस आने पर
-         * subject और book changes को तुरंत refresh किया जाता है।
-         *
-         * पहली बार Activity खुलते समय activeProfileId -1 होगा,
-         * इसलिए duplicate loading नहीं होगी।
-         */
         if (binding != null
                 && activeProfileId > 0L) {
 
@@ -151,22 +149,14 @@ public final class SubjectsActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        binding.buttonBack.setOnClickListener(
-                view ->
-                        getOnBackPressedDispatcher()
-                                .onBackPressed()
+        binding.buttonBack.setOnClickListener(view ->
+                getOnBackPressedDispatcher()
+                        .onBackPressed()
         );
 
-        /*
-         * Scan School Book card अब दोबारा dedicated scanner खोलता है।
-         *
-         * Scanner screen में Camera, Gallery, OCR/Barcode search और
-         * Manual Book Entry के पुराने सभी options फिर उपलब्ध होंगे।
-         */
         binding.cardScanSchoolBook
-                .setOnClickListener(
-                        view ->
-                                openBookCoverScanner()
+                .setOnClickListener(view ->
+                        openBookCoverScanner()
                 );
     }
 
@@ -213,8 +203,7 @@ public final class SubjectsActivity extends AppCompatActivity {
 
                     @Override
                     public void onSuccess(
-                            @Nullable StudentProfileEntity
-                                    studentProfile
+                            @Nullable StudentProfileEntity studentProfile
                     ) {
                         if (!isActivityAvailable()) {
                             return;
@@ -260,8 +249,7 @@ public final class SubjectsActivity extends AppCompatActivity {
 
                         Snackbar.make(
                                 binding.getRoot(),
-                                R.string
-                                        .subject_profile_loading_failed,
+                                R.string.profile_loading_failed,
                                 Snackbar.LENGTH_LONG
                         ).show();
                     }
@@ -284,19 +272,15 @@ public final class SubjectsActivity extends AppCompatActivity {
                         "Current Class"
                 );
 
-        String profileSummary =
+        binding.textSubjectProfile.setText(
                 activeEducationBoard
                         + "  •  "
-                        + activeStudentClass;
-
-        binding.textSubjectProfile.setText(
-                profileSummary
+                        + activeStudentClass
         );
 
         binding.textSubjectStudentName.setText(
                 getString(
-                        R.string
-                                .subjects_for_student_format,
+                        R.string.subjects_for_student_format,
                         valueOrFallback(
                                 studentProfile.getStudentName(),
                                 "Student"
@@ -323,19 +307,17 @@ public final class SubjectsActivity extends AppCompatActivity {
         );
 
         /*
-         * false इसलिए दिया गया है ताकि Policy disabled, pending-book
-         * और invalid subjects की पूरी readiness summary बना सके।
+         * Repository से सभी subjects लेकर Child policy स्वयं
+         * enabled/book-confirmed filtering करेगी।
          */
         schoolSubjectRepository.getSubjectsForProfile(
                 profileId,
                 false,
-                new SchoolSubjectRepository
-                        .SubjectsCallback() {
+                new SchoolSubjectRepository.SubjectsCallback() {
 
                     @Override
                     public void onSuccess(
-                            @NonNull List<SchoolSubjectEntity>
-                                    schoolSubjects
+                            @NonNull List<SchoolSubjectEntity> schoolSubjects
                     ) {
                         if (!isActivityAvailable()
                                 || profileId != activeProfileId) {
@@ -344,14 +326,13 @@ public final class SubjectsActivity extends AppCompatActivity {
                         }
 
                         ChildSubjectVisibilityPolicy
-                                .VisibilitySummary visibilitySummary =
+                                .VisibilitySummary summary =
                                 ChildSubjectVisibilityPolicy
                                         .createVisibilitySummary(
                                                 schoolSubjects
                                         );
 
-                        List<SchoolSubjectEntity>
-                                filteredSubjects =
+                        List<SchoolSubjectEntity> filteredSubjects =
                                 ChildSubjectVisibilityPolicy
                                         .filterVisibleSubjects(
                                                 schoolSubjects
@@ -382,8 +363,7 @@ public final class SubjectsActivity extends AppCompatActivity {
                         if (subjectItems.isEmpty()) {
                             Snackbar.make(
                                     binding.getRoot(),
-                                    visibilitySummary
-                                            .createStatusMessage(),
+                                    summary.createStatusMessage(),
                                     Snackbar.LENGTH_LONG
                             ).show();
                         }
@@ -416,7 +396,8 @@ public final class SubjectsActivity extends AppCompatActivity {
 
                         Snackbar.make(
                                 binding.getRoot(),
-                                "Confirmed school subjects load नहीं हो सके।",
+                                "Confirmed school subjects "
+                                        + "load नहीं हो सके।",
                                 Snackbar.LENGTH_LONG
                         ).show();
                     }
@@ -479,9 +460,7 @@ public final class SubjectsActivity extends AppCompatActivity {
                 );
 
         int backgroundColorRes;
-
         int borderColorRes;
-
         int accentColorRes;
 
         switch (paletteIndex) {
@@ -567,7 +546,7 @@ public final class SubjectsActivity extends AppCompatActivity {
     private String createSubjectDescription(
             @NonNull SchoolSubjectEntity schoolSubject
     ) {
-        StringBuilder descriptionBuilder =
+        StringBuilder description =
                 new StringBuilder();
 
         String bookName =
@@ -576,17 +555,17 @@ public final class SubjectsActivity extends AppCompatActivity {
                 );
 
         if (!bookName.isEmpty()) {
-            descriptionBuilder.append(
+            description.append(
                     "Exact Book: "
             );
 
-            descriptionBuilder.append(
+            description.append(
                     bookName
             );
         }
 
         appendDescriptionPart(
-                descriptionBuilder,
+                description,
                 schoolSubject.getPublisherName()
         );
 
@@ -595,7 +574,7 @@ public final class SubjectsActivity extends AppCompatActivity {
                     schoolSubject.getChapterCount();
 
             appendDescriptionPart(
-                    descriptionBuilder,
+                    description,
                     chapterCount
                             + (chapterCount == 1
                             ? " Chapter"
@@ -604,16 +583,14 @@ public final class SubjectsActivity extends AppCompatActivity {
 
         } else {
             appendDescriptionPart(
-                    descriptionBuilder,
-                    "Chapters pending"
+                    description,
+                    "Open to view confirmed chapters"
             );
         }
 
-        if (descriptionBuilder.length() == 0) {
-            return "Exact school book confirmed";
-        }
-
-        return descriptionBuilder.toString();
+        return description.length() == 0
+                ? "Exact school book confirmed"
+                : description.toString();
     }
 
     private void appendDescriptionPart(
@@ -650,93 +627,86 @@ public final class SubjectsActivity extends AppCompatActivity {
                                 schoolSubject
                         );
 
-        String normalizedSubjectName =
+        String normalizedName =
                 normalizeText(
                         subjectName
                 );
 
-        if (normalizedSubjectName.contains(
+        if (normalizedName.contains(
                 "mathematics"
         )
-                || normalizedSubjectName.equals(
+                || normalizedName.equals(
                 "math"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "गणित"
         )) {
-
             return "∑";
         }
 
-        if (normalizedSubjectName.contains(
+        if (normalizedName.contains(
                 "hindi"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "हिंदी"
         )) {
-
             return "अ";
         }
 
-        if (normalizedSubjectName.contains(
+        if (normalizedName.contains(
                 "english"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "अंग्रेज"
         )) {
-
             return "A";
         }
 
-        if (normalizedSubjectName.contains(
+        if (normalizedName.contains(
                 "science"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "विज्ञान"
         )) {
-
             return "⚗";
         }
 
-        if (normalizedSubjectName.contains(
+        if (normalizedName.contains(
                 "social"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "history"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "geography"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "civics"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "सामाजिक"
         )) {
-
             return "◎";
         }
 
-        if (normalizedSubjectName.contains(
+        if (normalizedName.contains(
                 "computer"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "information technology"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "कंप्यूटर"
         )) {
-
             return "</>";
         }
 
-        if (normalizedSubjectName.contains(
+        if (normalizedName.contains(
                 "sanskrit"
         )
-                || normalizedSubjectName.contains(
+                || normalizedName.contains(
                 "संस्कृत"
         )) {
-
             return "सं";
         }
 
@@ -768,8 +738,7 @@ public final class SubjectsActivity extends AppCompatActivity {
     ) {
         binding.textSubjectCount.setText(
                 getString(
-                        R.string
-                                .subject_count_format,
+                        R.string.subject_count_format,
                         Math.max(
                                 0,
                                 visibleSubjectCount
@@ -823,6 +792,10 @@ public final class SubjectsActivity extends AppCompatActivity {
         );
     }
 
+    /**
+     * Child द्वारा subject card tap करने पर exact school-book
+     * chapter mode खोला जाता है।
+     */
     private void handleSubjectSelection(
             @NonNull SubjectItem subjectItem
     ) {
@@ -831,7 +804,9 @@ public final class SubjectsActivity extends AppCompatActivity {
                         subjectItem.getSubjectName()
                 );
 
-        if (selectedSubject == null) {
+        if (selectedSubject == null
+                || selectedSubject.getSubjectRowId() <= 0L) {
+
             Snackbar.make(
                     binding.getRoot(),
                     "Selected school subject उपलब्ध नहीं है।",
@@ -841,8 +816,40 @@ public final class SubjectsActivity extends AppCompatActivity {
             return;
         }
 
-        showExactSubjectInformation(
-                selectedSubject
+        String selectedSubjectName =
+                ChildSubjectVisibilityPolicy
+                        .getSubjectDisplayName(
+                                selectedSubject
+                        );
+
+        Intent chaptersIntent =
+                new Intent(
+                        SubjectsActivity.this,
+                        ChaptersActivity.class
+                );
+
+        chaptersIntent.putExtra(
+                ChaptersActivity.EXTRA_SCHOOL_SUBJECT_ROW_ID,
+                selectedSubject.getSubjectRowId()
+        );
+
+        chaptersIntent.putExtra(
+                ChaptersActivity.EXTRA_SUBJECT_NAME,
+                selectedSubjectName
+        );
+
+        chaptersIntent.putExtra(
+                ChaptersActivity.EXTRA_STUDENT_CLASS,
+                activeStudentClass
+        );
+
+        chaptersIntent.putExtra(
+                ChaptersActivity.EXTRA_EDUCATION_BOARD,
+                activeEducationBoard
+        );
+
+        startActivity(
+                chaptersIntent
         );
     }
 
@@ -878,120 +885,6 @@ public final class SubjectsActivity extends AppCompatActivity {
         }
 
         return null;
-    }
-
-    private void showExactSubjectInformation(
-            @NonNull SchoolSubjectEntity schoolSubject
-    ) {
-        String subjectName =
-                ChildSubjectVisibilityPolicy
-                        .getSubjectDisplayName(
-                                schoolSubject
-                        );
-
-        StringBuilder messageBuilder =
-                new StringBuilder();
-
-        messageBuilder.append(
-                "Exact School Book: "
-        );
-
-        messageBuilder.append(
-                valueOrFallback(
-                        schoolSubject.getBookName(),
-                        "Confirmed Book"
-                )
-        );
-
-        appendMessageLine(
-                messageBuilder,
-                "Publisher",
-                schoolSubject.getPublisherName()
-        );
-
-        appendMessageLine(
-                messageBuilder,
-                "Book Code",
-                schoolSubject.getBookCode()
-        );
-
-        appendMessageLine(
-                messageBuilder,
-                "Subject Code",
-                schoolSubject.getSubjectCode()
-        );
-
-        messageBuilder.append(
-                "\n\n"
-        );
-
-        if (schoolSubject.getChapterCount() > 0) {
-            messageBuilder.append(
-                    schoolSubject.getChapterCount()
-            );
-
-            messageBuilder.append(
-                    schoolSubject.getChapterCount() == 1
-                            ? " exact chapter record तैयार है।"
-                            : " exact chapter records तैयार हैं।"
-            );
-
-        } else {
-            messageBuilder.append(
-                    "इस exact school book के chapters अभी तैयार नहीं किए गए हैं।"
-            );
-        }
-
-        messageBuilder.append(
-                "\n\nGeneric chapter catalog नहीं खोला जाएगा। "
-                        + "अगले चरण में इसी exact book के chapters जोड़े जाएँगे।"
-        );
-
-        new MaterialAlertDialogBuilder(
-                this
-        )
-                .setTitle(
-                        subjectName
-                )
-                .setMessage(
-                        messageBuilder.toString()
-                )
-                .setPositiveButton(
-                        "ठीक है",
-                        null
-                )
-                .show();
-    }
-
-    private void appendMessageLine(
-            @NonNull StringBuilder builder,
-            @NonNull String label,
-            @Nullable Object value
-    ) {
-        String safeValue =
-                safeText(
-                        value
-                );
-
-        if (safeValue.isEmpty()) {
-            return;
-        }
-
-        builder.append(
-                "\n"
-        );
-
-        builder.append(
-                label
-        );
-
-        builder.append(
-                ": "
-        );
-
-        builder.append(
-                safeValue
-        );
     }
 
     private void showLoadingState(

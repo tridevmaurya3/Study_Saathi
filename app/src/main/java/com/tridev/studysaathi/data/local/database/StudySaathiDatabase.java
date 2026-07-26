@@ -12,6 +12,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import com.tridev.studysaathi.data.local.dao.DoubtHistoryDao;
 import com.tridev.studysaathi.data.local.dao.LessonProgressDao;
 import com.tridev.studysaathi.data.local.dao.QuizAttemptDao;
+import com.tridev.studysaathi.data.local.dao.SchoolBookChapterContentDao;
+import com.tridev.studysaathi.data.local.dao.SchoolBookChapterDao;
+import com.tridev.studysaathi.data.local.dao.SchoolBookChapterPageDao;
 import com.tridev.studysaathi.data.local.dao.SchoolBookDao;
 import com.tridev.studysaathi.data.local.dao.SchoolCurriculumProfileDao;
 import com.tridev.studysaathi.data.local.dao.SchoolSubjectDao;
@@ -19,6 +22,9 @@ import com.tridev.studysaathi.data.local.dao.StudentProfileDao;
 import com.tridev.studysaathi.data.local.entity.DoubtHistoryEntity;
 import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
 import com.tridev.studysaathi.data.local.entity.QuizAttemptEntity;
+import com.tridev.studysaathi.data.local.entity.SchoolBookChapterContentEntity;
+import com.tridev.studysaathi.data.local.entity.SchoolBookChapterEntity;
+import com.tridev.studysaathi.data.local.entity.SchoolBookChapterPageEntity;
 import com.tridev.studysaathi.data.local.entity.SchoolBookEntity;
 import com.tridev.studysaathi.data.local.entity.SchoolCurriculumProfileEntity;
 import com.tridev.studysaathi.data.local.entity.SchoolSubjectEntity;
@@ -35,13 +41,15 @@ import java.util.concurrent.Executors;
                 DoubtHistoryEntity.class,
                 SchoolCurriculumProfileEntity.class,
                 SchoolSubjectEntity.class,
-                SchoolBookEntity.class
+                SchoolBookEntity.class,
+                SchoolBookChapterEntity.class,
+                SchoolBookChapterContentEntity.class,
+                SchoolBookChapterPageEntity.class
         },
-        version = 6,
+        version = 9,
         exportSchema = false
 )
-public abstract class StudySaathiDatabase
-        extends RoomDatabase {
+public abstract class StudySaathiDatabase extends RoomDatabase {
 
     private static final String DATABASE_NAME =
             "study_saathi_database";
@@ -200,30 +208,45 @@ public abstract class StudySaathiDatabase
                 }
             };
 
-    /**
-     * Version 5 से 6:
-     *
-     * 1. Student school curriculum profile table
-     * 2. Dynamic school subjects table
-     * 3. School books and scanned books table
-     */
     public static final Migration MIGRATION_5_6 =
             new Migration(5, 6) {
                 @Override
                 public void migrate(
                         @NonNull SupportSQLiteDatabase database
                 ) {
-                    createSchoolCurriculumProfilesTable(
-                            database
-                    );
+                    createSchoolCurriculumProfilesTable(database);
+                    createSchoolSubjectsTable(database);
+                    createSchoolBooksTable(database);
+                }
+            };
 
-                    createSchoolSubjectsTable(
-                            database
-                    );
+    public static final Migration MIGRATION_6_7 =
+            new Migration(6, 7) {
+                @Override
+                public void migrate(
+                        @NonNull SupportSQLiteDatabase database
+                ) {
+                    createSchoolBookChaptersTable(database);
+                }
+            };
 
-                    createSchoolBooksTable(
-                            database
-                    );
+    public static final Migration MIGRATION_7_8 =
+            new Migration(7, 8) {
+                @Override
+                public void migrate(
+                        @NonNull SupportSQLiteDatabase database
+                ) {
+                    createSchoolBookChapterContentsTable(database);
+                }
+            };
+
+    public static final Migration MIGRATION_8_9 =
+            new Migration(8, 9) {
+                @Override
+                public void migrate(
+                        @NonNull SupportSQLiteDatabase database
+                ) {
+                    createSchoolBookChapterPagesTable(database);
                 }
             };
 
@@ -487,6 +510,233 @@ public abstract class StudySaathiDatabase
         );
     }
 
+    private static void createSchoolBookChaptersTable(
+            @NonNull SupportSQLiteDatabase database
+    ) {
+        database.execSQL(
+                "CREATE TABLE IF NOT EXISTS "
+                        + "`school_book_chapters` ("
+                        + "`chapter_row_id` INTEGER PRIMARY KEY "
+                        + "AUTOINCREMENT NOT NULL, "
+                        + "`book_row_id` INTEGER NOT NULL, "
+                        + "`chapter_id` TEXT NOT NULL, "
+                        + "`chapter_number` TEXT NOT NULL, "
+                        + "`chapter_title_english` TEXT NOT NULL, "
+                        + "`chapter_title_hindi` TEXT NOT NULL, "
+                        + "`chapter_subtitle` TEXT NOT NULL, "
+                        + "`unit_name` TEXT NOT NULL, "
+                        + "`chapter_type` TEXT NOT NULL "
+                        + "DEFAULT 'CHAPTER', "
+                        + "`start_page_number` INTEGER NOT NULL DEFAULT 0, "
+                        + "`end_page_number` INTEGER NOT NULL DEFAULT 0, "
+                        + "`chapter_description` TEXT NOT NULL, "
+                        + "`learning_objectives` TEXT NOT NULL, "
+                        + "`important_topics` TEXT NOT NULL, "
+                        + "`content_source` TEXT NOT NULL "
+                        + "DEFAULT 'PARENT_MANUAL', "
+                        + "`source_reference` TEXT NOT NULL, "
+                        + "`extraction_confidence` REAL NOT NULL DEFAULT 0, "
+                        + "`parent_confirmed` INTEGER NOT NULL DEFAULT 0, "
+                        + "`is_enabled` INTEGER NOT NULL DEFAULT 1, "
+                        + "`is_optional_chapter` INTEGER NOT NULL DEFAULT 0, "
+                        + "`is_revision_chapter` INTEGER NOT NULL DEFAULT 0, "
+                        + "`content_processing_status` TEXT NOT NULL "
+                        + "DEFAULT 'NOT_STARTED', "
+                        + "`lesson_count` INTEGER NOT NULL DEFAULT 0, "
+                        + "`completed_lesson_count` INTEGER NOT NULL DEFAULT 0, "
+                        + "`quiz_question_count` INTEGER NOT NULL DEFAULT 0, "
+                        + "`note_count` INTEGER NOT NULL DEFAULT 0, "
+                        + "`bookmark_count` INTEGER NOT NULL DEFAULT 0, "
+                        + "`progress_percent` INTEGER NOT NULL DEFAULT 0, "
+                        + "`sort_order` INTEGER NOT NULL DEFAULT 0, "
+                        + "`last_opened_at` INTEGER NOT NULL, "
+                        + "`last_content_processed_at` INTEGER NOT NULL, "
+                        + "`created_at` INTEGER NOT NULL, "
+                        + "`updated_at` INTEGER NOT NULL, "
+                        + "FOREIGN KEY(`book_row_id`) "
+                        + "REFERENCES `school_books`(`book_row_id`) "
+                        + "ON UPDATE CASCADE ON DELETE CASCADE"
+                        + ")"
+        );
+
+        database.execSQL(
+                "CREATE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapters_book_row_id` "
+                        + "ON `school_book_chapters` (`book_row_id`)"
+        );
+
+        database.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapters_"
+                        + "book_row_id_chapter_id` "
+                        + "ON `school_book_chapters` ("
+                        + "`book_row_id`, "
+                        + "`chapter_id`"
+                        + ")"
+        );
+
+        database.execSQL(
+                "CREATE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapters_"
+                        + "book_row_id_is_enabled_"
+                        + "parent_confirmed_sort_order` "
+                        + "ON `school_book_chapters` ("
+                        + "`book_row_id`, "
+                        + "`is_enabled`, "
+                        + "`parent_confirmed`, "
+                        + "`sort_order`"
+                        + ")"
+        );
+
+        database.execSQL(
+                "CREATE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapters_"
+                        + "content_source_content_processing_status` "
+                        + "ON `school_book_chapters` ("
+                        + "`content_source`, "
+                        + "`content_processing_status`"
+                        + ")"
+        );
+
+        database.execSQL(
+                "CREATE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapters_chapter_type` "
+                        + "ON `school_book_chapters` (`chapter_type`)"
+        );
+    }
+
+    private static void createSchoolBookChapterContentsTable(
+            @NonNull SupportSQLiteDatabase database
+    ) {
+        database.execSQL(
+                "CREATE TABLE IF NOT EXISTS "
+                        + "`school_book_chapter_contents` ("
+                        + "`content_row_id` INTEGER PRIMARY KEY "
+                        + "AUTOINCREMENT NOT NULL, "
+                        + "`chapter_row_id` INTEGER NOT NULL, "
+                        + "`content_id` TEXT NOT NULL, "
+                        + "`language_mode` TEXT NOT NULL, "
+                        + "`chapter_introduction_english` TEXT NOT NULL, "
+                        + "`chapter_introduction_hindi` TEXT NOT NULL, "
+                        + "`detailed_explanation_english` TEXT NOT NULL, "
+                        + "`detailed_explanation_hindi` TEXT NOT NULL, "
+                        + "`key_points_english` TEXT NOT NULL, "
+                        + "`key_points_hindi` TEXT NOT NULL, "
+                        + "`important_terms_english` TEXT NOT NULL, "
+                        + "`important_terms_hindi` TEXT NOT NULL, "
+                        + "`worked_examples_english` TEXT NOT NULL, "
+                        + "`worked_examples_hindi` TEXT NOT NULL, "
+                        + "`real_life_examples_english` TEXT NOT NULL, "
+                        + "`real_life_examples_hindi` TEXT NOT NULL, "
+                        + "`common_mistakes_english` TEXT NOT NULL, "
+                        + "`common_mistakes_hindi` TEXT NOT NULL, "
+                        + "`chapter_summary_english` TEXT NOT NULL, "
+                        + "`chapter_summary_hindi` TEXT NOT NULL, "
+                        + "`practice_questions_json` TEXT NOT NULL, "
+                        + "`source_page_references_json` TEXT NOT NULL, "
+                        + "`content_source` TEXT NOT NULL, "
+                        + "`review_status` TEXT NOT NULL, "
+                        + "`parent_approved` INTEGER NOT NULL DEFAULT 0, "
+                        + "`generation_version` INTEGER NOT NULL DEFAULT 1, "
+                        + "`estimated_reading_minutes` INTEGER NOT NULL DEFAULT 0, "
+                        + "`created_at` INTEGER NOT NULL DEFAULT 0, "
+                        + "`updated_at` INTEGER NOT NULL DEFAULT 0, "
+                        + "`approved_at` INTEGER NOT NULL DEFAULT 0, "
+                        + "`last_generated_at` INTEGER NOT NULL DEFAULT 0, "
+                        + "FOREIGN KEY(`chapter_row_id`) "
+                        + "REFERENCES `school_book_chapters`(`chapter_row_id`) "
+                        + "ON UPDATE CASCADE ON DELETE CASCADE"
+                        + ")"
+        );
+
+        database.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapter_contents_chapter_row_id` "
+                        + "ON `school_book_chapter_contents` "
+                        + "(`chapter_row_id`)"
+        );
+
+        database.execSQL(
+                "CREATE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapter_contents_"
+                        + "review_status_parent_approved` "
+                        + "ON `school_book_chapter_contents` ("
+                        + "`review_status`, `parent_approved`"
+                        + ")"
+        );
+
+        database.execSQL(
+                "CREATE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapter_contents_content_source` "
+                        + "ON `school_book_chapter_contents` "
+                        + "(`content_source`)"
+        );
+    }
+
+    private static void createSchoolBookChapterPagesTable(
+            @NonNull SupportSQLiteDatabase database
+    ) {
+        database.execSQL(
+                "CREATE TABLE IF NOT EXISTS "
+                        + "`school_book_chapter_pages` ("
+                        + "`chapter_page_row_id` INTEGER PRIMARY KEY "
+                        + "AUTOINCREMENT NOT NULL, "
+                        + "`chapter_row_id` INTEGER NOT NULL, "
+                        + "`chapter_page_id` TEXT NOT NULL, "
+                        + "`page_order` INTEGER NOT NULL, "
+                        + "`source_document_page_number` INTEGER NOT NULL, "
+                        + "`page_type` TEXT NOT NULL, "
+                        + "`page_title` TEXT NOT NULL, "
+                        + "`introduction_english` TEXT NOT NULL, "
+                        + "`introduction_hindi` TEXT NOT NULL, "
+                        + "`explanation_english` TEXT NOT NULL, "
+                        + "`explanation_hindi` TEXT NOT NULL, "
+                        + "`key_points_english` TEXT NOT NULL, "
+                        + "`key_points_hindi` TEXT NOT NULL, "
+                        + "`examples_english` TEXT NOT NULL, "
+                        + "`examples_hindi` TEXT NOT NULL, "
+                        + "`exercises_json` TEXT NOT NULL, "
+                        + "`summary_english` TEXT NOT NULL, "
+                        + "`summary_hindi` TEXT NOT NULL, "
+                        + "`persistent_page_image_path` TEXT NOT NULL, "
+                        + "`raw_ocr_text` TEXT NOT NULL, "
+                        + "`parent_approved` INTEGER NOT NULL DEFAULT 0, "
+                        + "`created_at` INTEGER NOT NULL DEFAULT 0, "
+                        + "`updated_at` INTEGER NOT NULL DEFAULT 0, "
+                        + "FOREIGN KEY(`chapter_row_id`) "
+                        + "REFERENCES `school_book_chapters`"
+                        + "(`chapter_row_id`) "
+                        + "ON UPDATE CASCADE ON DELETE CASCADE"
+                        + ")"
+        );
+
+        database.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapter_pages_"
+                        + "chapter_row_id_page_order` "
+                        + "ON `school_book_chapter_pages` ("
+                        + "`chapter_row_id`, `page_order`"
+                        + ")"
+        );
+
+        database.execSQL(
+                "CREATE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapter_pages_"
+                        + "chapter_row_id_parent_approved` "
+                        + "ON `school_book_chapter_pages` ("
+                        + "`chapter_row_id`, `parent_approved`"
+                        + ")"
+        );
+
+        database.execSQL(
+                "CREATE INDEX IF NOT EXISTS "
+                        + "`index_school_book_chapter_pages_"
+                        + "source_document_page_number` "
+                        + "ON `school_book_chapter_pages` "
+                        + "(`source_document_page_number`)"
+        );
+    }
+
     public abstract StudentProfileDao studentProfileDao();
 
     public abstract LessonProgressDao lessonProgressDao();
@@ -501,6 +751,14 @@ public abstract class StudySaathiDatabase
     public abstract SchoolSubjectDao schoolSubjectDao();
 
     public abstract SchoolBookDao schoolBookDao();
+
+    public abstract SchoolBookChapterDao schoolBookChapterDao();
+
+    public abstract SchoolBookChapterContentDao
+    schoolBookChapterContentDao();
+
+    public abstract SchoolBookChapterPageDao
+    schoolBookChapterPageDao();
 
     public static StudySaathiDatabase getInstance(
             Context context
@@ -519,7 +777,10 @@ public abstract class StudySaathiDatabase
                                             MIGRATION_2_3,
                                             MIGRATION_3_4,
                                             MIGRATION_4_5,
-                                            MIGRATION_5_6
+                                            MIGRATION_5_6,
+                                            MIGRATION_6_7,
+                                            MIGRATION_7_8,
+                                            MIGRATION_8_9
                                     )
                                     .build();
                 }
