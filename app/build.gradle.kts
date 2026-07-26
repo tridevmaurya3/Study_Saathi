@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
 
@@ -6,24 +8,108 @@ plugins {
     )
 }
 
+/*
+ * Google Books API key को project की local.properties file से पढ़ा जाता है।
+ *
+ * local.properties सामान्यतः Git repository में commit नहीं होती।
+ * Key उपलब्ध न होने पर empty value उपयोग होगी, जिससे project build
+ * होना बंद नहीं होगा और Open Library fallback काम कर सकेगी।
+ */
+val localProperties =
+    Properties().apply {
+        val localPropertiesFile =
+            rootProject.file(
+                "local.properties"
+            )
+
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile
+                .inputStream()
+                .use { inputStream ->
+                    load(
+                        inputStream
+                    )
+                }
+        }
+    }
+
+val googleBooksApiKey =
+    localProperties
+        .getProperty(
+            "GOOGLE_BOOKS_API_KEY",
+            ""
+        )
+        .trim()
+
+/*
+ * BuildConfig String के लिए backslash और quotation marks को safely
+ * escape किया जाता है।
+ */
+val escapedGoogleBooksApiKey =
+    googleBooksApiKey
+        .replace(
+            "\\",
+            "\\\\"
+        )
+        .replace(
+            "\"",
+            "\\\""
+        )
+
 android {
-    namespace = "com.tridev.studysaathi"
-    compileSdk = 36
+    namespace =
+        "com.tridev.studysaathi"
+
+    compileSdk =
+        36
 
     defaultConfig {
-        applicationId = "com.tridev.studysaathi"
-        minSdk = 26
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        applicationId =
+            "com.tridev.studysaathi"
+
+        minSdk =
+            26
+
+        targetSdk =
+            36
+
+        versionCode =
+            1
+
+        versionName =
+            "1.0"
 
         testInstrumentationRunner =
             "androidx.test.runner.AndroidJUnitRunner"
+
+        /*
+         * Java code में यह value आगे ऐसे उपलब्ध होगी:
+         *
+         * BuildConfig.GOOGLE_BOOKS_API_KEY
+         *
+         * API key खाली होने पर Google Books anonymous request के बाद
+         * Open Library fallback उपलब्ध रहेगी।
+         */
+        buildConfigField(
+            "String",
+            "GOOGLE_BOOKS_API_KEY",
+            "\"$escapedGoogleBooksApiKey\""
+        )
     }
 
     buildTypes {
+        debug {
+            /*
+             * Debug build भी local.properties वाली key उपयोग करेगी।
+             * API restriction में debug SHA-1 आगे जोड़ा जाएगा।
+             */
+            isMinifyEnabled =
+                false
+        }
+
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled =
+                false
 
             proguardFiles(
                 getDefaultProguardFile(
@@ -43,7 +129,15 @@ android {
     }
 
     buildFeatures {
-        viewBinding = true
+        viewBinding =
+            true
+
+        /*
+         * Custom GOOGLE_BOOKS_API_KEY field के लिए BuildConfig
+         * generation explicitly enable होना जरूरी है।
+         */
+        buildConfig =
+            true
     }
 }
 
@@ -87,10 +181,8 @@ dependencies {
     /*
      * ML Kit Latin Text Recognition.
      *
-     * This bundled model will read English text,
-     * numbers, publisher names, book titles,
-     * class information and ISBN text printed
-     * using the Latin script.
+     * यह bundled model English text, numbers, publisher names,
+     * book titles, class information और ISBN text पढ़ता है।
      */
     implementation(
         "com.google.mlkit:text-recognition:16.0.1"
@@ -99,8 +191,7 @@ dependencies {
     /*
      * ML Kit Devanagari Text Recognition.
      *
-     * This bundled model will read Hindi and
-     * Sanskrit text printed using Devanagari.
+     * यह bundled model Hindi और Sanskrit text पढ़ता है।
      */
     implementation(
         "com.google.mlkit:text-recognition-devanagari:16.0.1"
@@ -109,17 +200,16 @@ dependencies {
     /*
      * ML Kit Barcode Scanning.
      *
-     * This bundled scanner will be used for
-     * ISBN, EAN-13, EAN-8, UPC and other
-     * supported book barcodes.
+     * यह ISBN, EAN-13, EAN-8, UPC और दूसरे supported
+     * book barcodes scan करता है।
      */
     implementation(
         "com.google.mlkit:barcode-scanning:17.3.0"
     )
 
     /*
-     * Firebase BoM manages compatible versions
-     * of all Firebase Android libraries.
+     * Firebase BoM सभी Firebase Android libraries के compatible
+     * versions manage करता है।
      */
     implementation(
         platform(
@@ -128,16 +218,16 @@ dependencies {
     )
 
     /*
-     * Firebase Authentication will be used
-     * for secure Study Saathi cloud accounts.
+     * Secure Study Saathi cloud accounts के लिए
+     * Firebase Authentication।
      */
     implementation(
         libs.firebase.auth
     )
 
     /*
-     * Cloud Firestore will store cloud backup
-     * and synchronization data.
+     * Cloud backup और synchronization data के लिए
+     * Cloud Firestore।
      */
     implementation(
         libs.firebase.firestore

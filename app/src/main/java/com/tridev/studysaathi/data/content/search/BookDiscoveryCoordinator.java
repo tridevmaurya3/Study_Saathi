@@ -12,91 +12,67 @@ import com.tridev.studysaathi.data.content.scanner.BookCoverMetadataExtractor;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class BookDiscoveryCoordinator
-        implements AutoCloseable {
+public final class BookDiscoveryCoordinator implements AutoCloseable {
 
-    private static final int DEFAULT_MAXIMUM_RESULTS =
-            20;
-
-    private static final int MINIMUM_RESULTS =
-            1;
-
-    private static final int MAXIMUM_RESULTS =
-            40;
+    private static final int DEFAULT_MAXIMUM_RESULTS = 20;
+    private static final int MINIMUM_RESULTS = 1;
+    private static final int MAXIMUM_RESULTS = 40;
 
     @NonNull
-    private final NetworkAvailabilityChecker
-            networkAvailabilityChecker;
+    private final NetworkAvailabilityChecker networkAvailabilityChecker;
 
     @NonNull
-    private final BookCoverMetadataExtractor
-            metadataExtractor;
+    private final BookCoverMetadataExtractor metadataExtractor;
 
     @NonNull
-    private final GoogleBooksSearchClient
-            googleBooksSearchClient;
+    private final GoogleBooksSearchClient googleBooksSearchClient;
 
     @NonNull
-    private final OnlineBookMatchEvaluator
-            matchEvaluator;
+    private final OpenLibrarySearchClient openLibrarySearchClient;
 
     @NonNull
-    private final AtomicBoolean searchInProgress;
+    private final OnlineBookMatchEvaluator matchEvaluator;
 
     @NonNull
-    private final AtomicBoolean closed;
+    private final AtomicBoolean searchInProgress = new AtomicBoolean(false);
 
-    public BookDiscoveryCoordinator(
-            @NonNull Context context
-    ) {
-        this(
-                context,
-                ""
-        );
+    @NonNull
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+
+    public BookDiscoveryCoordinator(@NonNull Context context) {
+        this(context, "");
     }
 
     /**
-     * The Google Books API key is optional.
-     *
-     * It must be supplied later through secure
-     * application configuration and must never
-     * be hard-coded directly inside this class.
+     * Google Books key optional है। Key उपलब्ध न होने, HTTP 429 आने,
+     * no result मिलने या weak match मिलने पर Open Library fallback चलता है।
      */
     public BookDiscoveryCoordinator(
             @NonNull Context context,
             @Nullable String googleBooksApiKey
     ) {
-        Context applicationContext =
-                context.getApplicationContext();
+        Context applicationContext = context.getApplicationContext();
 
         networkAvailabilityChecker =
-                new NetworkAvailabilityChecker(
-                        applicationContext
-                );
+                new NetworkAvailabilityChecker(applicationContext);
 
         metadataExtractor =
                 new BookCoverMetadataExtractor();
 
         googleBooksSearchClient =
-                new GoogleBooksSearchClient(
-                        googleBooksApiKey
-                );
+                new GoogleBooksSearchClient(googleBooksApiKey);
+
+        openLibrarySearchClient =
+                new OpenLibrarySearchClient();
 
         matchEvaluator =
                 new OnlineBookMatchEvaluator();
-
-        searchInProgress =
-                new AtomicBoolean(
-                        false
-                );
-
-        closed =
-                new AtomicBoolean(
-                        false
-                );
     }
 
     public void discoverBooks(
@@ -105,9 +81,7 @@ public final class BookDiscoveryCoordinator
     ) {
         discoverBooks(
                 scanResult,
-                BookCoverMetadataExtractor
-                        .ExtractionContext
-                        .empty(),
+                BookCoverMetadataExtractor.ExtractionContext.empty(),
                 DEFAULT_MAXIMUM_RESULTS,
                 callback
         );
@@ -115,8 +89,7 @@ public final class BookDiscoveryCoordinator
 
     public void discoverBooks(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor
-                    .ExtractionContext extractionContext,
+            @NonNull BookCoverMetadataExtractor.ExtractionContext extractionContext,
             @NonNull DiscoveryCallback callback
     ) {
         discoverBooks(
@@ -127,21 +100,9 @@ public final class BookDiscoveryCoordinator
         );
     }
 
-    /**
-     * Performs the complete online book-discovery
-     * process:
-     *
-     * 1. Validates the scan result.
-     * 2. Extracts structured metadata.
-     * 3. Checks validated internet connectivity.
-     * 4. Searches Google Books.
-     * 5. Evaluates and ranks all results.
-     * 6. Returns the best match for parent review.
-     */
     public void discoverBooks(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor
-                    .ExtractionContext extractionContext,
+            @NonNull BookCoverMetadataExtractor.ExtractionContext extractionContext,
             int maximumResults,
             @NonNull DiscoveryCallback callback
     ) {
@@ -156,10 +117,7 @@ public final class BookDiscoveryCoordinator
             return;
         }
 
-        if (!searchInProgress.compareAndSet(
-                false,
-                true
-        )) {
+        if (!searchInProgress.compareAndSet(false, true)) {
             callback.onDiscoveryFailed(
                     new BookDiscoveryException(
                             FailureReason.SEARCH_ALREADY_RUNNING,
@@ -171,22 +129,20 @@ public final class BookDiscoveryCoordinator
         }
 
         if (!scanResult.isSuccessful()
-                || !scanResult
-                .isReadyForOnlineSearch()) {
+                || !scanResult.isReadyForOnlineSearch()) {
 
             finishWithFailure(
                     callback,
                     new BookDiscoveryException(
                             FailureReason.INVALID_SCAN_RESULT,
-                            "The scanned cover does not contain "
-                                    + "enough readable book information."
+                            "The scanned cover does not contain enough readable book information."
                     )
             );
 
             return;
         }
 
-        BookCoverMetadataExtractor.DetectedBookMetadata
+        final BookCoverMetadataExtractor.DetectedBookMetadata
                 detectedMetadata;
 
         try {
@@ -201,8 +157,7 @@ public final class BookDiscoveryCoordinator
                     callback,
                     new BookDiscoveryException(
                             FailureReason.METADATA_EXTRACTION_FAILED,
-                            "Book information could not be "
-                                    + "extracted from the scanned cover.",
+                            "Book information could not be extracted from the scanned cover.",
                             exception
                     )
             );
@@ -210,52 +165,40 @@ public final class BookDiscoveryCoordinator
             return;
         }
 
-        if (!detectedMetadata
-                .isReadyForOnlineSearch()) {
-
+        if (!detectedMetadata.isReadyForOnlineSearch()) {
             finishWithFailure(
                     callback,
                     new BookDiscoveryException(
-                            FailureReason
-                                    .NO_SEARCHABLE_METADATA,
-                            "A valid book title or ISBN "
-                                    + "could not be identified."
+                            FailureReason.NO_SEARCHABLE_METADATA,
+                            "A valid book title or ISBN could not be identified."
                     )
             );
 
             return;
         }
 
-        NetworkAvailabilityChecker.NetworkState
-                networkState =
-                networkAvailabilityChecker
-                        .getCurrentNetworkState();
+        NetworkAvailabilityChecker.NetworkState networkState =
+                networkAvailabilityChecker.getCurrentNetworkState();
 
         if (networkState.isPermissionMissing()) {
             finishWithFailure(
                     callback,
                     new BookDiscoveryException(
-                            FailureReason
-                                    .NETWORK_PERMISSION_MISSING,
-                            networkState
-                                    .getEnglishStatusMessage()
+                            FailureReason.NETWORK_PERMISSION_MISSING,
+                            networkState.getEnglishStatusMessage()
                     )
             );
 
             return;
         }
 
-        if (!networkState
-                .isSuitableForOnlineBookSearch()) {
-
+        if (!networkState.isSuitableForOnlineBookSearch()) {
             finishWithFailure(
                     callback,
                     new BookDiscoveryException(
                             FailureReason.NETWORK_UNAVAILABLE,
-                            networkState
-                                    .getEnglishStatusMessage(),
-                            networkState
-                                    .getHindiStatusMessage()
+                            networkState.getEnglishStatusMessage(),
+                            networkState.getHindiStatusMessage()
                     )
             );
 
@@ -271,21 +214,36 @@ public final class BookDiscoveryCoordinator
                         )
                 );
 
+        searchGoogleBooks(
+                scanResult,
+                detectedMetadata,
+                networkState,
+                safeMaximumResults,
+                callback
+        );
+    }
+
+    private void searchGoogleBooks(
+            @NonNull BookCoverScanResult scanResult,
+            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+            int maximumResults,
+            @NonNull DiscoveryCallback callback
+    ) {
         googleBooksSearchClient.searchBooks(
                 detectedMetadata,
-                safeMaximumResults,
-                new GoogleBooksSearchClient
-                        .SearchCallback() {
+                maximumResults,
+                new GoogleBooksSearchClient.SearchCallback() {
 
                     @Override
                     public void onSearchCompleted(
-                            @NonNull GoogleBooksSearchClient
-                                    .SearchResponse response
+                            @NonNull GoogleBooksSearchClient.SearchResponse response
                     ) {
-                        handleSearchCompleted(
+                        handleGoogleSearchCompleted(
                                 scanResult,
                                 detectedMetadata,
                                 networkState,
+                                maximumResults,
                                 response,
                                 callback
                         );
@@ -295,8 +253,14 @@ public final class BookDiscoveryCoordinator
                     public void onSearchFailed(
                             @NonNull Exception exception
                     ) {
-                        handleSearchFailed(
+                        searchOpenLibrary(
+                                scanResult,
+                                detectedMetadata,
+                                networkState,
+                                maximumResults,
+                                null,
                                 exception,
+                                createGoogleFailureWarning(exception),
                                 callback
                         );
                     }
@@ -304,14 +268,12 @@ public final class BookDiscoveryCoordinator
         );
     }
 
-    private void handleSearchCompleted(
+    private void handleGoogleSearchCompleted(
             @NonNull BookCoverScanResult scanResult,
-            @NonNull BookCoverMetadataExtractor
-                    .DetectedBookMetadata detectedMetadata,
-            @NonNull NetworkAvailabilityChecker
-                    .NetworkState networkState,
-            @NonNull GoogleBooksSearchClient
-                    .SearchResponse searchResponse,
+            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+            int maximumResults,
+            @NonNull GoogleBooksSearchClient.SearchResponse googleResponse,
             @NonNull DiscoveryCallback callback
     ) {
         if (closed.get()) {
@@ -319,33 +281,329 @@ public final class BookDiscoveryCoordinator
                     callback,
                     new BookDiscoveryException(
                             FailureReason.CLIENT_CLOSED,
-                            "Book discovery was closed before "
-                                    + "the search completed."
+                            "Book discovery was closed before the search completed."
                     )
             );
 
             return;
         }
 
-        List<OnlineBookMatchEvaluator.RankedBookResult>
+        if (hasStrongMatch(
+                detectedMetadata,
+                googleResponse.getBookResults()
+        )) {
+            completeDiscovery(
+                    scanResult,
+                    detectedMetadata,
+                    networkState,
+                    googleResponse.getSearchQuery(),
+                    googleResponse.getTotalItems(),
+                    googleResponse.getBookResults(),
+                    new ArrayList<>(),
+                    googleResponse.getSearchedAt(),
+                    callback
+            );
+
+            return;
+        }
+
+        String fallbackWarning =
+                googleResponse.hasResults()
+                        ? "Google Books result exact या high-confidence match नहीं था। "
+                          + "Open Library से अतिरिक्त मिलान खोजे गए।"
+                        : "Google Books पर matching result नहीं मिला। "
+                          + "Open Library fallback search उपयोग की गई।";
+
+        searchOpenLibrary(
+                scanResult,
+                detectedMetadata,
+                networkState,
+                maximumResults,
+                googleResponse,
+                null,
+                fallbackWarning,
+                callback
+        );
+    }
+
+    private void searchOpenLibrary(
+            @NonNull BookCoverScanResult scanResult,
+            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+            int maximumResults,
+            @Nullable GoogleBooksSearchClient.SearchResponse googleResponse,
+            @Nullable Exception googleFailure,
+            @Nullable String fallbackWarning,
+            @NonNull DiscoveryCallback callback
+    ) {
+        if (closed.get()) {
+            finishWithFailure(
+                    callback,
+                    new BookDiscoveryException(
+                            FailureReason.CLIENT_CLOSED,
+                            "Book discovery was closed before the fallback search started."
+                    )
+            );
+
+            return;
+        }
+
+        openLibrarySearchClient.searchBooks(
+                detectedMetadata,
+                maximumResults,
+                new OpenLibrarySearchClient.SearchCallback() {
+
+                    @Override
+                    public void onSearchCompleted(
+                            @NonNull OpenLibrarySearchClient.SearchResponse
+                                    openLibraryResponse
+                    ) {
+                        handleOpenLibrarySearchCompleted(
+                                scanResult,
+                                detectedMetadata,
+                                networkState,
+                                googleResponse,
+                                googleFailure,
+                                fallbackWarning,
+                                openLibraryResponse,
+                                callback
+                        );
+                    }
+
+                    @Override
+                    public void onSearchFailed(
+                            @NonNull Exception openLibraryFailure
+                    ) {
+                        handleOpenLibrarySearchFailed(
+                                scanResult,
+                                detectedMetadata,
+                                networkState,
+                                googleResponse,
+                                googleFailure,
+                                fallbackWarning,
+                                openLibraryFailure,
+                                callback
+                        );
+                    }
+                }
+        );
+    }
+
+    private void handleOpenLibrarySearchCompleted(
+            @NonNull BookCoverScanResult scanResult,
+            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+            @Nullable GoogleBooksSearchClient.SearchResponse googleResponse,
+            @Nullable Exception googleFailure,
+            @Nullable String fallbackWarning,
+            @NonNull OpenLibrarySearchClient.SearchResponse openLibraryResponse,
+            @NonNull DiscoveryCallback callback
+    ) {
+        if (closed.get()) {
+            finishWithFailure(
+                    callback,
+                    new BookDiscoveryException(
+                            FailureReason.CLIENT_CLOSED,
+                            "Book discovery was closed before the fallback search completed."
+                    )
+            );
+
+            return;
+        }
+
+        List<OnlineBookSearchResult> googleResults =
+                googleResponse == null
+                        ? new ArrayList<>()
+                        : googleResponse.getBookResults();
+
+        List<OnlineBookSearchResult> mergedResults =
+                mergeResults(
+                        googleResults,
+                        openLibraryResponse.getBookResults()
+                );
+
+        List<String> providerWarnings =
+                new ArrayList<>();
+
+        addUniqueWarning(
+                providerWarnings,
+                fallbackWarning
+        );
+
+        if (googleFailure != null) {
+            addUniqueWarning(
+                    providerWarnings,
+                    createGoogleFailureWarning(googleFailure)
+            );
+        }
+
+        if (openLibraryResponse.hasResults()) {
+            addUniqueWarning(
+                    providerWarnings,
+                    "Open Library fallback search पूरी हुई। "
+                            + "Final result पर Parent confirmation आवश्यक है।"
+            );
+
+        } else {
+            addUniqueWarning(
+                    providerWarnings,
+                    "Open Library पर भी matching result नहीं मिला।"
+            );
+        }
+
+        String combinedQuery =
+                createCombinedQuery(
+                        googleResponse == null
+                                ? ""
+                                : googleResponse.getSearchQuery(),
+                        openLibraryResponse.getSearchQuery()
+                );
+
+        int combinedTotalItems =
+                safeAdd(
+                        googleResponse == null
+                                ? 0
+                                : googleResponse.getTotalItems(),
+                        openLibraryResponse.getTotalItems()
+                );
+
+        long searchedAt =
+                Math.max(
+                        googleResponse == null
+                                ? 0L
+                                : googleResponse.getSearchedAt(),
+                        openLibraryResponse.getSearchedAt()
+                );
+
+        completeDiscovery(
+                scanResult,
+                detectedMetadata,
+                networkState,
+                combinedQuery,
+                combinedTotalItems,
+                mergedResults,
+                providerWarnings,
+                searchedAt,
+                callback
+        );
+    }
+
+    private void handleOpenLibrarySearchFailed(
+            @NonNull BookCoverScanResult scanResult,
+            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+            @Nullable GoogleBooksSearchClient.SearchResponse googleResponse,
+            @Nullable Exception googleFailure,
+            @Nullable String fallbackWarning,
+            @NonNull Exception openLibraryFailure,
+            @NonNull DiscoveryCallback callback
+    ) {
+        if (closed.get()) {
+            finishWithFailure(
+                    callback,
+                    new BookDiscoveryException(
+                            FailureReason.CLIENT_CLOSED,
+                            "Book discovery was closed before the fallback search completed."
+                    )
+            );
+
+            return;
+        }
+
+        /*
+         * Google Books ने response दिया था, लेकिन Open Library fail हुई।
+         * इस स्थिति में Google का उपलब्ध result खोया नहीं जाएगा।
+         */
+        if (googleResponse != null) {
+            List<String> providerWarnings =
+                    new ArrayList<>();
+
+            addUniqueWarning(
+                    providerWarnings,
+                    fallbackWarning
+            );
+
+            addUniqueWarning(
+                    providerWarnings,
+                    "Open Library fallback उपलब्ध नहीं हुई: "
+                            + safeErrorMessage(openLibraryFailure)
+            );
+
+            completeDiscovery(
+                    scanResult,
+                    detectedMetadata,
+                    networkState,
+                    googleResponse.getSearchQuery(),
+                    googleResponse.getTotalItems(),
+                    googleResponse.getBookResults(),
+                    providerWarnings,
+                    googleResponse.getSearchedAt(),
+                    callback
+            );
+
+            return;
+        }
+
+        /*
+         * दोनों providers fail हुए हैं।
+         */
+        String googleMessage =
+                googleFailure == null
+                        ? "Google Books search failed."
+                        : safeErrorMessage(googleFailure);
+
+        String openLibraryMessage =
+                safeErrorMessage(openLibraryFailure);
+
+        int httpStatusCode =
+                firstHttpStatusCode(
+                        googleFailure,
+                        openLibraryFailure
+                );
+
+        finishWithFailure(
+                callback,
+                new BookDiscoveryException(
+                        FailureReason.SEARCH_PROVIDER_FAILED,
+                        "All online book providers failed. Google Books: "
+                                + googleMessage
+                                + " Open Library: "
+                                + openLibraryMessage,
+                        "Google Books और Open Library दोनों अभी उपलब्ध नहीं हैं। "
+                                + "थोड़ी देर बाद फिर प्रयास करें या Book की जानकारी manually डालें।",
+                        httpStatusCode,
+                        openLibraryFailure
+                )
+        );
+    }
+
+    private void completeDiscovery(
+            @NonNull BookCoverScanResult scanResult,
+            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+            @NonNull NetworkAvailabilityChecker.NetworkState networkState,
+            @Nullable String searchQuery,
+            int totalOnlineItems,
+            @NonNull List<OnlineBookSearchResult> rawResults,
+            @NonNull List<String> providerWarnings,
+            long searchedAt,
+            @NonNull DiscoveryCallback callback
+    ) {
+        final List<OnlineBookMatchEvaluator.RankedBookResult>
                 rankedResults;
 
         try {
             rankedResults =
                     matchEvaluator.evaluateAndRank(
                             detectedMetadata,
-                            searchResponse
-                                    .getBookResults()
+                            rawResults
                     );
 
         } catch (RuntimeException exception) {
             finishWithFailure(
                     callback,
                     new BookDiscoveryException(
-                            FailureReason
-                                    .MATCH_EVALUATION_FAILED,
-                            "Online book results could not "
-                                    + "be compared with the scan.",
+                            FailureReason.MATCH_EVALUATION_FAILED,
+                            "Online book results could not be compared with the scan.",
                             exception
                     )
             );
@@ -353,20 +611,18 @@ public final class BookDiscoveryCoordinator
             return;
         }
 
-        OnlineBookMatchEvaluator.RankedBookResult
-                bestMatch =
+        OnlineBookMatchEvaluator.RankedBookResult bestMatch =
                 rankedResults.isEmpty()
                         ? null
-                        : rankedResults.get(
-                        0
-                );
+                        : rankedResults.get(0);
 
         List<String> warnings =
                 createDiscoveryWarnings(
                         detectedMetadata,
-                        searchResponse,
+                        rawResults,
                         rankedResults,
-                        bestMatch
+                        bestMatch,
+                        providerWarnings
                 );
 
         BookDiscoveryResult discoveryResult =
@@ -374,89 +630,175 @@ public final class BookDiscoveryCoordinator
                         scanResult,
                         detectedMetadata,
                         networkState,
-                        searchResponse.getSearchQuery(),
-                        searchResponse.getTotalItems(),
-                        searchResponse.getBookResults(),
+                        safeText(searchQuery),
+                        totalOnlineItems,
+                        rawResults,
                         rankedResults,
                         bestMatch,
                         warnings,
-                        searchResponse.getSearchedAt()
+                        searchedAt
                 );
 
-        searchInProgress.set(
-                false
-        );
+        searchInProgress.set(false);
 
         callback.onDiscoveryCompleted(
                 discoveryResult
         );
     }
 
-    private void handleSearchFailed(
-            @NonNull Exception exception,
-            @NonNull DiscoveryCallback callback
+    private boolean hasStrongMatch(
+            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+            @NonNull List<OnlineBookSearchResult> results
     ) {
-        if (exception
-                instanceof GoogleBooksSearchClient
-                .GoogleBooksSearchException) {
-
-            GoogleBooksSearchClient
-                    .GoogleBooksSearchException
-                    searchException =
-                    (GoogleBooksSearchClient
-                            .GoogleBooksSearchException)
-                            exception;
-
-            finishWithFailure(
-                    callback,
-                    new BookDiscoveryException(
-                            FailureReason
-                                    .SEARCH_PROVIDER_FAILED,
-                            safeErrorMessage(
-                                    searchException
-                            ),
-                            searchException
-                                    .getHttpStatusCode(),
-                            searchException
-                    )
-            );
-
-            return;
+        if (results.isEmpty()) {
+            return false;
         }
 
-        finishWithFailure(
-                callback,
-                new BookDiscoveryException(
-                        FailureReason
-                                .SEARCH_PROVIDER_FAILED,
-                        safeErrorMessage(
-                                exception
-                        ),
-                        exception
-                )
+        String scannedIsbn =
+                normalizeIsbn(
+                        detectedMetadata.getPreferredIsbn()
+                );
+
+        /*
+         * Exact ISBN मिलने पर result को strong match माना जाएगा।
+         */
+        if (!scannedIsbn.isEmpty()) {
+            for (OnlineBookSearchResult result : results) {
+                if (scannedIsbn.equals(
+                        normalizeIsbn(
+                                result.getPreferredIsbn()
+                        )
+                )) {
+                    return true;
+                }
+            }
+        }
+
+        /*
+         * ISBN न होने पर title, author, class, subject और publisher
+         * matching evaluator से confidence जाँचा जाएगा।
+         */
+        try {
+            List<OnlineBookMatchEvaluator.RankedBookResult>
+                    rankedResults =
+                    matchEvaluator.evaluateAndRank(
+                            detectedMetadata,
+                            results
+                    );
+
+            return !rankedResults.isEmpty()
+                    && rankedResults
+                    .get(0)
+                    .getEvaluation()
+                    .isHighConfidence();
+
+        } catch (RuntimeException ignored) {
+            return false;
+        }
+    }
+
+    @NonNull
+    private List<OnlineBookSearchResult> mergeResults(
+            @NonNull List<OnlineBookSearchResult> firstResults,
+            @NonNull List<OnlineBookSearchResult> secondResults
+    ) {
+        Map<String, OnlineBookSearchResult> uniqueResults =
+                new LinkedHashMap<>();
+
+        addResultsToMap(
+                uniqueResults,
+                firstResults
         );
+
+        addResultsToMap(
+                uniqueResults,
+                secondResults
+        );
+
+        return new ArrayList<>(
+                uniqueResults.values()
+        );
+    }
+
+    private void addResultsToMap(
+            @NonNull Map<String, OnlineBookSearchResult> destination,
+            @NonNull List<OnlineBookSearchResult> results
+    ) {
+        for (OnlineBookSearchResult result : results) {
+            String key =
+                    createResultKey(result);
+
+            if (!destination.containsKey(key)) {
+                destination.put(
+                        key,
+                        result
+                );
+            }
+        }
+    }
+
+    @NonNull
+    private String createResultKey(
+            @NonNull OnlineBookSearchResult result
+    ) {
+        String isbn =
+                normalizeIsbn(
+                        result.getPreferredIsbn()
+                );
+
+        if (!isbn.isEmpty()) {
+            return "isbn:" + isbn;
+        }
+
+        String providerBookId =
+                safeText(
+                        result.getProviderBookId()
+                );
+
+        if (!providerBookId.isEmpty()) {
+            return "provider:"
+                    + result.getProvider().name()
+                    + ":"
+                    + providerBookId;
+        }
+
+        return "metadata:"
+                + comparisonText(result.getBookTitle())
+                + "|"
+                + comparisonText(result.getPublisherName())
+                + "|"
+                + comparisonText(result.getAuthorsDisplayText());
     }
 
     @NonNull
     private List<String> createDiscoveryWarnings(
-            @NonNull BookCoverMetadataExtractor
-                    .DetectedBookMetadata detectedMetadata,
-            @NonNull GoogleBooksSearchClient
-                    .SearchResponse searchResponse,
-            @NonNull List<OnlineBookMatchEvaluator
-                    .RankedBookResult> rankedResults,
-            @Nullable OnlineBookMatchEvaluator
-                    .RankedBookResult bestMatch
+            @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+            @NonNull List<OnlineBookSearchResult> rawResults,
+            @NonNull List<OnlineBookMatchEvaluator.RankedBookResult> rankedResults,
+            @Nullable OnlineBookMatchEvaluator.RankedBookResult bestMatch,
+            @NonNull List<String> providerWarnings
     ) {
         List<String> warnings =
                 new ArrayList<>(
                         detectedMetadata.getWarnings()
                 );
 
-        if (!searchResponse.hasResults()) {
+        for (String providerWarning : providerWarnings) {
+            addUniqueWarning(
+                    warnings,
+                    providerWarning
+            );
+        }
+
+        if (rawResults.isEmpty()) {
             addUniqueWarning(
                     warnings,
                     "No online book results were found."
+            );
+
+            addUniqueWarning(
+                    warnings,
+                    "Book की जानकारी manually भरें या साफ cover/ISBN photo से फिर search करें।"
             );
 
             return Collections.unmodifiableList(
@@ -467,8 +809,7 @@ public final class BookDiscoveryCoordinator
         if (rankedResults.isEmpty()) {
             addUniqueWarning(
                     warnings,
-                    "Online results were returned, but "
-                            + "none could be evaluated."
+                    "Online results were returned, but none could be evaluated."
             );
 
             return Collections.unmodifiableList(
@@ -487,13 +828,10 @@ public final class BookDiscoveryCoordinator
             );
         }
 
-        OnlineBookMatchEvaluator.MatchEvaluation
-                bestEvaluation =
+        OnlineBookMatchEvaluator.MatchEvaluation bestEvaluation =
                 bestMatch.getEvaluation();
 
-        for (String warning :
-                bestEvaluation.getWarnings()) {
-
+        for (String warning : bestEvaluation.getWarnings()) {
             addUniqueWarning(
                     warnings,
                     warning
@@ -507,34 +845,27 @@ public final class BookDiscoveryCoordinator
             );
         }
 
-        if (!bestEvaluation
-                .isAutomaticSelectionRecommended()) {
-
+        if (!bestEvaluation.isAutomaticSelectionRecommended()) {
             addUniqueWarning(
                     warnings,
-                    "The book must not be added "
-                            + "without parent confirmation."
+                    "The book must not be added without parent confirmation."
             );
         }
 
         OnlineBookSearchResult bestBook =
                 bestMatch.getBookResult();
 
-        if (!bestBook
-                .isOfficialSourceVerified()) {
-
+        if (!bestBook.isOfficialSourceVerified()) {
             addUniqueWarning(
                     warnings,
-                    "The source has not been verified "
-                            + "as the official publisher source."
+                    "The source has not been verified as the official publisher source."
             );
         }
 
         if (!bestBook.hasAuthorizedDownload()) {
             addUniqueWarning(
                     warnings,
-                    "Only metadata or preview may be "
-                            + "available for this result."
+                    "Only metadata or preview may be available for this result."
             );
         }
 
@@ -543,28 +874,153 @@ public final class BookDiscoveryCoordinator
         );
     }
 
+    @NonNull
+    private String createGoogleFailureWarning(
+            @NonNull Exception exception
+    ) {
+        return getHttpStatusCode(exception) == 429
+                ? "Google Books quota समाप्त थी, इसलिए Open Library fallback search उपयोग की गई।"
+                : "Google Books उपलब्ध नहीं था, इसलिए Open Library fallback search उपयोग की गई।";
+    }
+
+    private int firstHttpStatusCode(
+            @Nullable Exception firstException,
+            @Nullable Exception secondException
+    ) {
+        int firstCode =
+                getHttpStatusCode(firstException);
+
+        return firstCode > 0
+                ? firstCode
+                : getHttpStatusCode(secondException);
+    }
+
+    private int getHttpStatusCode(
+            @Nullable Exception exception
+    ) {
+        if (exception
+                instanceof GoogleBooksSearchClient.GoogleBooksSearchException) {
+
+            return ((GoogleBooksSearchClient.GoogleBooksSearchException)
+                    exception)
+                    .getHttpStatusCode();
+        }
+
+        if (exception
+                instanceof OpenLibrarySearchClient.OpenLibrarySearchException) {
+
+            return ((OpenLibrarySearchClient.OpenLibrarySearchException)
+                    exception)
+                    .getHttpStatusCode();
+        }
+
+        return 0;
+    }
+
+    private int safeAdd(
+            int firstValue,
+            int secondValue
+    ) {
+        long sum =
+                (long) Math.max(0, firstValue)
+                        + Math.max(0, secondValue);
+
+        return sum > Integer.MAX_VALUE
+                ? Integer.MAX_VALUE
+                : (int) sum;
+    }
+
+    @NonNull
+    private String createCombinedQuery(
+            @Nullable String googleQuery,
+            @Nullable String openLibraryQuery
+    ) {
+        String safeGoogleQuery =
+                safeText(googleQuery);
+
+        String safeOpenLibraryQuery =
+                safeText(openLibraryQuery);
+
+        if (safeGoogleQuery.isEmpty()) {
+            return safeOpenLibraryQuery;
+        }
+
+        if (safeOpenLibraryQuery.isEmpty()
+                || safeGoogleQuery.equalsIgnoreCase(
+                safeOpenLibraryQuery
+        )) {
+            return safeGoogleQuery;
+        }
+
+        return "Google Books: "
+                + safeGoogleQuery
+                + " | Open Library: "
+                + safeOpenLibraryQuery;
+    }
+
+    @NonNull
+    private String normalizeIsbn(
+            @Nullable Object value
+    ) {
+        String isbn =
+                safeText(value)
+                        .replaceAll(
+                                "[^0-9Xx]",
+                                ""
+                        )
+                        .toUpperCase(
+                                Locale.ROOT
+                        );
+
+        return isbn.length() == 10
+                || isbn.length() == 13
+                ? isbn
+                : "";
+    }
+
+    @NonNull
+    private String comparisonText(
+            @Nullable Object value
+    ) {
+        return safeText(value)
+                .toLowerCase(
+                        Locale.ROOT
+                )
+                .replaceAll(
+                        "[^\\p{L}\\p{N}]+",
+                        " "
+                )
+                .replaceAll(
+                        "\\s+",
+                        " "
+                )
+                .trim();
+    }
+
+    @NonNull
+    private String safeText(
+            @Nullable Object value
+    ) {
+        return value == null
+                ? ""
+                : value.toString().trim();
+    }
+
     private void addUniqueWarning(
             @NonNull List<String> warnings,
             @Nullable String warning
     ) {
-        if (warning == null) {
-            return;
-        }
-
         String safeWarning =
-                warning.trim();
+                safeText(warning);
 
         if (safeWarning.isEmpty()) {
             return;
         }
 
-        for (String existingWarning :
-                warnings) {
-
-            if (existingWarning
-                    .equalsIgnoreCase(
-                            safeWarning
-                    )) {
+        for (String existingWarning : warnings) {
+            if (existingWarning.equalsIgnoreCase(
+                    safeWarning
+            )) {
                 return;
             }
         }
@@ -578,9 +1034,7 @@ public final class BookDiscoveryCoordinator
             @NonNull DiscoveryCallback callback,
             @NonNull BookDiscoveryException exception
     ) {
-        searchInProgress.set(
-                false
-        );
+        searchInProgress.set(false);
 
         callback.onDiscoveryFailed(
                 exception
@@ -594,13 +1048,10 @@ public final class BookDiscoveryCoordinator
         String message =
                 exception.getMessage();
 
-        if (message == null
-                || message.trim().isEmpty()) {
-
-            return "Online book search failed.";
-        }
-
-        return message.trim();
+        return message == null
+                || message.trim().isEmpty()
+                ? "Online book search failed."
+                : message.trim();
     }
 
     public boolean isSearchInProgress() {
@@ -620,19 +1071,14 @@ public final class BookDiscoveryCoordinator
 
     @Override
     public void close() {
-        if (!closed.compareAndSet(
-                false,
-                true
-        )) {
+        if (!closed.compareAndSet(false, true)) {
             return;
         }
 
-        searchInProgress.set(
-                false
-        );
+        searchInProgress.set(false);
 
         googleBooksSearchClient.close();
-
+        openLibrarySearchClient.close();
         networkAvailabilityChecker.close();
     }
 
@@ -674,12 +1120,12 @@ public final class BookDiscoveryCoordinator
         private final BookCoverScanResult scanResult;
 
         @NonNull
-        private final BookCoverMetadataExtractor
-                .DetectedBookMetadata detectedMetadata;
+        private final BookCoverMetadataExtractor.DetectedBookMetadata
+                detectedMetadata;
 
         @NonNull
-        private final NetworkAvailabilityChecker
-                .NetworkState networkState;
+        private final NetworkAvailabilityChecker.NetworkState
+                networkState;
 
         @NonNull
         private final String searchQuery;
@@ -691,12 +1137,12 @@ public final class BookDiscoveryCoordinator
                 rawBookResults;
 
         @NonNull
-        private final List<OnlineBookMatchEvaluator
-                .RankedBookResult> rankedBookResults;
+        private final List<OnlineBookMatchEvaluator.RankedBookResult>
+                rankedBookResults;
 
         @Nullable
-        private final OnlineBookMatchEvaluator
-                .RankedBookResult bestMatch;
+        private final OnlineBookMatchEvaluator.RankedBookResult
+                bestMatch;
 
         @NonNull
         private final List<String> warnings;
@@ -705,18 +1151,14 @@ public final class BookDiscoveryCoordinator
 
         private BookDiscoveryResult(
                 @NonNull BookCoverScanResult scanResult,
-                @NonNull BookCoverMetadataExtractor
-                        .DetectedBookMetadata detectedMetadata,
-                @NonNull NetworkAvailabilityChecker
-                        .NetworkState networkState,
+                @NonNull BookCoverMetadataExtractor.DetectedBookMetadata detectedMetadata,
+                @NonNull NetworkAvailabilityChecker.NetworkState networkState,
                 @NonNull String searchQuery,
                 int totalOnlineItems,
-                @NonNull List<OnlineBookSearchResult>
-                        rawBookResults,
-                @NonNull List<OnlineBookMatchEvaluator
-                        .RankedBookResult> rankedBookResults,
-                @Nullable OnlineBookMatchEvaluator
-                        .RankedBookResult bestMatch,
+                @NonNull List<OnlineBookSearchResult> rawBookResults,
+                @NonNull List<OnlineBookMatchEvaluator.RankedBookResult>
+                        rankedBookResults,
+                @Nullable OnlineBookMatchEvaluator.RankedBookResult bestMatch,
                 @NonNull List<String> warnings,
                 long searchedAt
         ) {
@@ -774,8 +1216,7 @@ public final class BookDiscoveryCoordinator
         }
 
         @NonNull
-        public BookCoverMetadataExtractor
-                .DetectedBookMetadata
+        public BookCoverMetadataExtractor.DetectedBookMetadata
         getDetectedMetadata() {
             return detectedMetadata;
         }
@@ -802,15 +1243,13 @@ public final class BookDiscoveryCoordinator
         }
 
         @NonNull
-        public List<OnlineBookMatchEvaluator
-                .RankedBookResult>
+        public List<OnlineBookMatchEvaluator.RankedBookResult>
         getRankedBookResults() {
             return rankedBookResults;
         }
 
         @Nullable
-        public OnlineBookMatchEvaluator
-                .RankedBookResult
+        public OnlineBookMatchEvaluator.RankedBookResult
         getBestMatch() {
             return bestMatch;
         }
@@ -834,19 +1273,22 @@ public final class BookDiscoveryCoordinator
 
         public boolean hasHighConfidenceMatch() {
             return bestMatch != null
-                    && bestMatch.getEvaluation()
+                    && bestMatch
+                    .getEvaluation()
                     .isHighConfidence();
         }
 
         public boolean isAutomaticSelectionRecommended() {
             return bestMatch != null
-                    && bestMatch.getEvaluation()
+                    && bestMatch
+                    .getEvaluation()
                     .isAutomaticSelectionRecommended();
         }
 
         public boolean requiresParentReview() {
             return bestMatch == null
-                    || bestMatch.getEvaluation()
+                    || bestMatch
+                    .getEvaluation()
                     .requiresParentReview()
                     || !warnings.isEmpty();
         }
@@ -858,13 +1300,15 @@ public final class BookDiscoveryCoordinator
 
         public boolean bestMatchHasAuthorizedDownload() {
             return bestMatch != null
-                    && bestMatch.getBookResult()
+                    && bestMatch
+                    .getBookResult()
                     .hasAuthorizedDownload();
         }
 
         public boolean bestMatchCanBeAddedAsMetadata() {
             return bestMatch != null
-                    && bestMatch.getBookResult()
+                    && bestMatch
+                    .getBookResult()
                     .canBeAddedAsMetadataOnly();
         }
     }
@@ -979,14 +1423,12 @@ public final class BookDiscoveryCoordinator
             return failureReason
                     == FailureReason.NETWORK_UNAVAILABLE
                     || failureReason
-                    == FailureReason
-                    .NETWORK_PERMISSION_MISSING;
+                    == FailureReason.NETWORK_PERMISSION_MISSING;
         }
 
         public boolean isProviderFailure() {
             return failureReason
-                    == FailureReason
-                    .SEARCH_PROVIDER_FAILED;
+                    == FailureReason.SEARCH_PROVIDER_FAILED;
         }
 
         public boolean hasHttpStatusCode() {

@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,6 +35,9 @@ public final class SubjectsActivity extends AppCompatActivity {
     private SchoolSubjectRepository schoolSubjectRepository;
 
     private SubjectAdapter subjectAdapter;
+
+    private ActivityResultLauncher<Intent>
+            bookScanLauncher;
 
     @NonNull
     private List<SchoolSubjectEntity> visibleSchoolSubjects =
@@ -76,9 +81,31 @@ public final class SubjectsActivity extends AppCompatActivity {
                         this
                 );
 
+        registerBookScanLauncher();
         setupRecyclerView();
         setupClickListeners();
         loadActiveStudentProfile();
+    }
+
+    private void registerBookScanLauncher() {
+        bookScanLauncher =
+                registerForActivityResult(
+                        new ActivityResultContracts
+                                .StartActivityForResult(),
+                        result -> {
+                            if (!isActivityAvailable()
+                                    || result.getResultCode()
+                                    != RESULT_OK
+                                    || activeProfileId <= 0L) {
+
+                                return;
+                            }
+
+                            loadConfirmedSchoolSubjects(
+                                    activeProfileId
+                            );
+                        }
+                );
     }
 
     @Override
@@ -86,8 +113,8 @@ public final class SubjectsActivity extends AppCompatActivity {
         super.onResume();
 
         /*
-         * Parent Curriculum Setup से वापस आने पर subject और book
-         * changes को तुरंत refresh किया जाता है।
+         * Parent Curriculum Setup या Book Scanner से वापस आने पर
+         * subject और book changes को तुरंत refresh किया जाता है।
          *
          * पहली बार Activity खुलते समय activeProfileId -1 होगा,
          * इसलिए duplicate loading नहीं होगी।
@@ -131,39 +158,48 @@ public final class SubjectsActivity extends AppCompatActivity {
         );
 
         /*
-         * Exact book management Parent-controlled है।
+         * Scan School Book card अब दोबारा dedicated scanner खोलता है।
          *
-         * Target subject के बिना direct scanner खोलने के बजाय
-         * School Curriculum Setup खोला जाता है, जहाँ सही subject
-         * चुनकर Scan या Manual Book Entry की जा सकती है।
+         * Scanner screen में Camera, Gallery, OCR/Barcode search और
+         * Manual Book Entry के पुराने सभी options फिर उपलब्ध होंगे।
          */
         binding.cardScanSchoolBook
                 .setOnClickListener(
                         view ->
-                                openSchoolCurriculumSetup()
+                                openBookCoverScanner()
                 );
     }
 
-    private void openSchoolCurriculumSetup() {
+    private void openBookCoverScanner() {
         if (!isActivityAvailable()) {
             return;
         }
 
-        Intent curriculumSetupIntent =
+        if (activeProfileId <= 0L) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    "पहले active student profile तैयार करें।",
+                    Snackbar.LENGTH_LONG
+            ).show();
+
+            return;
+        }
+
+        Intent bookScannerIntent =
                 new Intent(
                         SubjectsActivity.this,
-                        SchoolCurriculumSetupActivity.class
+                        BookCoverScanActivity.class
                 );
 
-        startActivity(
-                curriculumSetupIntent
+        bookScannerIntent.putExtra(
+                BookCoverScanActivity
+                        .EXTRA_TARGET_PROFILE_ID,
+                activeProfileId
         );
 
-        Snackbar.make(
-                binding.getRoot(),
-                "Subject card से exact school book Scan या Manually Add करें।",
-                Snackbar.LENGTH_LONG
-        ).show();
+        bookScanLauncher.launch(
+                bookScannerIntent
+        );
     }
 
     private void loadActiveStudentProfile() {
