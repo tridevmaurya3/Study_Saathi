@@ -1,5 +1,6 @@
 package com.tridev.studysaathi.data.content.search;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -7,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.tridev.studysaathi.data.content.model.OnlineBookSearchResult;
+import com.tridev.studysaathi.data.content.network.AndroidApiRequestIdentity;
 import com.tridev.studysaathi.data.content.scanner.BookCoverMetadataExtractor;
 
 import org.json.JSONArray;
@@ -23,18 +25,25 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class GoogleBooksSearchClient
         implements AutoCloseable {
 
     private static final String GOOGLE_BOOKS_SEARCH_URL =
             "https://www.googleapis.com/books/v1/volumes";
+
+    private static final String USER_AGENT =
+            "StudySaathi-Android/1.0";
 
     private static final int DEFAULT_MAXIMUM_RESULTS =
             20;
@@ -51,8 +60,29 @@ public final class GoogleBooksSearchClient
     private static final int READ_TIMEOUT_MILLISECONDS =
             25_000;
 
-    private static final int MAXIMUM_ERROR_MESSAGE_LENGTH =
-            500;
+    private static final int MAXIMUM_ERROR_BODY_LENGTH =
+            700;
+
+    private static final int MAXIMUM_CATEGORIES =
+            12;
+
+    private static final Pattern CLASS_PATTERN =
+            Pattern.compile(
+                    "(?i)\\b(?:class|grade|standard|std\\.?)"
+                            + "\\s*[-:]?\\s*(1[0-2]|[1-9])\\b"
+            );
+
+    private static final Pattern PUBLICATION_YEAR_PATTERN =
+            Pattern.compile(
+                    "(?:18|19|20)\\d{2}"
+            );
+
+    @NonNull
+    private final String googleBooksApiKey;
+
+    @Nullable
+    private final AndroidApiRequestIdentity
+            androidApiRequestIdentity;
 
     @NonNull
     private final ExecutorService networkExecutor;
@@ -60,27 +90,56 @@ public final class GoogleBooksSearchClient
     @NonNull
     private final Handler mainThreadHandler;
 
-    @NonNull
-    private final String apiKey;
-
     private volatile boolean closed;
 
-    public GoogleBooksSearchClient() {
-        this("");
+    /**
+     * पुराना constructor compatibility के लिए रखा गया है।
+     *
+     * इस constructor से API key request में जाएगी, लेकिन Android
+     * restriction headers उपलब्ध नहीं होंगे।
+     */
+    public GoogleBooksSearchClient(
+            @Nullable String googleBooksApiKey
+    ) {
+        this(
+                googleBooksApiKey,
+                null
+        );
     }
 
     /**
-     * API key must not be hard-coded directly inside
-     * this class. It will later be supplied through
-     * secure application configuration.
+     * Android-aware constructor।
+     *
+     * यह current installed APK से package name और signing certificate
+     * SHA-1 तैयार करता है।
      */
     public GoogleBooksSearchClient(
-            @Nullable String apiKey
+            @NonNull Context context,
+            @Nullable String googleBooksApiKey
     ) {
-        this.apiKey =
-                normalizeOptionalText(
-                        apiKey
+        this(
+                googleBooksApiKey,
+                AndroidApiRequestIdentity.create(
+                        context.getApplicationContext()
+                )
+        );
+    }
+
+    /**
+     * Test और dependency injection के लिए constructor।
+     */
+    public GoogleBooksSearchClient(
+            @Nullable String googleBooksApiKey,
+            @Nullable AndroidApiRequestIdentity
+                    androidApiRequestIdentity
+    ) {
+        this.googleBooksApiKey =
+                safeText(
+                        googleBooksApiKey
                 );
+
+        this.androidApiRequestIdentity =
+                androidApiRequestIdentity;
 
         networkExecutor =
                 Executors.newSingleThreadExecutor();
@@ -113,39 +172,30 @@ public final class GoogleBooksSearchClient
             dispatchFailure(
                     callback,
                     new GoogleBooksSearchException(
-                            "Google Books search client "
-                                    + "has already been closed."
+                            "Google Books search client has already been closed."
                     )
             );
 
             return;
         }
 
-        String searchQuery =
-                createSearchQuery(
-                        detectedBook
-                );
+        final SearchRequest searchRequest;
 
-        if (searchQuery.isEmpty()) {
+        try {
+            searchRequest =
+                    createSearchRequest(
+                            detectedBook,
+                            maximumResults
+                    );
+
+        } catch (Exception exception) {
             dispatchFailure(
                     callback,
-                    new GoogleBooksSearchException(
-                            "Book title or ISBN is required "
-                                    + "before starting online search."
-                    )
+                    exception
             );
 
             return;
         }
-
-        int safeMaximumResults =
-                Math.max(
-                        MINIMUM_RESULTS,
-                        Math.min(
-                                MAXIMUM_RESULTS,
-                                maximumResults
-                        )
-                );
 
         try {
             networkExecutor.execute(
@@ -153,8 +203,7 @@ public final class GoogleBooksSearchClient
                         try {
                             SearchResponse response =
                                     executeSearch(
-                                            searchQuery,
-                                            safeMaximumResults
+                                            searchRequest
                                     );
 
                             dispatchSuccess(
@@ -175,7 +224,7 @@ public final class GoogleBooksSearchClient
             dispatchFailure(
                     callback,
                     new GoogleBooksSearchException(
-                            "Book search could not be started.",
+                            "Google Books search could not be started.",
                             exception
                     )
             );
@@ -183,18 +232,211 @@ public final class GoogleBooksSearchClient
     }
 
     @NonNull
-    private SearchResponse executeSearch(
-            @NonNull String searchQuery,
+    private SearchRequest createSearchRequest(
+            @NonNull BookCoverMetadataExtractor
+                    .DetectedBookMetadata detectedBook,
             int maximumResults
+    ) throws IOException,
+            GoogleBooksSearchException {
+
+        int safeMaximumResults =
+                Math.max(
+                        MINIMUM_RESULTS,
+                        Math.min(
+                                MAXIMUM_RESULTS,
+                                maximumResults
+                        )
+                );
+
+        String preferredIsbn =
+                normalizeIsbn(
+                        detectedBook.getPreferredIsbn()
+                );
+
+        boolean exactIsbnSearch =
+                !preferredIsbn.isEmpty();
+
+        String searchQuery =
+                exactIsbnSearch
+                        ? "isbn:" + preferredIsbn
+                        : createMetadataSearchQuery(
+                        detectedBook
+                );
+
+        if (searchQuery.isEmpty()) {
+            throw new GoogleBooksSearchException(
+                    "Book title or ISBN is required before starting Google Books search."
+            );
+        }
+
+        StringBuilder requestUrl =
+                new StringBuilder(
+                        GOOGLE_BOOKS_SEARCH_URL
+                )
+                        .append(
+                                "?q="
+                        )
+                        .append(
+                                encode(
+                                        searchQuery
+                                )
+                        )
+                        .append(
+                                "&maxResults="
+                        )
+                        .append(
+                                safeMaximumResults
+                        )
+                        .append(
+                                "&startIndex=0"
+                        )
+                        .append(
+                                "&printType=books"
+                        )
+                        .append(
+                                "&projection=full"
+                        );
+
+        if (!googleBooksApiKey.isEmpty()) {
+            requestUrl.append(
+                    "&key="
+            );
+
+            requestUrl.append(
+                    encode(
+                            googleBooksApiKey
+                    )
+            );
+        }
+
+        return new SearchRequest(
+                searchQuery,
+                requestUrl.toString(),
+                preferredIsbn,
+                exactIsbnSearch,
+                safeMaximumResults
+        );
+    }
+
+    @NonNull
+    private String createMetadataSearchQuery(
+            @NonNull BookCoverMetadataExtractor
+                    .DetectedBookMetadata detectedBook
+    ) {
+        StringBuilder query =
+                new StringBuilder();
+
+        appendFieldQuery(
+                query,
+                "intitle",
+                detectedBook.getBookTitle()
+        );
+
+        appendFieldQuery(
+                query,
+                "inauthor",
+                detectedBook.getAuthorName()
+        );
+
+        appendFieldQuery(
+                query,
+                "inpublisher",
+                detectedBook.getPublisherName()
+        );
+
+        if (query.length() == 0) {
+            appendFreeText(
+                    query,
+                    detectedBook.getOnlineSearchQuery()
+            );
+        }
+
+        if (query.length() == 0) {
+            appendFreeText(
+                    query,
+                    detectedBook.getSubjectName()
+            );
+
+            appendFreeText(
+                    query,
+                    detectedBook.getClassName()
+            );
+        }
+
+        return query.toString()
+                .trim();
+    }
+
+    private void appendFieldQuery(
+            @NonNull StringBuilder query,
+            @NonNull String fieldName,
+            @Nullable String value
+    ) {
+        String safeValue =
+                safeText(
+                        value
+                );
+
+        if (safeValue.isEmpty()) {
+            return;
+        }
+
+        if (query.length() > 0) {
+            query.append(
+                    ' '
+            );
+        }
+
+        query.append(
+                fieldName
+        );
+
+        query.append(
+                ":\""
+        );
+
+        query.append(
+                safeValue.replace(
+                        "\"",
+                        " "
+                )
+        );
+
+        query.append(
+                '"'
+        );
+    }
+
+    private void appendFreeText(
+            @NonNull StringBuilder query,
+            @Nullable String value
+    ) {
+        String safeValue =
+                safeText(
+                        value
+                );
+
+        if (safeValue.isEmpty()) {
+            return;
+        }
+
+        if (query.length() > 0) {
+            query.append(
+                    ' '
+            );
+        }
+
+        query.append(
+                safeValue
+        );
+    }
+
+    @NonNull
+    private SearchResponse executeSearch(
+            @NonNull SearchRequest searchRequest
     ) throws IOException,
             JSONException,
             GoogleBooksSearchException {
-
-        String requestUrl =
-                createRequestUrl(
-                        searchQuery,
-                        maximumResults
-                );
 
         HttpURLConnection connection =
                 null;
@@ -202,7 +444,7 @@ public final class GoogleBooksSearchClient
         try {
             URL url =
                     new URL(
-                            requestUrl
+                            searchRequest.requestUrl
                     );
 
             connection =
@@ -222,7 +464,7 @@ public final class GoogleBooksSearchClient
             );
 
             connection.setUseCaches(
-                    false
+                    true
             );
 
             connection.setDoInput(
@@ -241,24 +483,27 @@ public final class GoogleBooksSearchClient
 
             connection.setRequestProperty(
                     "User-Agent",
-                    "StudySaathi-Android/1.0"
+                    USER_AGENT
             );
+
+            connection.setRequestProperty(
+                    "X-Study-Saathi-Provider",
+                    "Google-Books"
+            );
+
+            boolean androidIdentityApplied =
+                    applyAndroidRequestIdentity(
+                            connection
+                    );
 
             int responseCode =
                     connection.getResponseCode();
 
-            InputStream responseStream;
-
-            if (responseCode >= 200
-                    && responseCode < 300) {
-
-                responseStream =
-                        connection.getInputStream();
-
-            } else {
-                responseStream =
-                        connection.getErrorStream();
-            }
+            InputStream responseStream =
+                    responseCode >= 200
+                            && responseCode < 300
+                            ? connection.getInputStream()
+                            : connection.getErrorStream();
 
             String responseBody =
                     readResponseBody(
@@ -271,15 +516,17 @@ public final class GoogleBooksSearchClient
                 throw new GoogleBooksSearchException(
                         createHttpErrorMessage(
                                 responseCode,
-                                responseBody
+                                responseBody,
+                                androidIdentityApplied
                         ),
                         responseCode
                 );
             }
 
             return parseSearchResponse(
-                    searchQuery,
-                    responseBody
+                    searchRequest,
+                    responseBody,
+                    androidIdentityApplied
             );
 
         } finally {
@@ -289,169 +536,25 @@ public final class GoogleBooksSearchClient
         }
     }
 
-    @NonNull
-    private String createRequestUrl(
-            @NonNull String searchQuery,
-            int maximumResults
-    ) throws IOException {
-
-        String encodedQuery =
-                URLEncoder.encode(
-                        searchQuery,
-                        StandardCharsets.UTF_8.name()
-                );
-
-        StringBuilder urlBuilder =
-                new StringBuilder(
-                        GOOGLE_BOOKS_SEARCH_URL
-                );
-
-        urlBuilder.append(
-                "?q="
-        );
-
-        urlBuilder.append(
-                encodedQuery
-        );
-
-        urlBuilder.append(
-                "&maxResults="
-        );
-
-        urlBuilder.append(
-                maximumResults
-        );
-
-        urlBuilder.append(
-                "&printType=books"
-        );
-
-        urlBuilder.append(
-                "&projection=full"
-        );
-
-        urlBuilder.append(
-                "&orderBy=relevance"
-        );
-
-        if (!apiKey.isEmpty()) {
-            urlBuilder.append(
-                    "&key="
-            );
-
-            urlBuilder.append(
-                    URLEncoder.encode(
-                            apiKey,
-                            StandardCharsets.UTF_8.name()
-                    )
-            );
-        }
-
-        return urlBuilder.toString();
-    }
-
-    @NonNull
-    private String createSearchQuery(
-            @NonNull BookCoverMetadataExtractor
-                    .DetectedBookMetadata detectedBook
+    private boolean applyAndroidRequestIdentity(
+            @NonNull HttpURLConnection connection
     ) {
-        String preferredIsbn =
-                normalizeIsbn(
-                        detectedBook.getPreferredIsbn()
-                );
+        if (googleBooksApiKey.isEmpty()
+                || androidApiRequestIdentity == null) {
 
-        if (!preferredIsbn.isEmpty()) {
-            return "isbn:"
-                    + preferredIsbn;
+            return false;
         }
 
-        StringBuilder queryBuilder =
-                new StringBuilder();
-
-        String bookTitle =
-                normalizeOptionalText(
-                        detectedBook.getBookTitle()
-                );
-
-        if (!bookTitle.isEmpty()) {
-            queryBuilder.append(
-                    "intitle:\""
-            );
-
-            queryBuilder.append(
-                    removeQuotationMarks(
-                            bookTitle
-                    )
-            );
-
-            queryBuilder.append(
-                    "\""
-            );
-        }
-
-        String subjectName =
-                normalizeOptionalText(
-                        detectedBook.getSubjectName()
-                );
-
-        if (!subjectName.isEmpty()) {
-            appendQueryPart(
-                    queryBuilder,
-                    subjectName
-            );
-        }
-
-        String className =
-                normalizeOptionalText(
-                        detectedBook.getClassName()
-                );
-
-        if (!className.isEmpty()) {
-            appendQueryPart(
-                    queryBuilder,
-                    className
-            );
-        }
-
-        if (queryBuilder.length() == 0) {
-            return normalizeOptionalText(
-                    detectedBook.getOnlineSearchQuery()
-            );
-        }
-
-        return queryBuilder
-                .toString()
-                .trim();
-    }
-
-    private void appendQueryPart(
-            @NonNull StringBuilder queryBuilder,
-            @Nullable String value
-    ) {
-        String safeValue =
-                normalizeOptionalText(
-                        value
-                );
-
-        if (safeValue.isEmpty()) {
-            return;
-        }
-
-        if (queryBuilder.length() > 0) {
-            queryBuilder.append(
-                    ' '
-            );
-        }
-
-        queryBuilder.append(
-                safeValue
+        return androidApiRequestIdentity.applyTo(
+                connection
         );
     }
 
     @NonNull
     private SearchResponse parseSearchResponse(
-            @NonNull String searchQuery,
-            @NonNull String responseBody
+            @NonNull SearchRequest searchRequest,
+            @NonNull String responseBody,
+            boolean androidIdentityApplied
     ) throws JSONException,
             GoogleBooksSearchException {
 
@@ -461,7 +564,7 @@ public final class GoogleBooksSearchClient
             );
         }
 
-        JSONObject rootObject =
+        JSONObject root =
                 new JSONObject(
                         responseBody
                 );
@@ -469,66 +572,79 @@ public final class GoogleBooksSearchClient
         int totalItems =
                 Math.max(
                         0,
-                        rootObject.optInt(
+                        root.optInt(
                                 "totalItems",
                                 0
                         )
                 );
 
-        JSONArray itemArray =
-                rootObject.optJSONArray(
+        JSONArray items =
+                root.optJSONArray(
                         "items"
                 );
 
-        List<OnlineBookSearchResult> results =
+        List<OnlineBookSearchResult> parsedResults =
                 new ArrayList<>();
 
         long searchedAt =
                 System.currentTimeMillis();
 
-        if (itemArray != null) {
+        if (items != null) {
             for (int index = 0;
-                 index < itemArray.length();
+                 index < items.length();
                  index++) {
 
-                JSONObject itemObject =
-                        itemArray.optJSONObject(
+                JSONObject item =
+                        items.optJSONObject(
                                 index
                         );
 
-                if (itemObject == null) {
+                if (item == null) {
                     continue;
                 }
 
-                OnlineBookSearchResult result =
-                        parseVolumeResult(
-                                itemObject,
+                OnlineBookSearchResult parsedResult =
+                        parseBookItem(
+                                item,
+                                searchRequest.preferredIsbn,
                                 searchedAt
                         );
 
-                if (result != null) {
-                    results.add(
-                            result
+                if (parsedResult != null) {
+                    parsedResults.add(
+                            parsedResult
                     );
                 }
             }
         }
 
         return new SearchResponse(
-                searchQuery,
+                searchRequest.searchQuery,
                 totalItems,
-                results,
-                searchedAt
+                removeDuplicateResults(
+                        parsedResults
+                ),
+                searchedAt,
+                searchRequest.exactIsbnSearch,
+                !googleBooksApiKey.isEmpty(),
+                androidIdentityApplied
         );
     }
 
     @Nullable
-    private OnlineBookSearchResult parseVolumeResult(
-            @NonNull JSONObject itemObject,
+    private OnlineBookSearchResult parseBookItem(
+            @NonNull JSONObject item,
+            @NonNull String requestedIsbn,
             long searchedAt
     ) {
+        String providerBookId =
+                jsonText(
+                        item,
+                        "id"
+                );
+
         JSONObject volumeInfo =
-                itemObject.optJSONObject(
+                item.optJSONObject(
                         "volumeInfo"
                 );
 
@@ -536,41 +652,37 @@ public final class GoogleBooksSearchClient
             return null;
         }
 
-        String bookTitle =
-                getJsonText(
+        String title =
+                jsonText(
                         volumeInfo,
                         "title"
                 );
 
-        if (bookTitle.isEmpty()) {
+        if (title.isEmpty()) {
             return null;
         }
 
-        String providerBookId =
-                getJsonText(
-                        itemObject,
-                        "id"
-                );
-
-        String resultId =
-                createResultId(
-                        providerBookId
-                );
-
         String subtitle =
-                getJsonText(
+                jsonText(
                         volumeInfo,
                         "subtitle"
                 );
 
-        String publisher =
-                getJsonText(
+        List<String> authors =
+                jsonTextList(
+                        volumeInfo.optJSONArray(
+                                "authors"
+                        )
+                );
+
+        String publisherName =
+                jsonText(
                         volumeInfo,
                         "publisher"
                 );
 
         String publicationDate =
-                getJsonText(
+                jsonText(
                         volumeInfo,
                         "publishedDate"
                 );
@@ -581,15 +693,17 @@ public final class GoogleBooksSearchClient
                 );
 
         String description =
-                getJsonText(
+                jsonText(
                         volumeInfo,
                         "description"
                 );
 
         String languageCode =
-                getJsonText(
-                        volumeInfo,
-                        "language"
+                normalizeLanguageCode(
+                        jsonText(
+                                volumeInfo,
+                                "language"
+                        )
                 );
 
         int pageCount =
@@ -601,63 +715,131 @@ public final class GoogleBooksSearchClient
                         )
                 );
 
+        List<String> categories =
+                jsonTextList(
+                        volumeInfo.optJSONArray(
+                                "categories"
+                        )
+                );
+
+        IndustryIdentifiers identifiers =
+                parseIndustryIdentifiers(
+                        volumeInfo.optJSONArray(
+                                "industryIdentifiers"
+                        ),
+                        requestedIsbn
+                );
+
+        JSONObject imageLinks =
+                volumeInfo.optJSONObject(
+                        "imageLinks"
+                );
+
+        String smallCoverImageUrl =
+                firstNonEmpty(
+                        imageText(
+                                imageLinks,
+                                "small"
+                        ),
+                        imageText(
+                                imageLinks,
+                                "thumbnail"
+                        ),
+                        imageText(
+                                imageLinks,
+                                "smallThumbnail"
+                        )
+                );
+
+        String largeCoverImageUrl =
+                firstNonEmpty(
+                        imageText(
+                                imageLinks,
+                                "extraLarge"
+                        ),
+                        imageText(
+                                imageLinks,
+                                "large"
+                        ),
+                        imageText(
+                                imageLinks,
+                                "medium"
+                        ),
+                        smallCoverImageUrl
+                );
+
         String informationUrl =
-                normalizeWebUrl(
-                        getJsonText(
+                firstNonEmpty(
+                        jsonText(
                                 volumeInfo,
                                 "infoLink"
+                        ),
+                        jsonText(
+                                item,
+                                "selfLink"
+                        ),
+                        createGoogleBooksVolumeUrl(
+                                providerBookId
                         )
                 );
 
         String previewUrl =
-                normalizeWebUrl(
-                        getJsonText(
-                                volumeInfo,
-                                "previewLink"
-                        )
-                );
-
-        String editionName =
-                getJsonText(
+                jsonText(
                         volumeInfo,
-                        "edition"
+                        "previewLink"
                 );
 
-        JSONArray authorArray =
-                volumeInfo.optJSONArray(
-                        "authors"
+        String canonicalVolumeUrl =
+                jsonText(
+                        volumeInfo,
+                        "canonicalVolumeLink"
                 );
 
-        JSONArray categoryArray =
-                volumeInfo.optJSONArray(
-                        "categories"
-                );
-
-        String subjectName =
-                getFirstArrayText(
-                        categoryArray
-                );
-
-        IsbnInformation isbnInformation =
-                extractIsbnInformation(
-                        volumeInfo.optJSONArray(
-                                "industryIdentifiers"
-                        )
-                );
-
-        ImageInformation imageInformation =
-                extractImageInformation(
-                        volumeInfo.optJSONObject(
-                                "imageLinks"
-                        )
+        JSONObject accessInfo =
+                item.optJSONObject(
+                        "accessInfo"
                 );
 
         AccessInformation accessInformation =
-                extractAccessInformation(
-                        itemObject.optJSONObject(
-                                "accessInfo"
-                        ),
-                        previewUrl
+                parseAccessInformation(
+                        accessInfo,
+                        previewUrl,
+                        informationUrl
+                );
+
+        String subjectName =
+                categories.isEmpty()
+                        ? subjectFromTitle(
+                        title
+                )
+                        : categories.get(
+                        0
+                );
+
+        String className =
+                classFromBookText(
+                        title
+                                + " "
+                                + subtitle
+                                + " "
+                                + description
+                );
+
+        String studyMedium =
+                mediumFromLanguageCode(
+                        languageCode
+                );
+
+        String editionName =
+                extractEditionName(
+                        title,
+                        subtitle,
+                        description
+                );
+
+        String resultId =
+                createResultId(
+                        providerBookId
                 );
 
         OnlineBookSearchResult.Builder builder =
@@ -666,7 +848,7 @@ public final class GoogleBooksSearchClient
                                 OnlineBookSearchResult
                                         .BookProvider
                                         .GOOGLE_BOOKS,
-                                bookTitle
+                                title
                         )
                         .setProviderBookId(
                                 providerBookId
@@ -674,8 +856,11 @@ public final class GoogleBooksSearchClient
                         .setBookSubtitle(
                                 subtitle
                         )
+                        .addAuthors(
+                                authors
+                        )
                         .setPublisherName(
-                                publisher
+                                publisherName
                         )
                         .setPublicationDate(
                                 publicationDate
@@ -686,26 +871,23 @@ public final class GoogleBooksSearchClient
                         .setEditionName(
                                 editionName
                         )
-                        .setDescription(
-                                description
-                        )
                         .setSubjectName(
                                 subjectName
                         )
+                        .setClassName(
+                                className
+                        )
                         .setStudyMedium(
-                                convertLanguageToMedium(
-                                        languageCode
-                                )
+                                studyMedium
                         )
                         .setIsbn10(
-                                isbnInformation.isbn10
+                                identifiers.isbn10
                         )
                         .setIsbn13(
-                                isbnInformation.isbn13
+                                identifiers.isbn13
                         )
                         .setIndustryIdentifier(
-                                isbnInformation
-                                        .preferredIdentifier
+                                identifiers.preferredIdentifier
                         )
                         .setLanguageCode(
                                 languageCode
@@ -714,46 +896,42 @@ public final class GoogleBooksSearchClient
                                 pageCount
                         )
                         .setSmallCoverImageUrl(
-                                imageInformation
-                                        .smallImageUrl
+                                smallCoverImageUrl
                         )
                         .setLargeCoverImageUrl(
-                                imageInformation
-                                        .largeImageUrl
+                                largeCoverImageUrl
                         )
                         .setInformationUrl(
-                                informationUrl
+                                firstNonEmpty(
+                                        canonicalVolumeUrl,
+                                        informationUrl
+                                )
                         )
                         .setPreviewUrl(
-                                accessInformation
-                                        .preferredPreviewUrl
+                                accessInformation.previewUrl
                         )
                         .setOfficialSourceUrl(
                                 ""
                         )
                         .setAuthorizedDownloadUrl(
-                                accessInformation
-                                        .authorizedDownloadUrl
+                                accessInformation.authorizedDownloadUrl
                         )
                         .setDownloadMimeType(
-                                accessInformation
-                                        .downloadMimeType
+                                accessInformation.downloadMimeType
                         )
                         .setAccessType(
-                                accessInformation
-                                        .accessType
+                                accessInformation.accessType
                         )
                         .setLicenseType(
-                                accessInformation
-                                        .licenseType
+                                OnlineBookSearchResult
+                                        .LicenseType
+                                        .UNKNOWN
                         )
                         .setPreviewAllowed(
-                                accessInformation
-                                        .previewAllowed
+                                accessInformation.previewAllowed
                         )
                         .setDownloadAllowed(
-                                accessInformation
-                                        .downloadAllowed
+                                accessInformation.downloadAllowed
                         )
                         .setOfficialSource(
                                 false
@@ -762,8 +940,7 @@ public final class GoogleBooksSearchClient
                                 false
                         )
                         .setPublicDomain(
-                                accessInformation
-                                        .publicDomain
+                                accessInformation.publicDomain
                         )
                         .setOpenEducationalResource(
                                 false
@@ -780,57 +957,57 @@ public final class GoogleBooksSearchClient
                                 false
                         );
 
-        if (authorArray != null) {
-            for (int index = 0;
-                 index < authorArray.length();
-                 index++) {
+        for (int index = 0;
+             index < categories.size()
+                     && index < MAXIMUM_CATEGORIES;
+             index++) {
 
-                builder.addAuthor(
-                        authorArray.optString(
-                                index,
-                                ""
-                        )
-                );
-            }
-        }
-
-        if (categoryArray != null) {
-            for (int index = 0;
-                 index < categoryArray.length();
-                 index++) {
-
-                builder.addCategory(
-                        categoryArray.optString(
-                                index,
-                                ""
-                        )
-                );
-            }
-        }
-
-        if (isbnInformation.preferredIdentifier
-                .isEmpty()) {
-
-            builder.addWarning(
-                    "Google Books result does not "
-                            + "contain an ISBN."
+            builder.addCategory(
+                    categories.get(
+                            index
+                    )
             );
         }
 
-        if (accessInformation
-                .unverifiedDownloadAvailable) {
-
+        if (identifiers.preferredIdentifier.isEmpty()) {
             builder.addWarning(
-                    "A download link was reported, "
-                            + "but its usage rights still "
-                            + "require separate verification."
+                    "Google Books result में verified ISBN उपलब्ध नहीं है।"
+            );
+        }
+
+        if (publisherName.isEmpty()) {
+            builder.addWarning(
+                    "Google Books record में publisher उपलब्ध नहीं है।"
+            );
+        }
+
+        if (!requestedIsbn.isEmpty()
+                && requestedIsbn.equals(
+                identifiers.preferredIdentifier
+        )) {
+
+            builder.addMatchReason(
+                    "Google Books ISBN scanned ISBN से exact match करता है।"
+            );
+
+        } else if (!requestedIsbn.isEmpty()
+                && identifiers.contains(
+                requestedIsbn
+        )) {
+
+            builder.addMatchReason(
+                    "Scanned ISBN Google Books identifiers में मौजूद है।"
+            );
+
+        } else {
+            builder.addMatchReason(
+                    "Result उपलब्ध title, author और publisher metadata से मिला।"
             );
         }
 
         if (accessInformation.publicDomain) {
             builder.addMatchReason(
-                    "Google Books marks this volume "
-                            + "as public domain."
+                    "Google Books ने इस edition को public-domain access के रूप में बताया है।"
             );
         }
 
@@ -838,159 +1015,33 @@ public final class GoogleBooksSearchClient
     }
 
     @NonNull
-    private IsbnInformation extractIsbnInformation(
-            @Nullable JSONArray identifierArray
+    private AccessInformation parseAccessInformation(
+            @Nullable JSONObject accessInfo,
+            @Nullable String volumePreviewUrl,
+            @Nullable String informationUrl
     ) {
-        String isbn10 =
-                "";
-
-        String isbn13 =
-                "";
-
-        String preferredIdentifier =
-                "";
-
-        if (identifierArray != null) {
-            for (int index = 0;
-                 index < identifierArray.length();
-                 index++) {
-
-                JSONObject identifierObject =
-                        identifierArray.optJSONObject(
-                                index
-                        );
-
-                if (identifierObject == null) {
-                    continue;
-                }
-
-                String type =
-                        getJsonText(
-                                identifierObject,
-                                "type"
-                        )
-                                .toUpperCase(
-                                        Locale.ROOT
-                                );
-
-                String identifier =
-                        normalizeIsbn(
-                                getJsonText(
-                                        identifierObject,
-                                        "identifier"
-                                )
-                        );
-
-                if (identifier.isEmpty()) {
-                    continue;
-                }
-
-                if ("ISBN_13".equals(type)
-                        || identifier.length() == 13) {
-
-                    if (isbn13.isEmpty()) {
-                        isbn13 =
-                                identifier;
-                    }
-
-                } else if ("ISBN_10".equals(type)
-                        || identifier.length() == 10) {
-
-                    if (isbn10.isEmpty()) {
-                        isbn10 =
-                                identifier;
-                    }
-                }
-
-                if (preferredIdentifier.isEmpty()) {
-                    preferredIdentifier =
-                            identifier;
-                }
-            }
-        }
-
-        if (!isbn13.isEmpty()) {
-            preferredIdentifier =
-                    isbn13;
-
-        } else if (!isbn10.isEmpty()) {
-            preferredIdentifier =
-                    isbn10;
-        }
-
-        return new IsbnInformation(
-                isbn10,
-                isbn13,
-                preferredIdentifier
-        );
-    }
-
-    @NonNull
-    private ImageInformation extractImageInformation(
-            @Nullable JSONObject imageLinks
-    ) {
-        if (imageLinks == null) {
-            return new ImageInformation(
+        if (accessInfo == null) {
+            return new AccessInformation(
+                    OnlineBookSearchResult
+                            .AccessType
+                            .METADATA_ONLY,
+                    false,
+                    false,
+                    false,
+                    "",
                     "",
                     ""
             );
         }
 
-        String smallImageUrl =
-                firstNonEmpty(
-                        normalizeImageUrl(
-                                getJsonText(
-                                        imageLinks,
-                                        "thumbnail"
-                                )
-                        ),
-                        normalizeImageUrl(
-                                getJsonText(
-                                        imageLinks,
-                                        "smallThumbnail"
-                                )
-                        )
-                );
-
-        String largeImageUrl =
-                firstNonEmpty(
-                        normalizeImageUrl(
-                                getJsonText(
-                                        imageLinks,
-                                        "extraLarge"
-                                )
-                        ),
-                        normalizeImageUrl(
-                                getJsonText(
-                                        imageLinks,
-                                        "large"
-                                )
-                        ),
-                        normalizeImageUrl(
-                                getJsonText(
-                                        imageLinks,
-                                        "medium"
-                                )
-                        ),
-                        smallImageUrl
-                );
-
-        return new ImageInformation(
-                smallImageUrl,
-                largeImageUrl
-        );
-    }
-
-    @NonNull
-    private AccessInformation extractAccessInformation(
-            @Nullable JSONObject accessInfo,
-            @NonNull String volumePreviewUrl
-    ) {
-        if (accessInfo == null) {
-            return AccessInformation.metadataOnly(
-                    volumePreviewUrl
-            );
-        }
+        String viewability =
+                jsonText(
+                        accessInfo,
+                        "viewability"
+                )
+                        .toUpperCase(
+                                Locale.ROOT
+                        );
 
         boolean publicDomain =
                 accessInfo.optBoolean(
@@ -1004,102 +1055,69 @@ public final class GoogleBooksSearchClient
                         false
                 );
 
-        String viewability =
-                getJsonText(
+        String webReaderLink =
+                jsonText(
                         accessInfo,
-                        "viewability"
+                        "webReaderLink"
+                );
+
+        String accessViewStatus =
+                jsonText(
+                        accessInfo,
+                        "accessViewStatus"
                 )
                         .toUpperCase(
                                 Locale.ROOT
                         );
 
-        String webReaderLink =
-                normalizeWebUrl(
-                        getJsonText(
-                                accessInfo,
-                                "webReaderLink"
-                        )
-                );
-
-        DownloadInformation pdfDownload =
-                extractFormatDownload(
-                        accessInfo.optJSONObject(
-                                "pdf"
-                        ),
-                        "application/pdf"
-                );
-
-        DownloadInformation epubDownload =
-                extractFormatDownload(
-                        accessInfo.optJSONObject(
-                                "epub"
-                        ),
-                        "application/epub+zip"
-                );
-
-        DownloadInformation preferredDownload;
-
-        if (pdfDownload.available
-                && !pdfDownload.downloadUrl.isEmpty()) {
-
-            preferredDownload =
-                    pdfDownload;
-
-        } else {
-            preferredDownload =
-                    epubDownload;
-        }
-
-        String preferredPreviewUrl =
-                firstNonEmpty(
-                        webReaderLink,
-                        volumePreviewUrl
-                );
-
         boolean previewAllowed =
-                embeddable
-                        || !preferredPreviewUrl.isEmpty()
-                        || "PARTIAL".equals(viewability)
-                        || "ALL_PAGES".equals(viewability);
+                !"NO_PAGES".equals(
+                        viewability
+                )
+                        && (
+                        "PARTIAL".equals(
+                                viewability
+                        )
+                                || "ALL_PAGES".equals(
+                                viewability
+                        )
+                                || "FULL_PUBLIC_DOMAIN".equals(
+                                viewability
+                        )
+                                || "SAMPLE".equals(
+                                accessViewStatus
+                        )
+                                || embeddable
+                );
 
-        boolean downloadLinkReported =
-                preferredDownload.available
-                        && !preferredDownload
-                        .downloadUrl
-                        .isEmpty();
-
-        /*
-         * A reported link is not treated as an
-         * authorized automatic download unless
-         * the API explicitly marks the volume
-         * as public domain.
-         */
-        boolean downloadAllowed =
-                publicDomain
-                        && downloadLinkReported;
-
-        String authorizedDownloadUrl =
-                downloadAllowed
-                        ? preferredDownload.downloadUrl
+        String previewUrl =
+                previewAllowed
+                        ? firstNonEmpty(
+                        webReaderLink,
+                        safeText(
+                                volumePreviewUrl
+                        ),
+                        safeText(
+                                informationUrl
+                        )
+                )
                         : "";
 
-        String downloadMimeType =
-                downloadAllowed
-                        ? preferredDownload.mimeType
-                        : "";
+        DownloadInformation downloadInformation =
+                parseDownloadInformation(
+                        accessInfo,
+                        publicDomain
+                );
 
         OnlineBookSearchResult.AccessType accessType;
 
-        if (downloadAllowed) {
-            accessType =
-                    OnlineBookSearchResult
-                            .AccessType
-                            .FULL_DOWNLOAD;
-
-        } else if ("ALL_PAGES".equals(
+        if (publicDomain
+                || "FULL_PUBLIC_DOMAIN".equals(
                 viewability
         )
-                && previewAllowed) {
+                || "ALL_PAGES".equals(
+                viewability
+        )) {
 
             accessType =
                     OnlineBookSearchResult
@@ -1119,65 +1137,553 @@ public final class GoogleBooksSearchClient
                             .METADATA_ONLY;
         }
 
-        OnlineBookSearchResult.LicenseType licenseType;
-
-        if (publicDomain) {
-            licenseType =
-                    OnlineBookSearchResult
-                            .LicenseType
-                            .PUBLIC_DOMAIN;
-
-        } else {
-            licenseType =
-                    OnlineBookSearchResult
-                            .LicenseType
-                            .UNKNOWN;
-        }
-
         return new AccessInformation(
-                preferredPreviewUrl,
-                authorizedDownloadUrl,
-                downloadMimeType,
                 accessType,
-                licenseType,
                 previewAllowed,
-                downloadAllowed,
+                downloadInformation.downloadAllowed,
                 publicDomain,
-                downloadLinkReported
-                        && !downloadAllowed
+                previewUrl,
+                downloadInformation.downloadUrl,
+                downloadInformation.mimeType
         );
     }
 
     @NonNull
-    private DownloadInformation extractFormatDownload(
-            @Nullable JSONObject formatObject,
-            @NonNull String mimeType
+    private DownloadInformation parseDownloadInformation(
+            @NonNull JSONObject accessInfo,
+            boolean publicDomain
     ) {
-        if (formatObject == null) {
-            return DownloadInformation.unavailable(
-                    mimeType
-            );
-        }
+        JSONObject pdf =
+                accessInfo.optJSONObject(
+                        "pdf"
+                );
 
-        boolean available =
-                formatObject.optBoolean(
+        JSONObject epub =
+                accessInfo.optJSONObject(
+                        "epub"
+                );
+
+        boolean pdfAvailable =
+                pdf != null
+                        && pdf.optBoolean(
                         "isAvailable",
                         false
                 );
 
-        String downloadUrl =
-                normalizeWebUrl(
-                        getJsonText(
-                                formatObject,
+        boolean epubAvailable =
+                epub != null
+                        && epub.optBoolean(
+                        "isAvailable",
+                        false
+                );
+
+        String pdfDownloadUrl =
+                pdf == null
+                        ? ""
+                        : firstNonEmpty(
+                        jsonText(
+                                pdf,
                                 "downloadLink"
+                        ),
+                        jsonText(
+                                pdf,
+                                "acsTokenLink"
                         )
                 );
 
+        String epubDownloadUrl =
+                epub == null
+                        ? ""
+                        : firstNonEmpty(
+                        jsonText(
+                                epub,
+                                "downloadLink"
+                        ),
+                        jsonText(
+                                epub,
+                                "acsTokenLink"
+                        )
+                );
+
+        /*
+         * Metadata में file उपलब्ध लिखी होने के बावजूद direct authorized
+         * link न हो तो app अपने-आप download नहीं करेगी।
+         */
+        if (publicDomain
+                && pdfAvailable
+                && !pdfDownloadUrl.isEmpty()) {
+
+            return new DownloadInformation(
+                    true,
+                    pdfDownloadUrl,
+                    "application/pdf"
+            );
+        }
+
+        if (publicDomain
+                && epubAvailable
+                && !epubDownloadUrl.isEmpty()) {
+
+            return new DownloadInformation(
+                    true,
+                    epubDownloadUrl,
+                    "application/epub+zip"
+            );
+        }
+
         return new DownloadInformation(
-                available,
-                downloadUrl,
-                mimeType
+                false,
+                "",
+                ""
         );
+    }
+
+    @NonNull
+    private IndustryIdentifiers parseIndustryIdentifiers(
+            @Nullable JSONArray industryIdentifiers,
+            @NonNull String requestedIsbn
+    ) {
+        String isbn10 =
+                "";
+
+        String isbn13 =
+                "";
+
+        String exactIdentifier =
+                "";
+
+        List<String> allIdentifiers =
+                new ArrayList<>();
+
+        if (industryIdentifiers != null) {
+            for (int index = 0;
+                 index < industryIdentifiers.length();
+                 index++) {
+
+                JSONObject identifierObject =
+                        industryIdentifiers.optJSONObject(
+                                index
+                        );
+
+                if (identifierObject == null) {
+                    continue;
+                }
+
+                String type =
+                        jsonText(
+                                identifierObject,
+                                "type"
+                        )
+                                .toUpperCase(
+                                        Locale.ROOT
+                                );
+
+                String identifier =
+                        normalizeIsbn(
+                                jsonText(
+                                        identifierObject,
+                                        "identifier"
+                                )
+                        );
+
+                if (identifier.isEmpty()) {
+                    continue;
+                }
+
+                if (!allIdentifiers.contains(
+                        identifier
+                )) {
+                    allIdentifiers.add(
+                            identifier
+                    );
+                }
+
+                if ("ISBN_10".equals(
+                        type
+                )
+                        || identifier.length() == 10) {
+
+                    if (isbn10.isEmpty()) {
+                        isbn10 =
+                                identifier;
+                    }
+                }
+
+                if ("ISBN_13".equals(
+                        type
+                )
+                        || identifier.length() == 13) {
+
+                    if (isbn13.isEmpty()) {
+                        isbn13 =
+                                identifier;
+                    }
+                }
+
+                if (!requestedIsbn.isEmpty()
+                        && requestedIsbn.equals(
+                        identifier
+                )) {
+
+                    exactIdentifier =
+                            identifier;
+                }
+            }
+        }
+
+        String preferredIdentifier =
+                !exactIdentifier.isEmpty()
+                        ? exactIdentifier
+                        : (
+                        !isbn13.isEmpty()
+                        ? isbn13
+                        : isbn10
+                );
+
+        return new IndustryIdentifiers(
+                isbn10,
+                isbn13,
+                preferredIdentifier,
+                allIdentifiers
+        );
+    }
+
+    @NonNull
+    private List<OnlineBookSearchResult>
+    removeDuplicateResults(
+            @NonNull List<OnlineBookSearchResult> results
+    ) {
+        Map<String, OnlineBookSearchResult> uniqueResults =
+                new LinkedHashMap<>();
+
+        for (OnlineBookSearchResult result :
+                results) {
+
+            String isbn =
+                    normalizeIsbn(
+                            result.getPreferredIsbn()
+                    );
+
+            String resultKey;
+
+            if (!isbn.isEmpty()) {
+                resultKey =
+                        "isbn:"
+                                + isbn;
+
+            } else if (!result.getProviderBookId()
+                    .isEmpty()) {
+
+                resultKey =
+                        "provider:"
+                                + result.getProviderBookId();
+
+            } else {
+                resultKey =
+                        "metadata:"
+                                + comparisonText(
+                                result.getBookTitle()
+                        )
+                                + "|"
+                                + comparisonText(
+                                result.getPublisherName()
+                        )
+                                + "|"
+                                + comparisonText(
+                                result.getAuthorsDisplayText()
+                        );
+            }
+
+            if (!uniqueResults.containsKey(
+                    resultKey
+            )) {
+                uniqueResults.put(
+                        resultKey,
+                        result
+                );
+            }
+        }
+
+        return new ArrayList<>(
+                uniqueResults.values()
+        );
+    }
+
+    @NonNull
+    private String extractPublicationYear(
+            @Nullable String publicationDate
+    ) {
+        Matcher matcher =
+                PUBLICATION_YEAR_PATTERN.matcher(
+                        safeText(
+                                publicationDate
+                        )
+                );
+
+        return matcher.find()
+                ? matcher.group()
+                : "";
+    }
+
+    @NonNull
+    private String extractEditionName(
+            @Nullable String title,
+            @Nullable String subtitle,
+            @Nullable String description
+    ) {
+        String combinedText =
+                safeText(
+                        title
+                )
+                        + " "
+                        + safeText(
+                        subtitle
+                )
+                        + " "
+                        + safeText(
+                        description
+                );
+
+        Matcher matcher =
+                Pattern.compile(
+                                "(?i)\\b(?:revised|updated|new|latest|"
+                                        + "\\d+(?:st|nd|rd|th))\\s+edition\\b"
+                        )
+                        .matcher(
+                                combinedText
+                        );
+
+        return matcher.find()
+                ? matcher.group()
+                .trim()
+                : "";
+    }
+
+    @NonNull
+    private String classFromBookText(
+            @Nullable String value
+    ) {
+        Matcher matcher =
+                CLASS_PATTERN.matcher(
+                        safeText(
+                                value
+                        )
+                );
+
+        return matcher.find()
+                ? "Class "
+                  + matcher.group(
+                1
+        )
+                : "";
+    }
+
+    @NonNull
+    private String subjectFromTitle(
+            @Nullable String title
+    ) {
+        String subject =
+                safeText(
+                        title
+                )
+                        .replaceAll(
+                                "(?i)\\s+(?:for\\s+)?"
+                                        + "(?:class|grade|standard|std\\.?)"
+                                        + "\\s*[-:]?\\s*(?:1[0-2]|[1-9]).*$",
+                                ""
+                        )
+                        .replaceAll(
+                                "(?i)\\b(?:textbook|workbook|coursebook)\\b",
+                                ""
+                        )
+                        .replaceAll(
+                                "\\s+",
+                                " "
+                        )
+                        .trim();
+
+        return subject.length() <= 80
+                ? subject
+                : "";
+    }
+
+    @NonNull
+    private String normalizeLanguageCode(
+            @Nullable String value
+    ) {
+        String languageCode =
+                safeText(
+                        value
+                )
+                        .toLowerCase(
+                                Locale.ROOT
+                        );
+
+        switch (languageCode) {
+            case "eng":
+                return "en";
+
+            case "hin":
+                return "hi";
+
+            case "san":
+                return "sa";
+
+            default:
+                return languageCode;
+        }
+    }
+
+    @NonNull
+    private String mediumFromLanguageCode(
+            @Nullable String languageCode
+    ) {
+        switch (normalizeLanguageCode(
+                languageCode
+        )) {
+            case "en":
+                return "English";
+
+            case "hi":
+                return "Hindi";
+
+            case "sa":
+                return "Sanskrit";
+
+            default:
+                return "";
+        }
+    }
+
+    @NonNull
+    private String createGoogleBooksVolumeUrl(
+            @Nullable String providerBookId
+    ) {
+        String safeProviderBookId =
+                safeText(
+                        providerBookId
+                );
+
+        return safeProviderBookId.isEmpty()
+                ? ""
+                : "https://books.google.com/books?id="
+                  + safeProviderBookId;
+    }
+
+    @NonNull
+    private String createResultId(
+            @Nullable String providerBookId
+    ) {
+        String safeProviderBookId =
+                safeText(
+                        providerBookId
+                );
+
+        if (safeProviderBookId.isEmpty()) {
+            safeProviderBookId =
+                    UUID.randomUUID()
+                            .toString();
+        }
+
+        return "google_books_"
+                + safeProviderBookId;
+    }
+
+    @NonNull
+    private String imageText(
+            @Nullable JSONObject imageLinks,
+            @NonNull String key
+    ) {
+        if (imageLinks == null) {
+            return "";
+        }
+
+        String imageUrl =
+                jsonText(
+                        imageLinks,
+                        key
+                );
+
+        /*
+         * कुछ Google Books records HTTP image URL देते हैं।
+         * Android cleartext block से बचने के लिए HTTPS उपयोग करें।
+         */
+        if (imageUrl.startsWith(
+                "http://"
+        )) {
+            imageUrl =
+                    "https://"
+                            + imageUrl.substring(
+                            "http://".length()
+                    );
+        }
+
+        return imageUrl;
+    }
+
+    @NonNull
+    private String jsonText(
+            @NonNull JSONObject object,
+            @NonNull String key
+    ) {
+        return safeText(
+                object.optString(
+                        key,
+                        ""
+                )
+        );
+    }
+
+    @NonNull
+    private List<String> jsonTextList(
+            @Nullable JSONArray array
+    ) {
+        List<String> values =
+                new ArrayList<>();
+
+        if (array == null) {
+            return values;
+        }
+
+        for (int index = 0;
+             index < array.length();
+             index++) {
+
+            String value =
+                    safeText(
+                            array.optString(
+                                    index,
+                                    ""
+                            )
+                    );
+
+            if (!value.isEmpty()
+                    && !containsIgnoreCase(
+                    values,
+                    value
+            )) {
+                values.add(
+                        value
+                );
+            }
+        }
+
+        return values;
+    }
+
+    private boolean containsIgnoreCase(
+            @NonNull List<String> values,
+            @NonNull String target
+    ) {
+        for (String value : values) {
+            if (value.equalsIgnoreCase(
+                    target
+            )) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @NonNull
@@ -1189,337 +1695,152 @@ public final class GoogleBooksSearchClient
             return "";
         }
 
-        StringBuilder responseBuilder =
+        StringBuilder responseBody =
                 new StringBuilder();
 
-        try (
-                BufferedReader reader =
-                        new BufferedReader(
-                                new InputStreamReader(
-                                        inputStream,
-                                        StandardCharsets.UTF_8
-                                )
-                        )
-        ) {
+        try (BufferedReader reader =
+                     new BufferedReader(
+                             new InputStreamReader(
+                                     inputStream,
+                                     StandardCharsets.UTF_8
+                             )
+                     )) {
+
             String line;
 
             while ((line = reader.readLine())
                     != null) {
 
-                responseBuilder.append(
+                responseBody.append(
                         line
                 );
             }
         }
 
-        return responseBuilder.toString();
+        return responseBody.toString();
     }
 
     @NonNull
     private String createHttpErrorMessage(
             int responseCode,
-            @Nullable String responseBody
+            @Nullable String responseBody,
+            boolean androidIdentityApplied
     ) {
-        String serverMessage =
-                extractServerErrorMessage(
+        String safeResponseBody =
+                safeText(
                         responseBody
                 );
 
-        StringBuilder messageBuilder =
-                new StringBuilder();
+        if (safeResponseBody.length()
+                > MAXIMUM_ERROR_BODY_LENGTH) {
 
-        messageBuilder.append(
-                "Google Books search failed"
-        );
-
-        messageBuilder.append(
-                " (HTTP "
-        );
-
-        messageBuilder.append(
-                responseCode
-        );
-
-        messageBuilder.append(
-                ")."
-        );
-
-        if (!serverMessage.isEmpty()) {
-            messageBuilder.append(
-                    " "
-            );
-
-            messageBuilder.append(
-                    serverMessage
-            );
-        }
-
-        return messageBuilder.toString();
-    }
-
-    @NonNull
-    private String extractServerErrorMessage(
-            @Nullable String responseBody
-    ) {
-        String safeBody =
-                normalizeOptionalText(
-                        responseBody
-                );
-
-        if (safeBody.isEmpty()) {
-            return "";
-        }
-
-        try {
-            JSONObject rootObject =
-                    new JSONObject(
-                            safeBody
+            safeResponseBody =
+                    safeResponseBody.substring(
+                            0,
+                            MAXIMUM_ERROR_BODY_LENGTH
                     );
-
-            JSONObject errorObject =
-                    rootObject.optJSONObject(
-                            "error"
-                    );
-
-            if (errorObject != null) {
-                String message =
-                        getJsonText(
-                                errorObject,
-                                "message"
-                        );
-
-                if (!message.isEmpty()) {
-                    return limitTextLength(
-                            message,
-                            MAXIMUM_ERROR_MESSAGE_LENGTH
-                    );
-                }
-            }
-
-        } catch (JSONException ignored) {
-            // Fall back to limited plain response text.
         }
 
-        return limitTextLength(
-                safeBody,
-                MAXIMUM_ERROR_MESSAGE_LENGTH
-        );
-    }
+        String reason;
 
-    @NonNull
-    private String limitTextLength(
-            @NonNull String value,
-            int maximumLength
-    ) {
-        if (value.length()
-                <= maximumLength) {
+        switch (responseCode) {
+            case 400:
+                reason =
+                        "Google Books request invalid थी।";
+                break;
 
-            return value;
-        }
+            case 401:
+                reason =
+                        "Google Books API key authentication सफल नहीं हुई।";
+                break;
 
-        return value.substring(
-                        0,
-                        maximumLength
-                )
-                .trim();
-    }
+            case 403:
+                reason =
+                        androidIdentityApplied
+                                ? "Google Books API key restriction या permission ने request अस्वीकार की।"
+                                : "Google Books API key restriction के लिए Android identity उपलब्ध नहीं थी।";
+                break;
 
-    @NonNull
-    private String getJsonText(
-            @NonNull JSONObject object,
-            @NonNull String fieldName
-    ) {
-        Object value =
-                object.opt(
-                        fieldName
-                );
+            case 404:
+                reason =
+                        "Google Books endpoint या requested resource उपलब्ध नहीं है।";
+                break;
 
-        if (value == null
-                || value == JSONObject.NULL) {
+            case 429:
+                reason =
+                        "Google Books request quota या rate limit समाप्त हो गई।";
+                break;
 
-            return "";
-        }
-
-        return String.valueOf(
-                        value
-                )
-                .trim();
-    }
-
-    @NonNull
-    private String getFirstArrayText(
-            @Nullable JSONArray array
-    ) {
-        if (array == null
-                || array.length() == 0) {
-
-            return "";
-        }
-
-        return normalizeOptionalText(
-                array.optString(
-                        0,
-                        ""
-                )
-        );
-    }
-
-    @NonNull
-    private String extractPublicationYear(
-            @Nullable String publicationDate
-    ) {
-        String safePublicationDate =
-                normalizeOptionalText(
-                        publicationDate
-                );
-
-        if (safePublicationDate.length() < 4) {
-            return "";
-        }
-
-        String possibleYear =
-                safePublicationDate.substring(
-                        0,
-                        4
-                );
-
-        if (possibleYear.matches(
-                "\\d{4}"
-        )) {
-            return possibleYear;
-        }
-
-        return "";
-    }
-
-    @NonNull
-    private String convertLanguageToMedium(
-            @Nullable String languageCode
-    ) {
-        String safeLanguageCode =
-                normalizeOptionalText(
-                        languageCode
-                )
-                        .toLowerCase(
-                                Locale.ROOT
-                        );
-
-        switch (safeLanguageCode) {
-            case "hi":
-                return "Hindi";
-
-            case "en":
-                return "English";
-
-            case "sa":
-                return "Sanskrit";
+            case 500:
+            case 502:
+            case 503:
+            case 504:
+                reason =
+                        "Google Books service अस्थायी रूप से उपलब्ध नहीं है।";
+                break;
 
             default:
-                return "";
+                reason =
+                        "Google Books search सफल नहीं हुई।";
+                break;
         }
+
+        return safeResponseBody.isEmpty()
+                ? reason
+                  + " HTTP Status: "
+                  + responseCode
+                : reason
+                  + " HTTP Status: "
+                  + responseCode
+                  + ". Response: "
+                  + safeResponseBody;
     }
 
     @NonNull
-    private String createResultId(
-            @Nullable String providerBookId
-    ) {
-        String safeProviderBookId =
-                normalizeOptionalText(
-                        providerBookId
-                )
-                        .toLowerCase(
-                                Locale.ROOT
-                        )
-                        .replaceAll(
-                                "[^a-z0-9_-]",
-                                "_"
-                        )
-                        .replaceAll(
-                                "_+",
-                                "_"
-                        );
+    private String encode(
+            @NonNull String value
+    ) throws IOException {
 
-        while (safeProviderBookId.startsWith("_")) {
-            safeProviderBookId =
-                    safeProviderBookId.substring(
-                            1
-                    );
-        }
-
-        while (safeProviderBookId.endsWith("_")) {
-            safeProviderBookId =
-                    safeProviderBookId.substring(
-                            0,
-                            safeProviderBookId.length() - 1
-                    );
-        }
-
-        if (safeProviderBookId.isEmpty()) {
-            safeProviderBookId =
-                    UUID.randomUUID()
-                            .toString()
-                            .replace(
-                                    "-",
-                                    ""
-                            );
-        }
-
-        return "google_books_"
-                + safeProviderBookId;
+        return URLEncoder.encode(
+                value,
+                StandardCharsets.UTF_8.name()
+        );
     }
 
     @NonNull
     private String normalizeIsbn(
-            @Nullable String value
+            @Nullable Object value
     ) {
-        return normalizeOptionalText(
+        String isbn =
+                safeText(
+                        value
+                )
+                        .replaceAll(
+                                "[^0-9Xx]",
+                                ""
+                        )
+                        .toUpperCase(
+                                Locale.ROOT
+                        );
+
+        return isbn.length() == 10
+                || isbn.length() == 13
+                ? isbn
+                : "";
+    }
+
+    @NonNull
+    private String comparisonText(
+            @Nullable Object value
+    ) {
+        return safeText(
                 value
         )
-                .replaceAll(
-                        "[^0-9Xx]",
-                        ""
-                )
-                .toUpperCase(
+                .toLowerCase(
                         Locale.ROOT
-                );
-    }
-
-    @NonNull
-    private String normalizeWebUrl(
-            @Nullable String value
-    ) {
-        String safeUrl =
-                normalizeOptionalText(
-                        value
-                );
-
-        if (safeUrl.startsWith(
-                "http://"
-        )) {
-            return "https://"
-                    + safeUrl.substring(
-                    "http://".length()
-            );
-        }
-
-        return safeUrl;
-    }
-
-    @NonNull
-    private String normalizeImageUrl(
-            @Nullable String value
-    ) {
-        return normalizeWebUrl(
-                value
-        );
-    }
-
-    @NonNull
-    private String removeQuotationMarks(
-            @NonNull String value
-    ) {
-        return value.replace(
-                        "\"",
+                )
+                .replaceAll(
+                        "[^\\p{L}\\p{N}]+",
                         " "
                 )
                 .replaceAll(
@@ -1533,9 +1854,13 @@ public final class GoogleBooksSearchClient
     private String firstNonEmpty(
             @Nullable String... values
     ) {
+        if (values == null) {
+            return "";
+        }
+
         for (String value : values) {
             String safeValue =
-                    normalizeOptionalText(
+                    safeText(
                             value
                     );
 
@@ -1548,12 +1873,13 @@ public final class GoogleBooksSearchClient
     }
 
     @NonNull
-    private String normalizeOptionalText(
-            @Nullable String value
+    private String safeText(
+            @Nullable Object value
     ) {
         return value == null
                 ? ""
-                : value.trim();
+                : value.toString()
+                .trim();
     }
 
     private void dispatchSuccess(
@@ -1576,6 +1902,25 @@ public final class GoogleBooksSearchClient
                         exception
                 )
         );
+    }
+
+    public boolean hasApiKey() {
+        return !googleBooksApiKey.isEmpty();
+    }
+
+    public boolean hasCompleteAndroidIdentity() {
+        return androidApiRequestIdentity != null
+                && androidApiRequestIdentity.isComplete();
+    }
+
+    @NonNull
+    public String getAndroidIdentityDiagnosticSummary() {
+        if (androidApiRequestIdentity == null) {
+            return "Android API request identity has not been supplied.";
+        }
+
+        return androidApiRequestIdentity
+                .createDiagnosticSummary();
     }
 
     @Override
@@ -1610,12 +1955,21 @@ public final class GoogleBooksSearchClient
 
         private final long searchedAt;
 
+        private final boolean exactIsbnSearch;
+
+        private final boolean apiKeyUsed;
+
+        private final boolean androidIdentityApplied;
+
         private SearchResponse(
                 @NonNull String searchQuery,
                 int totalItems,
                 @NonNull List<OnlineBookSearchResult>
                         bookResults,
-                long searchedAt
+                long searchedAt,
+                boolean exactIsbnSearch,
+                boolean apiKeyUsed,
+                boolean androidIdentityApplied
         ) {
             this.searchQuery =
                     searchQuery;
@@ -1634,7 +1988,19 @@ public final class GoogleBooksSearchClient
                     );
 
             this.searchedAt =
-                    searchedAt;
+                    Math.max(
+                            0L,
+                            searchedAt
+                    );
+
+            this.exactIsbnSearch =
+                    exactIsbnSearch;
+
+            this.apiKeyUsed =
+                    apiKeyUsed;
+
+            this.androidIdentityApplied =
+                    androidIdentityApplied;
         }
 
         @NonNull
@@ -1656,6 +2022,18 @@ public final class GoogleBooksSearchClient
             return searchedAt;
         }
 
+        public boolean isExactIsbnSearch() {
+            return exactIsbnSearch;
+        }
+
+        public boolean isApiKeyUsed() {
+            return apiKeyUsed;
+        }
+
+        public boolean isAndroidIdentityApplied() {
+            return androidIdentityApplied;
+        }
+
         public boolean hasResults() {
             return !bookResults.isEmpty();
         }
@@ -1665,8 +2043,7 @@ public final class GoogleBooksSearchClient
         }
     }
 
-    public static final class
-    GoogleBooksSearchException
+    public static final class GoogleBooksSearchException
             extends Exception {
 
         private final int httpStatusCode;
@@ -1712,12 +2089,67 @@ public final class GoogleBooksSearchClient
             return httpStatusCode;
         }
 
-        public boolean isHttpError() {
-            return httpStatusCode > 0;
+        public boolean isRateLimited() {
+            return httpStatusCode == 429;
+        }
+
+        public boolean isAuthenticationFailure() {
+            return httpStatusCode == 401
+                    || httpStatusCode == 403;
+        }
+
+        public boolean isTemporaryServiceFailure() {
+            return httpStatusCode == 429
+                    || httpStatusCode == 500
+                    || httpStatusCode == 502
+                    || httpStatusCode == 503
+                    || httpStatusCode == 504;
         }
     }
 
-    private static final class IsbnInformation {
+    private static final class SearchRequest {
+
+        @NonNull
+        private final String searchQuery;
+
+        @NonNull
+        private final String requestUrl;
+
+        @NonNull
+        private final String preferredIsbn;
+
+        private final boolean exactIsbnSearch;
+
+        private final int maximumResults;
+
+        private SearchRequest(
+                @NonNull String searchQuery,
+                @NonNull String requestUrl,
+                @NonNull String preferredIsbn,
+                boolean exactIsbnSearch,
+                int maximumResults
+        ) {
+            this.searchQuery =
+                    searchQuery;
+
+            this.requestUrl =
+                    requestUrl;
+
+            this.preferredIsbn =
+                    preferredIsbn;
+
+            this.exactIsbnSearch =
+                    exactIsbnSearch;
+
+            this.maximumResults =
+                    Math.max(
+                            MINIMUM_RESULTS,
+                            maximumResults
+                    );
+        }
+    }
+
+    private static final class IndustryIdentifiers {
 
         @NonNull
         private final String isbn10;
@@ -1728,10 +2160,14 @@ public final class GoogleBooksSearchClient
         @NonNull
         private final String preferredIdentifier;
 
-        private IsbnInformation(
+        @NonNull
+        private final List<String> allIdentifiers;
+
+        private IndustryIdentifiers(
                 @NonNull String isbn10,
                 @NonNull String isbn13,
-                @NonNull String preferredIdentifier
+                @NonNull String preferredIdentifier,
+                @NonNull List<String> allIdentifiers
         ) {
             this.isbn10 =
                     isbn10;
@@ -1741,84 +2177,71 @@ public final class GoogleBooksSearchClient
 
             this.preferredIdentifier =
                     preferredIdentifier;
+
+            this.allIdentifiers =
+                    Collections.unmodifiableList(
+                            new ArrayList<>(
+                                    allIdentifiers
+                            )
+                    );
         }
-    }
 
-    private static final class ImageInformation {
-
-        @NonNull
-        private final String smallImageUrl;
-
-        @NonNull
-        private final String largeImageUrl;
-
-        private ImageInformation(
-                @NonNull String smallImageUrl,
-                @NonNull String largeImageUrl
+        private boolean contains(
+                @Nullable String identifier
         ) {
-            this.smallImageUrl =
-                    smallImageUrl;
+            String safeIdentifier =
+                    safeStaticIsbn(
+                            identifier
+                    );
 
-            this.largeImageUrl =
-                    largeImageUrl;
-        }
-    }
+            if (safeIdentifier.isEmpty()) {
+                return false;
+            }
 
-    private static final class DownloadInformation {
+            for (String existingIdentifier :
+                    allIdentifiers) {
 
-        private final boolean available;
+                if (safeIdentifier.equals(
+                        existingIdentifier
+                )) {
+                    return true;
+                }
+            }
 
-        @NonNull
-        private final String downloadUrl;
-
-        @NonNull
-        private final String mimeType;
-
-        private DownloadInformation(
-                boolean available,
-                @NonNull String downloadUrl,
-                @NonNull String mimeType
-        ) {
-            this.available =
-                    available;
-
-            this.downloadUrl =
-                    downloadUrl;
-
-            this.mimeType =
-                    mimeType;
+            return false;
         }
 
         @NonNull
-        private static DownloadInformation unavailable(
-                @NonNull String mimeType
+        private static String safeStaticIsbn(
+                @Nullable Object value
         ) {
-            return new DownloadInformation(
-                    false,
-                    "",
-                    mimeType
-            );
+            if (value == null) {
+                return "";
+            }
+
+            String isbn =
+                    value.toString()
+                            .trim()
+                            .replaceAll(
+                                    "[^0-9Xx]",
+                                    ""
+                            )
+                            .toUpperCase(
+                                    Locale.ROOT
+                            );
+
+            return isbn.length() == 10
+                    || isbn.length() == 13
+                    ? isbn
+                    : "";
         }
     }
 
     private static final class AccessInformation {
 
         @NonNull
-        private final String preferredPreviewUrl;
-
-        @NonNull
-        private final String authorizedDownloadUrl;
-
-        @NonNull
-        private final String downloadMimeType;
-
-        @NonNull
         private final OnlineBookSearchResult.AccessType
                 accessType;
-
-        @NonNull
-        private final OnlineBookSearchResult.LicenseType
-                licenseType;
 
         private final boolean previewAllowed;
 
@@ -1826,35 +2249,27 @@ public final class GoogleBooksSearchClient
 
         private final boolean publicDomain;
 
-        private final boolean unverifiedDownloadAvailable;
+        @NonNull
+        private final String previewUrl;
+
+        @NonNull
+        private final String authorizedDownloadUrl;
+
+        @NonNull
+        private final String downloadMimeType;
 
         private AccessInformation(
-                @NonNull String preferredPreviewUrl,
-                @NonNull String authorizedDownloadUrl,
-                @NonNull String downloadMimeType,
                 @NonNull OnlineBookSearchResult.AccessType
                         accessType,
-                @NonNull OnlineBookSearchResult.LicenseType
-                        licenseType,
                 boolean previewAllowed,
                 boolean downloadAllowed,
                 boolean publicDomain,
-                boolean unverifiedDownloadAvailable
+                @NonNull String previewUrl,
+                @NonNull String authorizedDownloadUrl,
+                @NonNull String downloadMimeType
         ) {
-            this.preferredPreviewUrl =
-                    preferredPreviewUrl;
-
-            this.authorizedDownloadUrl =
-                    authorizedDownloadUrl;
-
-            this.downloadMimeType =
-                    downloadMimeType;
-
             this.accessType =
                     accessType;
-
-            this.licenseType =
-                    licenseType;
 
             this.previewAllowed =
                     previewAllowed;
@@ -1865,36 +2280,40 @@ public final class GoogleBooksSearchClient
             this.publicDomain =
                     publicDomain;
 
-            this.unverifiedDownloadAvailable =
-                    unverifiedDownloadAvailable;
+            this.previewUrl =
+                    previewUrl;
+
+            this.authorizedDownloadUrl =
+                    authorizedDownloadUrl;
+
+            this.downloadMimeType =
+                    downloadMimeType;
         }
+    }
+
+    private static final class DownloadInformation {
+
+        private final boolean downloadAllowed;
 
         @NonNull
-        private static AccessInformation metadataOnly(
-                @NonNull String previewUrl
-        ) {
-            boolean hasPreview =
-                    !previewUrl.isEmpty();
+        private final String downloadUrl;
 
-            return new AccessInformation(
-                    previewUrl,
-                    "",
-                    "",
-                    hasPreview
-                            ? OnlineBookSearchResult
-                              .AccessType
-                              .PARTIAL_PREVIEW
-                            : OnlineBookSearchResult
-                              .AccessType
-                              .METADATA_ONLY,
-                    OnlineBookSearchResult
-                            .LicenseType
-                            .UNKNOWN,
-                    hasPreview,
-                    false,
-                    false,
-                    false
-            );
+        @NonNull
+        private final String mimeType;
+
+        private DownloadInformation(
+                boolean downloadAllowed,
+                @NonNull String downloadUrl,
+                @NonNull String mimeType
+        ) {
+            this.downloadAllowed =
+                    downloadAllowed;
+
+            this.downloadUrl =
+                    downloadUrl;
+
+            this.mimeType =
+                    mimeType;
         }
     }
 }
