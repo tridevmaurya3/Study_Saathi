@@ -100,14 +100,21 @@ android {
     buildTypes {
         debug {
             /*
-             * Debug build भी local.properties वाली key उपयोग करेगी।
-             * API restriction में debug SHA-1 आगे जोड़ा जाएगा।
+             * Debug build:
+             *
+             * Firebase App Check का Debug provider उपयोग करेगा।
+             * Debug token code या repository में save नहीं किया जाएगा।
              */
             isMinifyEnabled =
                 false
         }
 
         release {
+            /*
+             * Release build:
+             *
+             * Firebase App Check का Play Integrity provider उपयोग करेगा।
+             */
             isMinifyEnabled =
                 false
 
@@ -133,8 +140,8 @@ android {
             true
 
         /*
-         * Custom GOOGLE_BOOKS_API_KEY field के लिए BuildConfig
-         * generation explicitly enable होना जरूरी है।
+         * GOOGLE_BOOKS_API_KEY और BuildConfig.DEBUG access के लिए
+         * BuildConfig generation enabled रहेगी।
          */
         buildConfig =
             true
@@ -181,8 +188,8 @@ dependencies {
     /*
      * ML Kit Latin Text Recognition.
      *
-     * यह bundled model English text, numbers, publisher names,
-     * book titles, class information और ISBN text पढ़ता है।
+     * English text, numbers, publisher names, book titles,
+     * class information और ISBN text के लिए।
      */
     implementation(
         "com.google.mlkit:text-recognition:16.0.1"
@@ -191,7 +198,7 @@ dependencies {
     /*
      * ML Kit Devanagari Text Recognition.
      *
-     * यह bundled model Hindi और Sanskrit text पढ़ता है।
+     * Hindi और Sanskrit text के लिए।
      */
     implementation(
         "com.google.mlkit:text-recognition-devanagari:16.0.1"
@@ -200,8 +207,8 @@ dependencies {
     /*
      * ML Kit Barcode Scanning.
      *
-     * यह ISBN, EAN-13, EAN-8, UPC और दूसरे supported
-     * book barcodes scan करता है।
+     * ISBN, EAN-13, EAN-8, UPC और दूसरे supported
+     * book barcodes के लिए।
      */
     implementation(
         "com.google.mlkit:barcode-scanning:17.3.0"
@@ -218,19 +225,62 @@ dependencies {
     )
 
     /*
-     * Secure Study Saathi cloud accounts के लिए
-     * Firebase Authentication।
+     * Study Saathi cloud accounts के लिए Firebase Authentication।
      */
     implementation(
         libs.firebase.auth
     )
 
     /*
-     * Cloud backup और synchronization data के लिए
-     * Cloud Firestore।
+     * Cloud backup और synchronization के लिए Cloud Firestore।
      */
     implementation(
         libs.firebase.firestore
+    )
+
+    /*
+     * Firebase AI Logic SDK.
+     *
+     * Text, Image और conversational AI request भेजने के लिए।
+     */
+    implementation(
+        "com.google.firebase:firebase-ai"
+    )
+
+    /*
+     * Production / Release App Check provider.
+     *
+     * Release build में Play Integrity का उपयोग किया जाएगा।
+     */
+    implementation(
+        "com.google.firebase:firebase-appcheck-playintegrity"
+    )
+
+    /*
+     * Local development App Check provider.
+     *
+     * यह केवल BuildConfig.DEBUG true होने पर initialize किया जाएगा।
+     * कोई debug token source code में hardcode नहीं होगा।
+     */
+    implementation(
+        "com.google.firebase:firebase-appcheck-debug"
+    )
+
+    /*
+     * Firebase AI Logic Java one-shot operations के लिए।
+     *
+     * GenerativeModelFutures और ListenableFuture इसी library
+     * का उपयोग करते हैं।
+     */
+    implementation(
+        "com.google.guava:guava:31.0.1-android"
+    )
+
+    /*
+     * Firebase AI Logic Java streaming operations के लिए।
+     */
+    implementation(
+        "org.reactivestreams:reactive-streams:1.0.4"
     )
 
     testImplementation(

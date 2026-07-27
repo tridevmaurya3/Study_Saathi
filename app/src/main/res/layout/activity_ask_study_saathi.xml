@@ -332,20 +332,182 @@
                 app:boxCornerRadiusTopStart="18dp"
                 app:boxStrokeColor="@color/ss_primary">
 
-                <com.google.android.material.textfield.TextInputEditText
+                <com.tridev.studysaathi.ui.widget.StudyQuestionEditText
                     android:id="@+id/editQuestion"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif"
                     android:gravity="top|start"
                     android:inputType="textCapSentences|textMultiLine"
-                    android:maxLines="6"
-                    android:minHeight="125dp"
                     android:paddingTop="14dp"
+                    android:paddingBottom="14dp"
+                    android:scrollbars="vertical"
                     android:textColor="@color/ss_text_primary"
                     android:textSize="15sp" />
 
             </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonClearQuestion"
+                    style="@style/Widget.StudySaathi.Button.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:minHeight="48dp"
+                    android:text="सवाल साफ करें"
+                    android:textAllCaps="false"
+                    android:textSize="13sp"
+                    app:backgroundTint="@color/ss_surface"
+                    app:strokeColor="@color/ss_outline" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonToggleQuestionSize"
+                    style="@style/Widget.StudySaathi.Button.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:minHeight="48dp"
+                    android:text="बड़ा करें"
+                    android:textAllCaps="false"
+                    android:textSize="13sp"
+                    app:backgroundTint="@color/ss_purple_soft"
+                    app:strokeColor="@color/ss_purple_border" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="sans-serif"
+                android:lineSpacingExtra="2dp"
+                android:text="Question box के अंदर ऊपर-नीचे swipe करके पूरा सवाल पढ़ें। जरूरत होने पर बॉक्स को बड़ा करें।"
+                android:textColor="@color/ss_text_secondary"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonQuestionCamera"
+                    style="@style/Widget.StudySaathi.Button.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:minHeight="54dp"
+                    android:text="Camera से फोटो लें"
+                    android:textAllCaps="false"
+                    android:textSize="13sp"
+                    app:backgroundTint="@color/ss_blue_soft"
+                    app:strokeColor="@color/ss_blue_border" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonQuestionGallery"
+                    style="@style/Widget.StudySaathi.Button.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:minHeight="54dp"
+                    android:text="Gallery से चुनें"
+                    android:textAllCaps="false"
+                    android:textSize="13sp"
+                    app:backgroundTint="@color/ss_green_soft"
+                    app:strokeColor="@color/ss_green_border" />
+
+            </LinearLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardQuestionImagePreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/ss_surface"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/ss_outline"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-rounded"
+                        android:text="Question Photo"
+                        android:textColor="@color/ss_text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="220dp"
+                        android:layout_marginTop="11dp">
+
+                        <ImageView
+                            android:id="@+id/imageQuestionPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:adjustViewBounds="true"
+                            android:contentDescription="चुनी गई सवाल की फोटो"
+                            android:scaleType="centerCrop" />
+
+                        <com.google.android.material.progressindicator.CircularProgressIndicator
+                            android:id="@+id/progressQuestionImageOcr"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_gravity="center"
+                            android:visibility="gone"
+                            app:indicatorColor="@color/ss_primary"
+                            app:indicatorSize="42dp"
+                            app:trackColor="@color/ss_blue_soft"
+                            app:trackThickness="4dp" />
+
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/textQuestionImageStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:fontFamily="sans-serif"
+                        android:lineSpacingExtra="2dp"
+                        android:text="फोटो चुनी गई है। App सवाल पढ़कर editable text में दिखाएगी।"
+                        android:textColor="@color/ss_text_secondary"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonRemoveQuestionImage"
+                        style="@style/Widget.StudySaathi.Button.Outlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="11dp"
+                        android:text="फोटो हटाएँ"
+                        android:textAllCaps="false"
+                        android:textSize="13sp"
+                        app:backgroundTint="@color/ss_surface"
+                        app:strokeColor="@color/ss_outline" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonAskSaathi"
@@ -413,7 +575,7 @@
                         android:textSize="10sp"
                         android:textStyle="bold" />
 
-                    <TextView
+                    <com.tridev.studysaathi.ui.widget.StudyMarkdownTextView
                         android:id="@+id/textSaathiAnswer"
                         style="@style/TextAppearance.StudySaathi.Reading"
                         android:layout_width="match_parent"
@@ -421,6 +583,58 @@
                         android:layout_marginTop="9dp"
                         android:lineSpacingExtra="4dp"
                         android:textIsSelectable="true" />
+
+                    <TextView
+                        android:id="@+id/textAnswerSpeechStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="13dp"
+                        android:fontFamily="sans-serif"
+                        android:gravity="center_vertical"
+                        android:lineSpacingExtra="2dp"
+                        android:text="Answer सुनने के लिए नीचे button दबाएँ।"
+                        android:textColor="@color/ss_text_secondary"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutAnswerSpeechControls"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="13dp"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonSpeakAnswer"
+                            style="@style/Widget.StudySaathi.Button.Outlined"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:minHeight="52dp"
+                            android:text="🔊 जवाब सुनें"
+                            android:textAllCaps="false"
+                            android:textSize="14sp"
+                            app:backgroundTint="@color/ss_blue_soft"
+                            app:strokeColor="@color/ss_blue_border" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonStopAnswerSpeech"
+                            style="@style/Widget.StudySaathi.Button.Outlined"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:minHeight="52dp"
+                            android:text="⏹ रोकें"
+                            android:textAllCaps="false"
+                            android:textSize="14sp"
+                            android:visibility="gone"
+                            app:backgroundTint="@color/ss_yellow_soft"
+                            app:strokeColor="@color/ss_yellow_border" />
+
+                    </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonOpenLesson"
