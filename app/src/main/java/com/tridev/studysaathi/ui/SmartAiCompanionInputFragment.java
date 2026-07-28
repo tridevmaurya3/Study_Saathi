@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -15,6 +16,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+
+import com.tridev.studysaathi.AppAppearancePreferences;
 
 import java.util.ArrayList;
 
@@ -112,6 +115,11 @@ public final class SmartAiCompanionInputFragment extends Fragment {
     }
 
     public void launchVoice() {
+        String appLanguage = AppAppearancePreferences.getLanguage(
+                requireContext()
+        );
+        boolean englishOnly =
+                AppAppearancePreferences.LANGUAGE_ENGLISH.equals(appLanguage);
         Intent intent = new Intent(
                 RecognizerIntent.ACTION_RECOGNIZE_SPEECH
         );
@@ -121,16 +129,22 @@ public final class SmartAiCompanionInputFragment extends Fragment {
         );
         intent.putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE,
-                "hi-IN"
+                englishOnly ? "en-IN" : "hi-IN"
         );
         intent.putExtra(
                 RecognizerIntent.EXTRA_PROMPT,
-                "अपना सवाल बोलें"
+                englishOnly ? "Speak your question" : "अपना सवाल बोलें"
         );
         try {
             voiceLauncher.launch(intent);
         } catch (ActivityNotFoundException ignored) {
-            // Text input remains available.
+            Toast.makeText(
+                    requireContext(),
+                    englishOnly
+                            ? "Voice input is unavailable on this device."
+                            : "इस device पर voice input उपलब्ध नहीं है।",
+                    Toast.LENGTH_LONG
+            ).show();
         }
     }
 

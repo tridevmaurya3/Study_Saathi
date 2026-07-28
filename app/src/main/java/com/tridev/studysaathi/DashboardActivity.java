@@ -121,6 +121,10 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void setupStudyMenuActions() {
+        binding.studyMenuDrawerPanel.textMenuAppVersion.setText(
+                "Study Saathi • Version " + BuildConfig.VERSION_NAME
+        );
+
         binding.studyMenuDrawerPanel.buttonMenuDashboard
                 .setOnClickListener(view ->
                         binding.dashboardRoot.closeDrawer(

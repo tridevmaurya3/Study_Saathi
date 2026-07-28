@@ -296,6 +296,12 @@ public class ChaptersActivity
         exactChaptersLoading =
                 true;
 
+        if (exactChapterAdapter != null) {
+            binding.recyclerChapters.setAdapter(
+                    exactChapterAdapter
+            );
+        }
+
         childChapterRepository.getChildChaptersForSubject(
                 schoolSubjectRowId,
                 new ChildSchoolBookChapterRepository
@@ -314,8 +320,8 @@ public class ChaptersActivity
                                 false;
 
                         if (!result.isAvailable()) {
-                            showExactChapterUnavailableState(
-                                    result
+                            showSuggestedChapterFallback(
+                                    result.getUnavailableMessage()
                             );
 
                             return;
@@ -341,17 +347,12 @@ public class ChaptersActivity
                         exactChaptersLoading =
                                 false;
 
-                        showEmptyState();
-
-                        Snackbar.make(
-                                binding.getRoot(),
+                        showSuggestedChapterFallback(
                                 getErrorMessage(
                                         exception,
-                                        "Exact school-book chapters "
-                                                + "could not be loaded."
-                                ),
-                                Snackbar.LENGTH_LONG
-                        ).show();
+                                        "Book contents unavailable."
+                                )
+                        );
                     }
                 }
         );
@@ -403,6 +404,32 @@ public class ChaptersActivity
                     Snackbar.LENGTH_LONG
             ).show();
         }
+    }
+
+    private void showSuggestedChapterFallback(
+            @Nullable String reason
+    ) {
+        genericChapterAdapter =
+                new ChapterAdapter(
+                        new ArrayList<>(),
+                        this::handleGenericChapterSelection
+                );
+
+        binding.recyclerChapters.setAdapter(
+                genericChapterAdapter
+        );
+
+        prepareGenericChapterCatalog();
+
+        String message =
+                safeText(reason);
+        Snackbar.make(
+                binding.getRoot(),
+                message.isEmpty()
+                        ? "Editable class-wise starter contents shown."
+                        : message + " Class-wise starter contents shown.",
+                Snackbar.LENGTH_LONG
+        ).show();
     }
 
     private void showExactChapterList(

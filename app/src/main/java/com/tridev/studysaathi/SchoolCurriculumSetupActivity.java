@@ -677,25 +677,46 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
     }
 
     private void ensureCurriculumProfile(@NonNull StudentProfileEntity studentProfile) {
-        setOperationState(true, "School curriculum तैयार किया जा रहा है");
-        curriculumProfileRepository.ensureBasicCurriculumProfile(studentProfile, new SchoolCurriculumProfileRepository.EnsureProfileCallback() {
+        setOperationState(true, "Class के अनुसार subjects तैयार किए जा रहे हैं");
+        SchoolCurriculumBootstrapper bootstrapper =
+                new SchoolCurriculumBootstrapper(this);
+        bootstrapper.ensureCurriculumReady(
+                studentProfile,
+                new SchoolCurriculumBootstrapper.BootstrapCallback() {
             @Override
-            public void onReady(@NonNull SchoolCurriculumProfileEntity profile, boolean newlyCreated) {
+            public void onReady(
+                    @NonNull SchoolCurriculumBootstrapper.BootstrapResult result
+            ) {
+                bootstrapper.close();
                 if (!isActivityAvailable()) {
                     return;
                 }
-                curriculumProfile = profile;
-                displayCurriculumProfile(profile);
-                loadSchoolSubjects(profile.getProfileId());
+                curriculumProfile = result.getCurriculumProfile();
+                displayCurriculumProfile(curriculumProfile);
+                subjectAdapter.submitList(result.getAvailableSubjects());
+                updateSubjectListState();
+                setOperationState(false, "");
+                if (result.getInsertedSubjectCount() > 0) {
+                    setResult(RESULT_OK);
+                    Snackbar.make(
+                            binding.getRoot(),
+                            result.getInsertedSubjectCount()
+                                    + " class-wise editable subjects automatically added.",
+                            Snackbar.LENGTH_LONG
+                    ).show();
+                }
             }
 
             @Override
-            public void onError(@NonNull Exception exception) {
+            public void onError(
+                    @NonNull SchoolCurriculumBootstrapper.BootstrapException exception
+            ) {
+                bootstrapper.close();
                 if (!isActivityAvailable()) {
                     return;
                 }
                 setOperationState(false, "");
-                showError("School curriculum profile तैयार नहीं हो सकी।");
+                showError("Class-wise subjects तैयार नहीं हो सके। आप manually subject जोड़ सकते हैं।");
             }
         });
     }

@@ -134,17 +134,10 @@ public final class ChildSubjectVisibilityPolicy {
             );
         }
 
-        if (!hasConfirmedExactBook(
-                schoolSubject
-        )) {
-            return VisibilityDecision.hidden(
-                    REASON_EXACT_BOOK_PENDING,
-                    "इस subject की exact school book अभी confirm नहीं हुई है।"
-            );
-        }
-
         return VisibilityDecision.visible(
-                "Subject और exact school book Child Mode के लिए तैयार हैं।"
+                hasConfirmedExactBook(schoolSubject)
+                        ? "Confirmed school book is ready."
+                        : "Editable class-wise starter content is ready."
         );
     }
 

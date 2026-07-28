@@ -9,6 +9,7 @@ import android.view.WindowManager;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -90,6 +91,16 @@ public class ParentDashboardActivity
                 );
 
         setContentView(binding.getRoot());
+
+        getOnBackPressedDispatcher().addCallback(
+                this,
+                new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        returnToModeSelection();
+                    }
+                }
+        );
 
         studentProfileRepository =
                 new StudentProfileRepository(this);
@@ -306,8 +317,7 @@ public class ParentDashboardActivity
 
     private void setupClickListeners() {
         binding.buttonBack.setOnClickListener(view ->
-                getOnBackPressedDispatcher()
-                        .onBackPressed()
+                returnToModeSelection()
         );
 
         binding.buttonManageParentProfiles.setOnClickListener(view ->
@@ -366,6 +376,18 @@ public class ParentDashboardActivity
             );
             startActivity(helpIntent);
         });
+    }
+
+    private void returnToModeSelection() {
+        Intent modeIntent = new Intent(
+                ParentDashboardActivity.this,
+                UserModeSelectionActivity.class
+        );
+        modeIntent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TASK
+        );
+        startActivity(modeIntent);
     }
 
     private void openParentControl(@NonNull Class<?> destination) {

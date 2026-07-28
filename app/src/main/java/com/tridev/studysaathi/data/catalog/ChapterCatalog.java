@@ -524,19 +524,51 @@ public final class ChapterCatalog {
             int classNumber
     ) {
         List<ChapterItem> chapters = new ArrayList<>();
+        String normalized = normalizeSubjectName(subjectName);
+        String[] topics;
 
-        String safeSubjectName =
-                subjectName == null || subjectName.trim().isEmpty()
-                        ? "Subject"
-                        : subjectName.trim();
+        if (normalized.contains("math")) {
+            topics = classNumber <= 5
+                    ? new String[]{"Numbers", "Basic Operations", "Fractions", "Shapes & Geometry", "Measurement", "Patterns & Data"}
+                    : classNumber <= 10
+                    ? new String[]{"Number Systems", "Algebra", "Geometry", "Mensuration", "Data Handling", "Probability"}
+                    : new String[]{"Sets & Functions", "Algebra", "Coordinate Geometry", "Calculus", "Vectors & 3D", "Statistics & Probability"};
+        } else if (normalized.contains("science")
+                || normalized.contains("physics")
+                || normalized.contains("chemistry")
+                || normalized.contains("biology")) {
+            topics = classNumber <= 5
+                    ? new String[]{"Living World", "Food & Health", "Materials", "Motion & Energy", "Earth & Environment", "Activities & Revision"}
+                    : new String[]{"Matter & Materials", "Living Organisms", "Force & Energy", "Earth & Environment", "Health & Technology", "Experiments & Revision"};
+        } else if (normalized.contains("english")
+                || normalized.contains("hindi")
+                || normalized.contains("sanskrit")
+                || normalized.contains("language")) {
+            topics = new String[]{"Reading", "Literature", "Grammar", "Vocabulary", "Writing Skills", "Speaking & Revision"};
+        } else if (normalized.contains("social")
+                || normalized.contains("history")
+                || normalized.contains("geography")
+                || normalized.contains("civics")
+                || normalized.contains("political")) {
+            topics = new String[]{"History", "Geography", "Civics", "Economics", "Maps & Projects", "Revision"};
+        } else if (normalized.contains("computer")
+                || normalized.contains("information technology")) {
+            topics = new String[]{"Computer Fundamentals", "Digital Safety", "Productivity Tools", "Coding & Logic", "Data & Internet", "Practical Project"};
+        } else if (normalized.contains("account")
+                || normalized.contains("business")
+                || normalized.contains("economic")) {
+            topics = new String[]{"Core Concepts", "Records & Data", "Business Environment", "Applied Problems", "Case Studies", "Revision"};
+        } else {
+            topics = new String[]{"Core Concepts", "Key Topics", "Learning Skills", "Applications", "Activity & Project", "Revision & Practice"};
+        }
 
-        for (int index = 1; index <= 6; index++) {
+        for (String topic : topics) {
             addChapter(
                     chapters,
-                    safeSubjectName + " Foundation Unit " + index,
+                    topic,
                     "Class "
                             + classNumber
-                            + " के लिए starter learning unit।",
+                            + " के लिए editable starter topic। Parent इसे school book के अनुसार बदल सकते हैं।",
                     5
             );
         }

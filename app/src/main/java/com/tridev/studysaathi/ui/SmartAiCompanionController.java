@@ -26,6 +26,7 @@ import androidx.core.widget.NestedScrollView;
 
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
 import com.tridev.studysaathi.AskStudySaathiActivity;
 import com.tridev.studysaathi.BackupExportActivity;
 import com.tridev.studysaathi.BackupRestoreActivity;
@@ -117,10 +118,10 @@ public final class SmartAiCompanionController {
                 false
         );
 
-        int margin = dp(activity, 12);
+        int margin = dp(activity, 6);
         int availableWidth = activity.getResources()
                 .getDisplayMetrics().widthPixels - (margin * 2);
-        int panelWidth = Math.min(dp(activity, 360), availableWidth);
+        int panelWidth = Math.min(dp(activity, 440), availableWidth);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -136,6 +137,18 @@ public final class SmartAiCompanionController {
         panelParams.width = panelWidth;
         panelParams.gravity = Gravity.END | Gravity.BOTTOM;
         panel.setLayoutParams(panelParams);
+
+        MaterialCardView companionCard = companion.findViewById(
+                R.id.cardSmartAiCompanion
+        );
+        int screenHeight = activity.getResources()
+                .getDisplayMetrics().heightPixels;
+        ViewGroup.LayoutParams cardParams = companionCard.getLayoutParams();
+        cardParams.height = Math.min(
+                dp(activity, 720),
+                Math.round(screenHeight * 0.84f)
+        );
+        companionCard.setLayoutParams(cardParams);
 
         CompanionSession session = new CompanionSession(
                 activity,
@@ -327,8 +340,10 @@ public final class SmartAiCompanionController {
                                     safe(questionInput.getText()),
                                     null
                             ));
-            companion.findViewById(R.id.buttonSmartAiVoice)
-                    .setOnClickListener(view -> launchVoice());
+            TextInputLayout questionLayout = companion.findViewById(
+                    R.id.layoutSmartAiQuestion
+            );
+            questionLayout.setEndIconOnClickListener(view -> launchVoice());
             companion.findViewById(R.id.buttonSmartAiPhoto)
                     .setOnClickListener(view -> choosePhotoSource());
             companion.findViewById(R.id.buttonSmartAiSimpler)
@@ -349,7 +364,7 @@ public final class SmartAiCompanionController {
             companion.findViewById(R.id.buttonSmartAiQuiz)
                     .setOnClickListener(view ->
                             submitFollowUp(
-                                    "पिछले विषय पर कक्षा 6 का एक छोटा सवाल पूछो। अभी उसका उत्तर मत बताना।"
+                                    "पिछले विषय पर विद्यार्थी की वर्तमान कक्षा के अनुसार एक छोटा सवाल पूछो। अभी उसका उत्तर मत बताना।"
                             ));
             companion.findViewById(R.id.buttonSmartAiNewChat)
                     .setOnClickListener(view -> clearConversation());

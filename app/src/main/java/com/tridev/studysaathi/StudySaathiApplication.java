@@ -21,6 +21,7 @@ import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderF
 import com.tridev.studysaathi.data.ai.FirebaseAiQuotaActivityObserver;
 import com.tridev.studysaathi.data.ai.SmartTutorTextToSpeechActivityObserver;
 import com.tridev.studysaathi.ui.SmartAiCompanionController;
+import com.tridev.studysaathi.ui.PersistentNavigationController;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -405,6 +406,9 @@ public final class StudySaathiApplication
         SmartAiCompanionController.attach(
                 activity
         );
+        PersistentNavigationController.attach(
+                activity
+        );
 
         /*
          * FirebaseAiQuotaActivityObserver और
@@ -446,6 +450,9 @@ public final class StudySaathiApplication
             @NonNull Activity activity
     ) {
         SmartAiCompanionController.detach(
+                activity
+        );
+        PersistentNavigationController.detach(
                 activity
         );
 
