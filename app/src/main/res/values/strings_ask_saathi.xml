@@ -98,7 +98,7 @@
     </string>
 
     <string name="offline_assistant_note">
-        अभी उत्तर selected lesson content से offline तैयार होता है। Online AI support आगे जोड़ा जाएगा।
+        Study Saathi पहले verified offline answer और saved cache जाँचती है। जरूरत होने पर ही सुरक्षित online AI इस्तेमाल होता है।
     </string>
 
     <string name="ask_saathi_question_required">
