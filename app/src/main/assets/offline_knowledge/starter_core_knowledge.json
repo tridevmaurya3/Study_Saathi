@@ -1,0 +1,280 @@
+{
+  "entries": [
+    {
+      "id": "science_photosynthesis_foundation_001",
+      "board": "*",
+      "class": "*",
+      "language": "bilingual",
+      "subject": "Science",
+      "chapter": "*",
+      "topic": "photosynthesis",
+      "title": "प्रकाश संश्लेषण — Photosynthesis",
+      "directAnswer": "पौधे सूर्य के प्रकाश, जल और कार्बन डाइऑक्साइड की सहायता से अपना भोजन बनाते हैं। इस प्रक्रिया को प्रकाश संश्लेषण कहते हैं। Plants prepare their food using sunlight, water and carbon dioxide. This process is called photosynthesis.",
+      "explanation": "पौधों की पत्तियों में क्लोरोफिल नाम का हरा पदार्थ होता है। जड़ें मिट्टी से जल लेती हैं और पत्तियाँ हवा से कार्बन डाइऑक्साइड लेती हैं। सूर्य का प्रकाश ऊर्जा देता है। इनकी सहायता से पौधा भोजन बनाता है और ऑक्सीजन बाहर छोड़ता है।",
+      "keyPoints": [
+        "प्रक्रिया मुख्य रूप से हरी पत्तियों में होती है।",
+        "सूर्य का प्रकाश ऊर्जा प्रदान करता है।",
+        "जल जड़ों द्वारा मिट्टी से लिया जाता है।",
+        "कार्बन डाइऑक्साइड हवा से मिलती है।",
+        "ऑक्सीजन वातावरण में छोड़ी जाती है।"
+      ],
+      "examples": [
+        "हरी पत्ती सूर्य के प्रकाश में पौधे के लिए भोजन तैयार करती है।"
+      ],
+      "keywords": [
+        "प्रकाश संश्लेषण",
+        "photosynthesis",
+        "पौधे भोजन",
+        "plants make food",
+        "sunlight",
+        "chlorophyll",
+        "क्लोरोफिल"
+      ],
+      "questionPatterns": [
+        "पौधे अपना भोजन कैसे बनाते हैं",
+        "पौधे भोजन कैसे बनाते हैं",
+        "प्रकाश संश्लेषण क्या है",
+        "how do plants make food",
+        "what is photosynthesis"
+      ],
+      "source": "Study Saathi Curated Foundation",
+      "sourceVersion": "1.0",
+      "priority": 18,
+      "verified": true
+    },
+    {
+      "id": "science_water_transport_plants_001",
+      "board": "*",
+      "class": "*",
+      "language": "bilingual",
+      "subject": "Science",
+      "chapter": "*",
+      "topic": "water transport in plants",
+      "title": "पौधों में जल का परिवहन",
+      "directAnswer": "जड़ें मिट्टी से जल और खनिज लेती हैं। जाइलम नाम की नलिकाएँ इन्हें तने से होते हुए पत्तियों तक पहुँचाती हैं। Roots absorb water and minerals, and xylem carries them upward to the stem and leaves.",
+      "explanation": "जड़ों के रोएँ मिट्टी के संपर्क में रहते हैं और जल सोखते हैं। यह जल जाइलम ऊतक में प्रवेश करता है। जाइलम की पतली नलिकाएँ जड़ से तने और तने से पत्तियों तक लगातार मार्ग बनाती हैं। पत्तियों से जलवाष्प निकलने की प्रक्रिया भी जल को ऊपर खींचने में सहायता करती है।",
+      "keyPoints": [
+        "जड़ों के रोएँ जल सोखते हैं।",
+        "जाइलम जल और खनिजों का परिवहन करता है।",
+        "जल जड़ से तने और पत्तियों तक जाता है।",
+        "पत्तियों से होने वाला वाष्पोत्सर्जन जल को ऊपर खींचने में सहायता करता है।"
+      ],
+      "examples": [
+        "रंग मिले पानी में रखे सफेद फूल की पंखुड़ियों में रंग पहुँचना जल के परिवहन को दिखाता है।"
+      ],
+      "keywords": [
+        "जड़ें पानी",
+        "जाइलम",
+        "xylem",
+        "water transport",
+        "पत्तियों तक पानी",
+        "roots absorb water",
+        "वाष्पोत्सर्जन"
+      ],
+      "questionPatterns": [
+        "पौधों की जड़ें मिट्टी से पानी ऊपर पत्तियों तक कैसे पहुँचाती हैं",
+        "जड़ से पत्तियों तक पानी कैसे जाता है",
+        "how does water reach the leaves",
+        "how is water transported in plants"
+      ],
+      "source": "Study Saathi Curated Foundation",
+      "sourceVersion": "1.0",
+      "priority": 18,
+      "verified": true
+    },
+    {
+      "id": "english_noun_foundation_001",
+      "board": "*",
+      "class": "*",
+      "language": "bilingual",
+      "subject": "English",
+      "chapter": "*",
+      "topic": "noun",
+      "title": "Noun — संज्ञा",
+      "directAnswer": "A noun is a naming word. It is the name of a person, place, animal, thing or idea. Noun को हिंदी में संज्ञा कहते हैं।",
+      "explanation": "Words such as Riya, Delhi, dog, book and honesty are nouns because they name someone, somewhere, something or an idea.",
+      "keyPoints": [
+        "Name of a person: Riya",
+        "Name of a place: Delhi",
+        "Name of an animal: Tiger",
+        "Name of a thing: Pencil",
+        "Name of an idea or quality: Honesty"
+      ],
+      "examples": [
+        "Rohan has a bicycle.",
+        "Rohan and bicycle are nouns."
+      ],
+      "keywords": [
+        "noun",
+        "naming word",
+        "person place animal thing",
+        "संज्ञा",
+        "नाम बताने वाला शब्द"
+      ],
+      "questionPatterns": [
+        "what is a noun",
+        "define noun",
+        "noun की definition बताओ",
+        "noun क्या होता है"
+      ],
+      "source": "Study Saathi Curated Foundation",
+      "sourceVersion": "1.0",
+      "priority": 16,
+      "verified": true
+    },
+    {
+      "id": "hindi_sangya_foundation_001",
+      "board": "*",
+      "class": "*",
+      "language": "bilingual",
+      "subject": "Hindi",
+      "chapter": "*",
+      "topic": "संज्ञा",
+      "title": "संज्ञा",
+      "directAnswer": "किसी व्यक्ति, स्थान, वस्तु, प्राणी, गुण या भाव के नाम को संज्ञा कहते हैं।",
+      "explanation": "जिन शब्दों से किसी का नाम पता चलता है, वे संज्ञा कहलाते हैं। जैसे राम व्यक्ति का नाम है, वाराणसी स्थान का नाम है, पुस्तक वस्तु का नाम है और ईमानदारी गुण का नाम है।",
+      "keyPoints": [
+        "व्यक्ति का नाम: राम",
+        "स्थान का नाम: दिल्ली",
+        "वस्तु का नाम: पुस्तक",
+        "प्राणी का नाम: गाय",
+        "गुण या भाव का नाम: ईमानदारी"
+      ],
+      "examples": [
+        "सीमा विद्यालय गई।",
+        "सीमा और विद्यालय संज्ञा शब्द हैं।"
+      ],
+      "keywords": [
+        "संज्ञा",
+        "व्यक्ति स्थान वस्तु",
+        "नाम बताने वाला शब्द",
+        "sangya",
+        "noun in hindi"
+      ],
+      "questionPatterns": [
+        "संज्ञा क्या है",
+        "संज्ञा की परिभाषा बताओ",
+        "संज्ञा किसे कहते हैं",
+        "what is sangya"
+      ],
+      "source": "Study Saathi Curated Foundation",
+      "sourceVersion": "1.0",
+      "priority": 16,
+      "verified": true
+    },
+    {
+      "id": "evs_sprouts_foundation_001",
+      "board": "*",
+      "class": "*",
+      "language": "bilingual",
+      "subject": "EVS",
+      "chapter": "*",
+      "topic": "sprouts",
+      "title": "Sprouts — अंकुरित बीज",
+      "directAnswer": "जिन भीगे हुए बीजों से छोटी सफेद जड़ निकलने लगती है, उन्हें अंकुरित बीज या sprouts कहते हैं। Seeds that develop tiny baby roots after soaking are called sprouts.",
+      "explanation": "चना या मूँग जैसे बीजों को पानी में भिगोकर नम कपड़े में गर्म और हवादार स्थान पर रखा जाता है। एक या दो दिन बाद उनमें छोटी जड़ निकलने लगती है और वे अंकुरित हो जाते हैं।",
+      "keyPoints": [
+        "बीजों को पहले पानी में भिगोया जाता है।",
+        "उन्हें नम कपड़े में रखा जाता है।",
+        "गर्म और हवादार स्थान अंकुरण में सहायता करता है।",
+        "छोटी सफेद जड़ निकलने पर बीज sprouts कहलाते हैं।"
+      ],
+      "examples": [
+        "अंकुरित मूँग और अंकुरित चना।"
+      ],
+      "keywords": [
+        "sprouts",
+        "अंकुरित बीज",
+        "baby roots",
+        "छोटी सफेद जड़",
+        "soaked seeds"
+      ],
+      "questionPatterns": [
+        "what are sprouts",
+        "sprouts क्या होते हैं",
+        "अंकुरित बीज किसे कहते हैं",
+        "define sprouts"
+      ],
+      "source": "Study Saathi Curated Foundation",
+      "sourceVersion": "1.0",
+      "priority": 15,
+      "verified": true
+    },
+    {
+      "id": "social_science_jantar_mantar_001",
+      "board": "*",
+      "class": "*",
+      "language": "bilingual",
+      "subject": "Social Science",
+      "chapter": "*",
+      "topic": "jantar mantar",
+      "title": "जंतर मंतर",
+      "directAnswer": "जंतर मंतर खगोलीय यंत्रों का एक समूह है, जिसका उपयोग सूर्य, समय, ग्रहों और तारों की स्थिति का अध्ययन करने के लिए किया जाता था। Jantar Mantar is a collection of astronomical instruments used to study time and the positions of celestial objects.",
+      "explanation": "इन विशाल पत्थर और ईंट से बने यंत्रों की सहायता से समय मापा जाता था, सूर्य की गति देखी जाती थी और खगोलीय गणनाएँ की जाती थीं। भारत में जयपुर और दिल्ली सहित कई स्थानों पर जंतर मंतर बनाए गए थे।",
+      "keyPoints": [
+        "यह एक खगोलीय वेधशाला है।",
+        "इसमें बड़े वैज्ञानिक यंत्र बने हैं।",
+        "इनका उपयोग समय और खगोलीय पिंडों की स्थिति जानने में होता था।",
+        "जयपुर का जंतर मंतर विशेष रूप से प्रसिद्ध है।"
+      ],
+      "examples": [
+        "सम्राट यंत्र सूर्य की छाया की सहायता से समय मापने में उपयोग किया जाता है।"
+      ],
+      "keywords": [
+        "जंतर मंतर",
+        "jantar mantar",
+        "astronomical instruments",
+        "खगोलीय यंत्र",
+        "observatory"
+      ],
+      "questionPatterns": [
+        "जंतर मंतर क्या है",
+        "what is jantar mantar",
+        "जंतर मंतर का उपयोग क्या था",
+        "what was jantar mantar used for"
+      ],
+      "source": "Study Saathi Curated Foundation",
+      "sourceVersion": "1.0",
+      "priority": 15,
+      "verified": true
+    },
+    {
+      "id": "computer_hardware_software_001",
+      "board": "*",
+      "class": "*",
+      "language": "bilingual",
+      "subject": "Computer",
+      "chapter": "*",
+      "topic": "hardware and software",
+      "title": "Hardware and Software",
+      "directAnswer": "Computer के जिन भागों को हम देख और छू सकते हैं, उन्हें hardware कहते हैं। Computer को काम करने के निर्देश देने वाले programs को software कहते हैं।",
+      "explanation": "Keyboard, mouse, monitor और CPU hardware के उदाहरण हैं। Operating system, calculator app, browser और games software के उदाहरण हैं। Hardware कार्य करता है और software उसे बताता है कि क्या करना है।",
+      "keyPoints": [
+        "Hardware भौतिक भाग होते हैं।",
+        "Software programs और instructions होते हैं।",
+        "दोनों एक-दूसरे के साथ मिलकर काम करते हैं।"
+      ],
+      "examples": [
+        "Keyboard hardware है।",
+        "Windows और Android software हैं।"
+      ],
+      "keywords": [
+        "hardware",
+        "software",
+        "computer parts",
+        "प्रोग्राम",
+        "कंप्यूटर के भाग"
+      ],
+      "questionPatterns": [
+        "what is hardware and software",
+        "hardware और software क्या है",
+        "hardware और software में अंतर बताओ",
+        "difference between hardware and software"
+      ],
+      "source": "Study Saathi Curated Foundation",
+      "sourceVersion": "1.0",
+      "priority": 15,
+      "verified": true
+    }
+  ]
+}

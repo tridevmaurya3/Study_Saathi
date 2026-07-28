@@ -2,8 +2,10 @@ package com.tridev.studysaathi.data.catalog;
 
 import androidx.annotation.NonNull;
 
+import com.tridev.studysaathi.data.ai.OfflineBasicMathSolver;
 import com.tridev.studysaathi.model.LessonContent;
 
+import java.math.BigDecimal;
 import java.util.Locale;
 
 public final class DoubtAssistantEngine {
@@ -41,6 +43,23 @@ public final class DoubtAssistantEngine {
 
         LanguageMode languageMode =
                 getLanguageMode(explanationLanguage);
+
+        /*
+         * Clear basic Mathematics questions are solved locally before
+         * chapter-template matching. This prevents a word problem that
+         * contains words such as "question" or "सवाल" from being mistaken
+         * for a request to generate a practice question.
+         */
+        String offlineMathAnswer =
+                createOfflineMathAnswerIfAvailable(
+                        safeQuestion,
+                        safeSubject,
+                        languageMode
+                );
+
+        if (!offlineMathAnswer.isEmpty()) {
+            return offlineMathAnswer;
+        }
 
         if (containsAny(
                 normalizedQuestion,
@@ -168,6 +187,222 @@ public final class DoubtAssistantEngine {
                 hindiFallback,
                 languageMode
         );
+    }
+
+    /**
+     * Selected subject Mathematics होने पर basic offline solver चलाता है।
+     *
+     * Solver प्रश्न स्पष्ट रूप से हल कर पाए तभी answer लौटाया जाएगा।
+     * अन्यथा existing chapter-based fallback flow जारी रहेगा।
+     */
+    @NonNull
+    private static String createOfflineMathAnswerIfAvailable(
+            @NonNull String question,
+            @NonNull String subjectName,
+            @NonNull LanguageMode languageMode
+    ) {
+        if (!isMathematicsSubject(
+                subjectName
+        )) {
+            return "";
+        }
+
+        OfflineBasicMathSolver.SolveResult solveResult =
+                OfflineBasicMathSolver.trySolve(
+                        question
+                );
+
+        if (!solveResult.isSolved()) {
+            return "";
+        }
+
+        String hindiAnswer =
+                solveResult.getAnswerText();
+
+        String englishAnswer =
+                createEnglishMathAnswer(
+                        solveResult
+                );
+
+        return combineAnswer(
+                englishAnswer,
+                hindiAnswer,
+                languageMode
+        );
+    }
+
+    /**
+     * Subject name अलग-अलग school formats में हो सकता है:
+     *
+     * Mathematics
+     * Maths
+     * Math
+     * गणित
+     * अंकगणित
+     */
+    private static boolean isMathematicsSubject(
+            @NonNull String subjectName
+    ) {
+        String normalizedSubject =
+                subjectName
+                        .toLowerCase(Locale.ROOT)
+                        .replaceAll(
+                                "\\s+",
+                                " "
+                        )
+                        .trim();
+
+        return normalizedSubject.contains(
+                "mathematics"
+        )
+                || normalizedSubject.contains(
+                "maths"
+        )
+                || normalizedSubject.equals(
+                "math"
+        )
+                || normalizedSubject.contains(
+                "गणित"
+        )
+                || normalizedSubject.contains(
+                "अंकगणित"
+        );
+    }
+
+    /**
+     * Offline solver के structured result से English answer बनाता है।
+     */
+    @NonNull
+    private static String createEnglishMathAnswer(
+            @NonNull OfflineBasicMathSolver.SolveResult solveResult
+    ) {
+        String resultDisplayValue =
+                formatMathValue(
+                        solveResult.getResultValue(),
+                        solveResult.getCurrencySymbol()
+                );
+
+        StringBuilder answerBuilder =
+                new StringBuilder();
+
+        answerBuilder.append(
+                solveResult.getExpression()
+        );
+
+        answerBuilder.append(
+                "\n\n"
+        );
+
+        OfflineBasicMathSolver.Operation operation =
+                solveResult.getOperation();
+
+        if (operation == null) {
+            answerBuilder.append(
+                    "Therefore, the answer is "
+            );
+
+            answerBuilder.append(
+                    resultDisplayValue
+            );
+
+            answerBuilder.append(
+                    "."
+            );
+
+            return answerBuilder.toString();
+        }
+
+        switch (operation) {
+            case ADDITION:
+                answerBuilder.append(
+                        "Therefore, the total is "
+                );
+                break;
+
+            case SUBTRACTION:
+                if (!solveResult
+                        .getCurrencySymbol()
+                        .isEmpty()) {
+
+                    answerBuilder.append(
+                            "Therefore, "
+                    );
+
+                    answerBuilder.append(
+                            resultDisplayValue
+                    );
+
+                    answerBuilder.append(
+                            " remains."
+                    );
+
+                    return answerBuilder.toString();
+                }
+
+                answerBuilder.append(
+                        "Therefore, the remaining value is "
+                );
+                break;
+
+            case MULTIPLICATION:
+                answerBuilder.append(
+                        "Therefore, the product is "
+                );
+                break;
+
+            case DIVISION:
+                answerBuilder.append(
+                        "Therefore, the quotient is "
+                );
+                break;
+
+            default:
+                answerBuilder.append(
+                        "Therefore, the answer is "
+                );
+                break;
+        }
+
+        answerBuilder.append(
+                resultDisplayValue
+        );
+
+        answerBuilder.append(
+                "."
+        );
+
+        return answerBuilder.toString();
+    }
+
+    /**
+     * Decimal value से अनावश्यक trailing zero हटाता है।
+     *
+     * उदाहरण:
+     *
+     * 4.00 -> 4
+     * 7.50 -> 7.5
+     */
+    @NonNull
+    private static String formatMathValue(
+            BigDecimal value,
+            @NonNull String currencySymbol
+    ) {
+        if (value == null) {
+            return currencySymbol + "0";
+        }
+
+        BigDecimal normalizedValue =
+                value.stripTrailingZeros();
+
+        if (normalizedValue.scale() < 0) {
+            normalizedValue =
+                    normalizedValue.setScale(
+                            0
+                    );
+        }
+
+        return currencySymbol
+                + normalizedValue.toPlainString();
     }
 
     @NonNull

@@ -18,6 +18,8 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.appcheck.AppCheckProviderFactory;
 import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
+import com.tridev.studysaathi.data.ai.FirebaseAiQuotaActivityObserver;
+import com.tridev.studysaathi.data.ai.SmartTutorTextToSpeechActivityObserver;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -34,6 +36,10 @@ import java.util.WeakHashMap;
  * 2. Debug build में Firebase App Check Debug Provider उपयोग करती है।
  * 3. Release build में Play Integrity Provider उपयोग करती है।
  * 4. सभी Activities को Android edge-to-edge system bars से सुरक्षित रखती है।
+ * 5. Ask Study Saathi screen के Firebase AI quota cooldown को observe करती है।
+ * 6. Active quota cooldown में live countdown UI दिखाती है।
+ * 7. Hero Answer Card के Text-to-Speech observer को register करती है।
+ * 8. Smart Answer के लिए Listen और Stop controls की foundation सक्रिय करती है।
  */
 public final class StudySaathiApplication
         extends Application
@@ -45,8 +51,9 @@ public final class StudySaathiApplication
     /*
      * Debug provider class को reflection से load किया जाता है।
      *
-     * इससे आगे release build में debug dependency को केवल debugImplementation
-     * करने पर भी main source code को बदलना नहीं पड़ेगा।
+     * इससे आगे release build में debug dependency को केवल
+     * debugImplementation करने पर भी main source code को
+     * बदलना नहीं पड़ेगा।
      */
     private static final String DEBUG_PROVIDER_CLASS_NAME =
             "com.google.firebase.appcheck.debug."
@@ -68,8 +75,50 @@ public final class StudySaathiApplication
          */
         initializeFirebaseAppCheck();
 
+        /*
+         * Application का अपना lifecycle callback सभी Activities
+         * पर safe system-bar insets लागू करता है।
+         */
         registerActivityLifecycleCallbacks(
                 this
+        );
+
+        /*
+         * Firebase AI quota observer को केवल एक बार register करें।
+         *
+         * यह observer:
+         *
+         * - केवल AskStudySaathiActivity को observe करेगा।
+         * - Saved Firebase AI cooldown पहचानेगा।
+         * - Ask button पर live MM:SS countdown दिखाएगा।
+         * - Cooldown के दौरान Ask और Quick Action buttons रोकेगा।
+         * - Cooldown पूरा होने पर controls फिर सक्रिय करेगा।
+         */
+        FirebaseAiQuotaActivityObserver.register(
+                this
+        );
+
+        /*
+         * Hero Smart Answer Text-to-Speech observer को
+         * केवल एक बार register करें।
+         *
+         * यह observer:
+         *
+         * - केवल AskStudySaathiActivity को observe करेगा।
+         * - Structured source label वाला answer पहचानेगा।
+         * - Answer के नीचे "उत्तर सुनें" button जोड़ेगा।
+         * - Hindi और English answer को आवाज में पढ़ेगा।
+         * - Speech के दौरान Stop action देगा।
+         * - Activity pause/destroy होने पर speech और
+         *   Text-to-Speech resources सुरक्षित रूप से release करेगा।
+         */
+        SmartTutorTextToSpeechActivityObserver.register(
+                this
+        );
+
+        Log.i(
+                LOG_TAG,
+                "Study Saathi application observers registered successfully."
         );
     }
 
@@ -348,14 +397,21 @@ public final class StudySaathiApplication
     public void onActivityResumed(
             @NonNull Activity activity
     ) {
-        // No action required.
+        /*
+         * FirebaseAiQuotaActivityObserver और
+         * SmartTutorTextToSpeechActivityObserver अपने lifecycle
+         * callbacks independently handle करते हैं।
+         */
     }
 
     @Override
     public void onActivityPaused(
             @NonNull Activity activity
     ) {
-        // No action required.
+        /*
+         * TTS observer Ask Study Saathi screen pause होने पर
+         * active speech अपने-आप रोकता है।
+         */
     }
 
     @Override
@@ -370,7 +426,10 @@ public final class StudySaathiApplication
             @NonNull Activity activity,
             @NonNull Bundle outState
     ) {
-        // No action required.
+        /*
+         * Firebase AI cooldown SharedPreferences में save रहता है।
+         * TTS speech state को जानबूझकर restore नहीं किया जाता।
+         */
     }
 
     @Override
@@ -380,5 +439,10 @@ public final class StudySaathiApplication
         insetConfiguredActivities.remove(
                 activity
         );
+
+        /*
+         * TTS और quota observers अपने Activity sessions
+         * independently release करते हैं।
+         */
     }
 }
