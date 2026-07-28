@@ -354,6 +354,18 @@ public class ParentDashboardActivity
         binding.buttonParentCloudAccount.setOnClickListener(view ->
                 openParentControl(CloudAccountActivity.class)
         );
+
+        binding.buttonParentHelp.setOnClickListener(view -> {
+            Intent helpIntent = new Intent(
+                    ParentDashboardActivity.this,
+                    HelpAboutActivity.class
+            );
+            helpIntent.putExtra(
+                    HelpAboutActivity.EXTRA_MODE,
+                    HelpAboutActivity.MODE_PARENT
+            );
+            startActivity(helpIntent);
+        });
     }
 
     private void openParentControl(@NonNull Class<?> destination) {

@@ -101,10 +101,22 @@
             android:layout_marginTop="10dp"
             android:background="@color/ss_outline" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerHelp"
+            style="@style/Widget.StudySaathi.Button.DrawerCompact"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Help, Guide &amp; About"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_blue_soft"
+            app:strokeColor="@color/ss_blue_border" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="10dp"
             android:gravity="center"
             android:lineSpacingExtra="2dp"
             android:text="Profile, goals, reminders, curriculum और backup controls सुरक्षित Parent Mode में उपलब्ध हैं।"

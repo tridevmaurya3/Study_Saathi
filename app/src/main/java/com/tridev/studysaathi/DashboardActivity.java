@@ -209,6 +209,20 @@ public class DashboardActivity extends AppCompatActivity {
                         )
                 );
 
+        binding.profileDrawerPanel.buttonDrawerHelp
+                .setOnClickListener(view -> {
+                    binding.dashboardRoot.closeDrawer(GravityCompat.END);
+                    Intent helpIntent = new Intent(
+                            DashboardActivity.this,
+                            HelpAboutActivity.class
+                    );
+                    helpIntent.putExtra(
+                            HelpAboutActivity.EXTRA_MODE,
+                            HelpAboutActivity.MODE_STUDENT
+                    );
+                    startActivity(helpIntent);
+                });
+
     }
 
     private void closeProfileDrawerAndOpen(
