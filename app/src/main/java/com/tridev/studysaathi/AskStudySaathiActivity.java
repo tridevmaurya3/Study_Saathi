@@ -12,6 +12,7 @@ import android.os.ParcelFileDescriptor;
 import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 
@@ -673,6 +674,24 @@ public class AskStudySaathiActivity
                         getCurrentQuestionText()
                 )
         );
+
+        binding.buttonSendFollowUp.setOnClickListener(view ->
+                submitFollowUpQuestion()
+        );
+
+        binding.editFollowUpQuestion
+                .setOnEditorActionListener(
+                        (textView, actionId, event) -> {
+                            if (actionId
+                                    != EditorInfo.IME_ACTION_SEND) {
+
+                                return false;
+                            }
+
+                            submitFollowUpQuestion();
+                            return true;
+                        }
+                );
 
         binding.buttonQuickExplain.setOnClickListener(view ->
                 submitQuickQuestion(
@@ -3268,6 +3287,42 @@ public class AskStudySaathiActivity
         );
     }
 
+    private void submitFollowUpQuestion() {
+        String followUpQuestion =
+                binding.editFollowUpQuestion.getText() == null
+                        ? ""
+                        : safeText(
+                                binding.editFollowUpQuestion
+                                        .getText()
+                                        .toString()
+                        );
+
+        if (followUpQuestion.isEmpty()) {
+            binding.inputFollowUpQuestion.setError(
+                    getString(
+                            R.string.ask_saathi_follow_up_required
+                    )
+            );
+
+            binding.editFollowUpQuestion.requestFocus();
+            return;
+        }
+
+        binding.inputFollowUpQuestion.setError(
+                null
+        );
+
+        submitQuestion(
+                followUpQuestion
+        );
+
+        if (aiAnswerRequestInProgress) {
+            binding.editFollowUpQuestion.setText(
+                    null
+            );
+        }
+    }
+
     private void requestSmartAiAnswer(
             @NonNull String question
     ) {
@@ -3564,6 +3619,10 @@ public class AskStudySaathiActivity
                 View.VISIBLE
         );
 
+        binding.layoutFollowUpQuestion.setVisibility(
+                View.GONE
+        );
+
         binding.buttonOpenLesson.setVisibility(
                 View.GONE
         );
@@ -3630,6 +3689,14 @@ public class AskStudySaathiActivity
         binding.inputQuestion.setEndIconVisible(
                 false
         );
+
+        binding.editFollowUpQuestion.setEnabled(
+                false
+        );
+
+        binding.buttonSendFollowUp.setEnabled(
+                false
+        );
     }
 
     private void finishSmartAiLoadingState() {
@@ -3669,6 +3736,22 @@ public class AskStudySaathiActivity
         );
 
         binding.cardAnswer.setVisibility(
+                View.VISIBLE
+        );
+
+        binding.inputFollowUpQuestion.setError(
+                null
+        );
+
+        binding.editFollowUpQuestion.setEnabled(
+                true
+        );
+
+        binding.buttonSendFollowUp.setEnabled(
+                true
+        );
+
+        binding.layoutFollowUpQuestion.setVisibility(
                 View.VISIBLE
         );
 
@@ -4103,6 +4186,18 @@ public class AskStudySaathiActivity
         }
 
         binding.cardAnswer.setVisibility(
+                View.GONE
+        );
+
+        binding.editFollowUpQuestion.setText(
+                null
+        );
+
+        binding.inputFollowUpQuestion.setError(
+                null
+        );
+
+        binding.layoutFollowUpQuestion.setVisibility(
                 View.GONE
         );
 

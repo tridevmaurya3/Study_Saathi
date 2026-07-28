@@ -97,6 +97,26 @@
         Open Full Smart Lesson
     </string>
 
+    <string name="ask_saathi_follow_up_title">
+        जवाब दें या अगला सवाल पूछें
+    </string>
+
+    <string name="ask_saathi_follow_up_hint">
+        अपना जवाब या इसी answer से अगला सवाल लिखें…
+    </string>
+
+    <string name="ask_saathi_follow_up_helper">
+        Study Saathi पिछला सवाल और answer याद रखकर आगे बात करेगी।
+    </string>
+
+    <string name="ask_saathi_follow_up_send">
+        भेजें
+    </string>
+
+    <string name="ask_saathi_follow_up_required">
+        पहले अपना जवाब या अगला सवाल लिखें।
+    </string>
+
     <string name="offline_assistant_note">
         Study Saathi पहले verified offline answer और saved cache जाँचती है। जरूरत होने पर ही सुरक्षित online AI इस्तेमाल होता है।
     </string>
