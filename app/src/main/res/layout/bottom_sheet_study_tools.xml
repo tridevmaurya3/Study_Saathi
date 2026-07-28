@@ -109,6 +109,7 @@
         android:layout_marginTop="12dp"
         android:clickable="true"
         android:focusable="true"
+        android:visibility="gone"
         android:foreground="?attr/selectableItemBackground"
         app:cardBackgroundColor="@color/ss_green_soft"
         app:cardCornerRadius="20dp"

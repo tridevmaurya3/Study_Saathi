@@ -314,6 +314,18 @@ public class ParentDashboardActivity
                 openProfileManager()
         );
 
+        binding.buttonSwitchToStudentMode.setOnClickListener(view -> {
+            Intent modeIntent = new Intent(
+                    ParentDashboardActivity.this,
+                    UserModeSelectionActivity.class
+            );
+            modeIntent.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK
+                            | Intent.FLAG_ACTIVITY_CLEAR_TASK
+            );
+            startActivity(modeIntent);
+        });
+
         binding.buttonParentDoubtInsights.setOnClickListener(view ->
                 startActivity(
                         new Intent(
@@ -322,6 +334,35 @@ public class ParentDashboardActivity
                         )
                 )
         );
+
+        binding.buttonParentSettingsGoals.setOnClickListener(view ->
+                openParentControl(SettingsActivity.class)
+        );
+
+        binding.buttonParentReminders.setOnClickListener(view ->
+                openParentControl(ReminderSettingsActivity.class)
+        );
+
+        binding.buttonParentLocalBackup.setOnClickListener(view ->
+                openParentControl(BackupExportActivity.class)
+        );
+
+        binding.buttonParentRestoreImport.setOnClickListener(view ->
+                openParentControl(BackupRestoreActivity.class)
+        );
+
+        binding.buttonParentCloudAccount.setOnClickListener(view ->
+                openParentControl(CloudAccountActivity.class)
+        );
+    }
+
+    private void openParentControl(@NonNull Class<?> destination) {
+        if (!parentAccessVerified) {
+            verifyParentAccess();
+            return;
+        }
+
+        startActivity(new Intent(this, destination));
     }
 
     private void loadParentDashboard() {

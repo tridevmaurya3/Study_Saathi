@@ -101,125 +101,15 @@
             android:layout_marginTop="10dp"
             android:background="@color/ss_outline" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonDrawerChangeProfile"
-            style="@style/Widget.StudySaathi.Button.DrawerCompact"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:gravity="start|center_vertical"
-            android:text="Change Profile"
-            android:textAllCaps="false"
-            app:backgroundTint="@color/ss_blue_soft"
-            app:strokeColor="@color/ss_blue_border" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonDrawerManageProfiles"
-            style="@style/Widget.StudySaathi.Button.DrawerCompact"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:gravity="start|center_vertical"
-            android:text="Manage Student Profiles"
-            android:textAllCaps="false"
-            app:backgroundTint="@color/ss_teal_soft"
-            app:strokeColor="@color/ss_teal_border" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonDrawerSettings"
-            style="@style/Widget.StudySaathi.Button.DrawerCompact"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:gravity="start|center_vertical"
-            android:text="@string/settings_drawer_entry"
-            android:textAllCaps="false"
-            app:backgroundTint="@color/ss_purple_soft"
-            app:strokeColor="@color/ss_purple_border" />
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardDrawerDailyStudyGoal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            app:cardBackgroundColor="@color/ss_green_soft"
-            app:cardCornerRadius="0dp"
-            app:cardElevation="0dp"
-            app:strokeColor="@color/ss_green_border"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Daily Study Goal"
-                    android:textColor="@color/ss_text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/textDrawerDailyStudyGoal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:text="Set your daily learning target"
-                    android:textColor="@color/ss_text_secondary"
-                    android:textSize="13sp" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="BACKUP &amp; SYNC"
-            android:textColor="@color/ss_text_muted"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonDrawerLocalBackup"
-            style="@style/Widget.StudySaathi.Button.DrawerCompact"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:gravity="start|center_vertical"
-            android:text="Local Backup"
-            android:textAllCaps="false"
-            app:backgroundTint="@color/ss_yellow_soft"
-            app:strokeColor="@color/ss_yellow_border" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonDrawerRestoreImport"
-            style="@style/Widget.StudySaathi.Button.DrawerCompact"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:gravity="start|center_vertical"
-            android:text="Restore Backup &amp; Import"
-            android:textAllCaps="false"
-            app:backgroundTint="@color/ss_red_soft"
-            app:strokeColor="@color/ss_red_border" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonDrawerCloudSync"
-            style="@style/Widget.StudySaathi.Button.DrawerCompactPrimary"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:gravity="start|center_vertical"
-            android:text="Cloud Account &amp; Sync"
-            android:textAllCaps="false" />
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp"
+            android:text="Profile, goals, reminders, curriculum और backup controls सुरक्षित Parent Mode में उपलब्ध हैं।"
+            android:textColor="@color/ss_text_secondary"
+            android:textSize="13sp" />
 
     </LinearLayout>
 

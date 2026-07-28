@@ -177,12 +177,6 @@ public class DashboardActivity extends AppCompatActivity {
                         )
                 );
 
-        binding.studyMenuDrawerPanel.buttonMenuReminders
-                .setOnClickListener(view ->
-                        closeStudyMenuAndOpen(
-                                ReminderSettingsActivity.class
-                        )
-                );
     }
 
     private void closeStudyMenuAndOpen(
@@ -215,54 +209,6 @@ public class DashboardActivity extends AppCompatActivity {
                         )
                 );
 
-        binding.profileDrawerPanel.buttonDrawerChangeProfile
-                .setOnClickListener(view ->
-                        closeProfileDrawerAndOpen(
-                                StudentProfilesActivity.class
-                        )
-                );
-
-        binding.profileDrawerPanel.buttonDrawerManageProfiles
-                .setOnClickListener(view ->
-                        closeProfileDrawerAndOpen(
-                                StudentProfilesActivity.class
-                        )
-                );
-
-        binding.profileDrawerPanel.buttonDrawerSettings
-                .setOnClickListener(view ->
-                        closeProfileDrawerAndOpen(
-                                SettingsActivity.class
-                        )
-                );
-
-        binding.profileDrawerPanel.cardDrawerDailyStudyGoal
-                .setOnClickListener(view ->
-                        closeProfileDrawerAndOpen(
-                                LearningProgressActivity.class
-                        )
-                );
-
-        binding.profileDrawerPanel.buttonDrawerLocalBackup
-                .setOnClickListener(view ->
-                        closeProfileDrawerAndOpen(
-                                BackupExportActivity.class
-                        )
-                );
-
-        binding.profileDrawerPanel.buttonDrawerRestoreImport
-                .setOnClickListener(view ->
-                        closeProfileDrawerAndOpen(
-                                BackupRestoreActivity.class
-                        )
-                );
-
-        binding.profileDrawerPanel.buttonDrawerCloudSync
-                .setOnClickListener(view ->
-                        closeProfileDrawerAndOpen(
-                                CloudAccountActivity.class
-                        )
-                );
     }
 
     private void closeProfileDrawerAndOpen(
@@ -307,18 +253,6 @@ public class DashboardActivity extends AppCompatActivity {
                 .setOnClickListener(view -> {
                     toolsDialog.dismiss();
                     openRevision();
-                });
-
-        toolsBinding.cardToolStudyReminders
-                .setOnClickListener(view -> {
-                    toolsDialog.dismiss();
-
-                    startActivity(
-                            new Intent(
-                                    DashboardActivity.this,
-                                    ReminderSettingsActivity.class
-                            )
-                    );
                 });
 
         toolsBinding.cardToolChapterNotes

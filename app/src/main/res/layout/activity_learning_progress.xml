@@ -457,13 +457,15 @@
                         android:text="@string/daily_goal_choose"
                         android:textColor="@color/ss_text_primary"
                         android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:visibility="gone" />
 
                     <com.google.android.material.button.MaterialButtonToggleGroup
                         android:id="@+id/toggleDailyGoal"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
+                        android:visibility="gone"
                         app:checkedButton="@id/buttonGoalThree"
                         app:selectionRequired="true"
                         app:singleSelection="true">

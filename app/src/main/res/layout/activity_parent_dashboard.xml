@@ -308,12 +308,22 @@
                 android:textColor="@color/ss_text_secondary"
                 android:textSize="13sp" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonSwitchToStudentMode"
+                style="@style/Widget.StudySaathi.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Switch to Student Mode"
+                android:textAllCaps="false"
+                android:textSize="15sp" />
+
             <com.tridev.studysaathi.view.SchoolCurriculumSetupButton
                 android:id="@+id/buttonOpenSchoolCurriculumSetup"
                 style="@style/Widget.StudySaathi.Button.Outlined"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="11dp"
                 android:gravity="center"
                 android:text="School Curriculum Setup"
                 android:textAllCaps="false"
@@ -342,6 +352,73 @@
                 android:textSize="15sp"
                 app:backgroundTint="@color/ss_purple_soft"
                 app:strokeColor="@color/ss_purple_border" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonParentSettingsGoals"
+                style="@style/Widget.StudySaathi.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="11dp"
+                android:text="App Settings &amp; Daily Goals"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                app:backgroundTint="@color/ss_green_soft"
+                app:strokeColor="@color/ss_green_border" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonParentReminders"
+                style="@style/Widget.StudySaathi.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="11dp"
+                android:text="Manage Study Reminders"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                app:backgroundTint="@color/ss_yellow_soft"
+                app:strokeColor="@color/ss_yellow_border" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="ACCOUNT, BACKUP &amp; SAFETY"
+                android:textColor="@color/ss_text_muted"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonParentLocalBackup"
+                style="@style/Widget.StudySaathi.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Create Local Backup"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                app:backgroundTint="@color/ss_blue_soft"
+                app:strokeColor="@color/ss_blue_border" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonParentRestoreImport"
+                style="@style/Widget.StudySaathi.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="11dp"
+                android:text="Restore Backup &amp; Import"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                app:backgroundTint="@color/ss_red_soft"
+                app:strokeColor="@color/ss_red_border" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonParentCloudAccount"
+                style="@style/Widget.StudySaathi.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="11dp"
+                android:text="Cloud Account, Sync &amp; Deletion"
+                android:textAllCaps="false"
+                android:textSize="15sp" />
 
         </LinearLayout>
 

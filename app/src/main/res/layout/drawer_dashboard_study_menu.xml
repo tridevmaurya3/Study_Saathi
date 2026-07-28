@@ -149,18 +149,6 @@
             app:backgroundTint="@color/ss_green_soft"
             app:strokeColor="@color/ss_green_border" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonMenuReminders"
-            style="@style/Widget.StudySaathi.Button.DrawerCompact"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:gravity="start|center_vertical"
-            android:text="Study Reminders"
-            android:textAllCaps="false"
-            app:backgroundTint="@color/ss_red_soft"
-            app:strokeColor="@color/ss_red_border" />
-
     </LinearLayout>
 
 </ScrollView>
