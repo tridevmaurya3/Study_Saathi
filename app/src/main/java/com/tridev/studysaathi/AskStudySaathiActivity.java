@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -187,6 +188,14 @@ public class AskStudySaathiActivity
     private boolean restartImageOcrAfterSubjectLoad;
 
     private boolean aiAnswerRequestInProgress;
+    private boolean completedTurnArchived;
+
+    @NonNull
+    private String lastCompletedQuestion =
+            "";
+
+    @Nullable
+    private CharSequence lastCompletedAnswer;
 
     @Override
     protected void onCreate(
@@ -3598,6 +3607,8 @@ public class AskStudySaathiActivity
         aiAnswerRequestInProgress =
                 true;
 
+        archiveCompletedTurnIfNeeded();
+
         binding.textUserQuestion.setText(
                 question
         );
@@ -3728,6 +3739,15 @@ public class AskStudySaathiActivity
         binding.textSaathiAnswer.setText(
                 answer
         );
+
+        lastCompletedQuestion =
+                question;
+
+        lastCompletedAnswer =
+                binding.textSaathiAnswer.getText();
+
+        completedTurnArchived =
+                false;
 
         binding.buttonOpenLesson.setVisibility(
                 selectedChapter == null
@@ -4189,6 +4209,20 @@ public class AskStudySaathiActivity
                 View.GONE
         );
 
+        binding.layoutConversationHistory.removeAllViews();
+        binding.layoutConversationHistory.setVisibility(
+                View.GONE
+        );
+
+        lastCompletedQuestion =
+                "";
+
+        lastCompletedAnswer =
+                null;
+
+        completedTurnArchived =
+                false;
+
         binding.editFollowUpQuestion.setText(
                 null
         );
@@ -4212,6 +4246,52 @@ public class AskStudySaathiActivity
         binding.textSaathiAnswer.setText(
                 ""
         );
+    }
+
+    private void archiveCompletedTurnIfNeeded() {
+        if (completedTurnArchived
+                || lastCompletedQuestion.isEmpty()
+                || lastCompletedAnswer == null
+                || lastCompletedAnswer.length() == 0) {
+
+            return;
+        }
+
+        View archivedTurn =
+                getLayoutInflater().inflate(
+                        R.layout.item_study_conversation_turn,
+                        binding.layoutConversationHistory,
+                        false
+                );
+
+        TextView archivedQuestion =
+                archivedTurn.findViewById(
+                        R.id.textConversationQuestion
+                );
+
+        TextView archivedAnswer =
+                archivedTurn.findViewById(
+                        R.id.textConversationAnswer
+                );
+
+        archivedQuestion.setText(
+                lastCompletedQuestion
+        );
+
+        archivedAnswer.setText(
+                lastCompletedAnswer
+        );
+
+        binding.layoutConversationHistory.addView(
+                archivedTurn
+        );
+
+        binding.layoutConversationHistory.setVisibility(
+                View.VISIBLE
+        );
+
+        completedTurnArchived =
+                true;
     }
 
     @NonNull

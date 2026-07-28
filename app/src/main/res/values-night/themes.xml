@@ -2,7 +2,7 @@
 <resources>
 
     <style name="Theme.StudySaathi"
-        parent="Theme.Material3.Light.NoActionBar">
+        parent="Theme.Material3.DayNight.NoActionBar">
 
         <!-- Study Saathi remains light-theme-first -->
         <item name="colorPrimary">@color/ss_primary</item>
@@ -32,12 +32,12 @@
         <item name="colorErrorContainer">@color/ss_red_soft</item>
         <item name="colorOnErrorContainer">@color/ss_error</item>
 
-        <item name="android:windowBackground">@color/ss_background</item>
+        <item name="android:windowBackground">@drawable/bg_app_soft_mix</item>
         <item name="android:statusBarColor">@color/ss_background</item>
         <item name="android:navigationBarColor">@color/ss_background</item>
 
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
         <item name="android:forceDarkAllowed">false</item>
 
         <item name="android:windowNoTitle">true</item>

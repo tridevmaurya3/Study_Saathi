@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="ss_primary">#9DBBFF</color>
+    <color name="ss_primary_dark">#C7D7FF</color>
+    <color name="ss_secondary">#77D5DF</color>
+    <color name="ss_tertiary">#F0C36B</color>
+
+    <color name="ss_background">#101820</color>
+    <color name="ss_surface">#18232E</color>
+    <color name="ss_surface_soft">#202D39</color>
+    <color name="ss_surface_muted">#293744</color>
+
+    <color name="ss_text_primary">#F1F5F9</color>
+    <color name="ss_text_secondary">#C2CCD6</color>
+    <color name="ss_text_muted">#97A6B5</color>
+
+    <color name="ss_outline">#425363</color>
+    <color name="ss_outline_strong">#617487</color>
+    <color name="ss_divider">#344555</color>
+
+    <color name="ss_blue_soft">#1C3150</color>
+    <color name="ss_blue_border">#405E89</color>
+    <color name="ss_green_soft">#173A2A</color>
+    <color name="ss_green_border">#356B4E</color>
+    <color name="ss_red_soft">#452326</color>
+    <color name="ss_red_border">#7B4549</color>
+    <color name="ss_yellow_soft">#3D321B</color>
+    <color name="ss_yellow_border">#796637</color>
+    <color name="ss_purple_soft">#352747</color>
+    <color name="ss_purple_border">#65517E</color>
+    <color name="ss_teal_soft">#173A3D</color>
+    <color name="ss_teal_border">#356A6E</color>
+
+    <color name="ss_success">#75D693</color>
+    <color name="ss_warning">#F0C36B</color>
+    <color name="ss_error">#FFB4AB</color>
+    <color name="ss_info">#8CC8FF</color>
+
+</resources>

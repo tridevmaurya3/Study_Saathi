@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="settings_appearance_title">Theme &amp; Language</string>
+    <string name="settings_appearance_description">पूरे app का display mode और interface language चुनें।</string>
+    <string name="settings_theme_label">APP THEME</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_language_label">APP LANGUAGE</string>
+    <string name="settings_language_hindi">हिन्दी</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_bilingual">Bilingual</string>
+    <string name="settings_appearance_saved">Theme और language preference save हो गई।</string>
+
     <string name="study_tools_settings_option">
         Settings &amp; Profiles
     </string>

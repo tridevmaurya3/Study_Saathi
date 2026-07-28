@@ -69,6 +69,10 @@ public final class StudySaathiApplication
     public void onCreate() {
         super.onCreate();
 
+        AppAppearancePreferences.applySavedAppearance(
+                this
+        );
+
         /*
          * Firebase App Check को किसी भी Firebase Auth,
          * Firestore या Firebase AI request से पहले initialize करें।

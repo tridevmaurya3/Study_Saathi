@@ -55,6 +55,7 @@ public class SettingsActivity extends AppCompatActivity {
         );
 
         setupClickListeners();
+        setupAppearanceControls();
         setupDailyGoalControls();
     }
 
@@ -153,6 +154,112 @@ public class SettingsActivity extends AppCompatActivity {
                 );
 
         setDailyGoalControlsEnabled(false);
+    }
+
+    private void setupAppearanceControls() {
+        String savedTheme =
+                AppAppearancePreferences.getTheme(
+                        this
+                );
+
+        if (AppAppearancePreferences.THEME_LIGHT
+                .equals(savedTheme)) {
+            binding.toggleSettingsTheme.check(
+                    R.id.buttonThemeLight
+            );
+        } else if (AppAppearancePreferences.THEME_DARK
+                .equals(savedTheme)) {
+            binding.toggleSettingsTheme.check(
+                    R.id.buttonThemeDark
+            );
+        } else {
+            binding.toggleSettingsTheme.check(
+                    R.id.buttonThemeSystem
+            );
+        }
+
+        String savedLanguage =
+                AppAppearancePreferences.getLanguage(
+                        this
+                );
+
+        if (AppAppearancePreferences.LANGUAGE_HINDI
+                .equals(savedLanguage)) {
+            binding.toggleSettingsLanguage.check(
+                    R.id.buttonLanguageHindi
+            );
+        } else if (AppAppearancePreferences.LANGUAGE_ENGLISH
+                .equals(savedLanguage)) {
+            binding.toggleSettingsLanguage.check(
+                    R.id.buttonLanguageEnglish
+            );
+        } else {
+            binding.toggleSettingsLanguage.check(
+                    R.id.buttonLanguageBilingual
+            );
+        }
+
+        binding.toggleSettingsTheme
+                .addOnButtonCheckedListener(
+                        (group, checkedId, isChecked) -> {
+                            if (!isChecked) {
+                                return;
+                            }
+
+                            String theme =
+                                    AppAppearancePreferences
+                                            .THEME_SYSTEM;
+
+                            if (checkedId
+                                    == R.id.buttonThemeLight) {
+                                theme =
+                                        AppAppearancePreferences
+                                                .THEME_LIGHT;
+                            } else if (checkedId
+                                    == R.id.buttonThemeDark) {
+                                theme =
+                                        AppAppearancePreferences
+                                                .THEME_DARK;
+                            }
+
+                            AppAppearancePreferences
+                                    .saveAndApplyTheme(
+                                            this,
+                                            theme
+                                    );
+                        }
+                );
+
+        binding.toggleSettingsLanguage
+                .addOnButtonCheckedListener(
+                        (group, checkedId, isChecked) -> {
+                            if (!isChecked) {
+                                return;
+                            }
+
+                            String language =
+                                    AppAppearancePreferences
+                                            .LANGUAGE_BILINGUAL;
+
+                            if (checkedId
+                                    == R.id.buttonLanguageHindi) {
+                                language =
+                                        AppAppearancePreferences
+                                                .LANGUAGE_HINDI;
+                            } else if (checkedId
+                                    == R.id.buttonLanguageEnglish) {
+                                language =
+                                        AppAppearancePreferences
+                                                .LANGUAGE_ENGLISH;
+                            }
+
+                            AppAppearancePreferences
+                                    .saveAndApplyLanguage(
+                                            this,
+                                            language
+                                    );
+                        }
+                );
     }
 
     private void loadActiveProfile() {
