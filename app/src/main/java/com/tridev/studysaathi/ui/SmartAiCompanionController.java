@@ -624,7 +624,7 @@ public final class SmartAiCompanionController {
                 @NonNull SmartTutorAnswerResult result,
                 @NonNull String effectiveSubject
         ) {
-            String answer = formatForClassSix(
+            String answer = formatForStudentClass(
                     result.getRawAnswerText()
             );
             String source = result.getAnswerSource().getDisplayLabel();
@@ -848,7 +848,9 @@ public final class SmartAiCompanionController {
     }
 
     @NonNull
-    private static String formatForClassSix(@NonNull String rawAnswer) {
+    private static String formatForStudentClass(
+            @NonNull String rawAnswer
+    ) {
         String answer = safe(rawAnswer);
         if (answer.isEmpty()) {
             return answer;

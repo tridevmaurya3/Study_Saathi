@@ -840,7 +840,7 @@ public final class SchoolCurriculumProfileRepository {
                 educationBoard
         );
 
-        curriculumProfile.setClassNumber(
+        curriculumProfile.applyClassDefaults(
                 extractClassNumber(
                         studentProfile.getStudentClass()
                 )
@@ -891,10 +891,6 @@ public final class SchoolCurriculumProfileRepository {
 
         curriculumProfile.setSaveDoubtHistoryEnabled(
                 true
-        );
-
-        curriculumProfile.setPreferredMaximumAnswerWords(
-                DEFAULT_MAXIMUM_ANSWER_WORDS
         );
 
         /*

@@ -1704,8 +1704,10 @@ public final class FirebaseStudyTutorClient {
         );
 
         prompt.append(
-                "26. For a Class 6 learner, use this order whenever the question allows it: "
-                        + "सरल उत्तर, आसान उदाहरण, छोटा अभ्यास प्रश्न.\n"
+                "26. Match vocabulary, depth, examples and calculation steps to the exact "
+                        + "student Class shown above (Class 1 through Class 12). "
+                        + "Use this order whenever the question allows it: "
+                        + "सरल उत्तर, class-appropriate example, छोटा अभ्यास प्रश्न.\n"
         );
 
         prompt.append(
@@ -1716,6 +1718,12 @@ public final class FirebaseStudyTutorClient {
         prompt.append(
                 "28. When APPROVED CURRENT CHAPTER CONTENT is present, treat it as the primary "
                         + "curriculum reference. Do not contradict it without clearly explaining why.\n"
+        );
+
+        prompt.append(
+                "29. Follow the selected Education Board or school pattern. "
+                        + "Do not silently substitute CBSE content for a State Board, CISCE, NIOS "
+                        + "or another selected pattern.\n"
         );
 
         prompt.append(

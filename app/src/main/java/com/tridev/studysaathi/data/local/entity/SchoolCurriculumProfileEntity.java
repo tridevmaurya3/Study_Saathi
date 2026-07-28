@@ -442,8 +442,17 @@ public class SchoolCurriculumProfileEntity {
     }
 
     public void applyGradeSixDefaults() {
-        classNumber =
-                6;
+        applyClassDefaults(
+                6
+        );
+    }
+
+    public void applyClassDefaults(
+            int requestedClassNumber
+    ) {
+        setClassNumber(
+                requestedClassNumber
+        );
 
         aiTutorEnabled =
                 true;
@@ -469,8 +478,17 @@ public class SchoolCurriculumProfileEntity {
         saveDoubtHistoryEnabled =
                 true;
 
-        preferredMaximumAnswerWords =
-                300;
+        if (classNumber <= 2) {
+            preferredMaximumAnswerWords = 140;
+        } else if (classNumber <= 5) {
+            preferredMaximumAnswerWords = 220;
+        } else if (classNumber <= 8) {
+            preferredMaximumAnswerWords = 300;
+        } else if (classNumber <= 10) {
+            preferredMaximumAnswerWords = 450;
+        } else {
+            preferredMaximumAnswerWords = 650;
+        }
     }
 
     public boolean hasMinimumSchoolInformation() {

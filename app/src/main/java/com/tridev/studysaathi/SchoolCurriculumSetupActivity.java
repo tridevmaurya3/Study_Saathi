@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.tridev.studysaathi.adapter.SchoolCurriculumSubjectAdapter;
+import com.tridev.studysaathi.data.content.bootstrap.SchoolCurriculumBootstrapper;
 import com.tridev.studysaathi.data.content.validation.SchoolCurriculumSetupValidator;
 import com.tridev.studysaathi.data.local.entity.SchoolCurriculumProfileEntity;
 import com.tridev.studysaathi.data.local.entity.SchoolSubjectEntity;
@@ -1285,6 +1286,17 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
                 subjectAdapter.addSubject(schoolSubject);
                 updateSubjectListState();
                 setOperationState(false, "");
+                binding.getRoot().postDelayed(
+                        () -> {
+                            if (isActivityAvailable()
+                                    && !operationInProgress) {
+                                showBookAddMethodDialog(
+                                        schoolSubject
+                                );
+                            }
+                        },
+                        250L
+                );
                 Snackbar.make(binding.getRoot(), schoolSubject.getSubjectNameEnglish() + " curriculum में जोड़ दिया गया है।", Snackbar.LENGTH_LONG).show();
                 setResult(RESULT_OK);
             }
@@ -1768,7 +1780,92 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
     }
 
     private void showImportSubjectMessage() {
-        Snackbar.make(binding.getRoot(), "School directory और subject import अगले package में जोड़ा जाएगा।", Snackbar.LENGTH_LONG).show();
+        StudentProfileEntity studentProfile =
+                activeStudentProfile;
+
+        if (studentProfile == null
+                || operationInProgress) {
+            showError(
+                    "Active student profile तैयार होने के बाद दोबारा कोशिश करें।"
+            );
+            return;
+        }
+
+        setOperationState(
+                true,
+                studentProfile.getStudentClass()
+                        + " के suggested subjects जोड़े जा रहे हैं"
+        );
+
+        SchoolCurriculumBootstrapper bootstrapper =
+                new SchoolCurriculumBootstrapper(
+                        this
+                );
+
+        bootstrapper.ensureCurriculumReady(
+                studentProfile,
+                new SchoolCurriculumBootstrapper.BootstrapCallback() {
+                    @Override
+                    public void onReady(
+                            @NonNull SchoolCurriculumBootstrapper
+                                    .BootstrapResult result
+                    ) {
+                        bootstrapper.close();
+
+                        if (!isActivityAvailable()) {
+                            return;
+                        }
+
+                        curriculumProfile =
+                                result.getCurriculumProfile();
+
+                        subjectAdapter.submitList(
+                                result.getAvailableSubjects()
+                        );
+
+                        updateSubjectListState();
+                        setOperationState(
+                                false,
+                                ""
+                        );
+                        setResult(
+                                RESULT_OK
+                        );
+
+                        String message =
+                                result.getInsertedSubjectCount() > 0
+                                        ? result.getInsertedSubjectCount()
+                                        + " suggested subjects जोड़ दिए गए। अब actual school books जोड़ें।"
+                                        : "इस class के suggested subjects पहले से मौजूद हैं।";
+
+                        Snackbar.make(
+                                binding.getRoot(),
+                                message,
+                                Snackbar.LENGTH_LONG
+                        ).show();
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull SchoolCurriculumBootstrapper
+                                    .BootstrapException exception
+                    ) {
+                        bootstrapper.close();
+
+                        if (!isActivityAvailable()) {
+                            return;
+                        }
+
+                        setOperationState(
+                                false,
+                                ""
+                        );
+                        showError(
+                                "Suggested subjects नहीं जुड़ सके। Subject manually जोड़ें।"
+                        );
+                    }
+                }
+        );
     }
 
     private void showMissingStudentProfileError() {
