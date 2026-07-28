@@ -8,11 +8,16 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 import com.tridev.studysaathi.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String EXTRA_AUTH_GATE_PASSED =
+            "extra_auth_gate_passed";
 
     private ActivityMainBinding binding;
     private StudentProfileRepository studentProfileRepository;
@@ -23,6 +28,25 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (!getIntent().getBooleanExtra(EXTRA_AUTH_GATE_PASSED, false)) {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            Intent entryIntent;
+            if (user == null || !user.isEmailVerified()) {
+                entryIntent = new Intent(this, CloudAccountActivity.class);
+                entryIntent.putExtra(
+                        CloudAccountActivity.EXTRA_REQUIRE_AUTHENTICATION,
+                        true
+                );
+            } else {
+                entryIntent = new Intent(this, UserModeSelectionActivity.class);
+            }
+            entryIntent.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK
+            );
+            startActivity(entryIntent);
+            return;
+        }
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());

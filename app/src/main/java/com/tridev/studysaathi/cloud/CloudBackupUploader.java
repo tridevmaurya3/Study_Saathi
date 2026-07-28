@@ -62,6 +62,42 @@ public final class CloudBackupUploader {
                 FirebaseFirestore.getInstance();
     }
 
+    public void deleteLatestBackup(
+            @NonNull FirebaseUser firebaseUser,
+            @NonNull DeleteCallback callback
+    ) {
+        Exception accountError = validateVerifiedUser(firebaseUser);
+        if (accountError != null) {
+            callback.onError(accountError);
+            return;
+        }
+
+        DocumentReference latestBackup =
+                getLatestBackupReference(firebaseUser.getUid());
+
+        latestBackup.collection(COLLECTION_CHUNKS)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    int requiredOperations = snapshot.size() + 1;
+                    if (requiredOperations > MAX_SAFE_BATCH_OPERATIONS) {
+                        callback.onError(new IllegalStateException(
+                                "Cloud backup contains too many parts to delete safely."
+                        ));
+                        return;
+                    }
+
+                    WriteBatch batch = firestore.batch();
+                    for (DocumentSnapshot chunk : snapshot.getDocuments()) {
+                        batch.delete(chunk.getReference());
+                    }
+                    batch.delete(latestBackup);
+                    batch.commit()
+                            .addOnSuccessListener(unused -> callback.onSuccess())
+                            .addOnFailureListener(callback::onError);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
     /**
      * Keeps support for the existing compressed but
      * unencrypted cloud payload.
@@ -1345,6 +1381,12 @@ public final class CloudBackupUploader {
                         "initialization_vector_base64"
                 )
         );
+    }
+
+    public interface DeleteCallback {
+        void onSuccess();
+
+        void onError(@NonNull Exception exception);
     }
 
     @NonNull

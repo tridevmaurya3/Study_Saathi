@@ -6,13 +6,16 @@ import android.text.TextUtils;
 import android.util.Patterns;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.OnBackPressedCallback;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FieldValue;
@@ -35,6 +38,9 @@ import java.util.Map;
 
 public class CloudAccountActivity
         extends AppCompatActivity {
+
+    public static final String EXTRA_REQUIRE_AUTHENTICATION =
+            "extra_require_authentication";
 
     private static final String CLOUD_STATE_PREFERENCES =
             "study_saathi_cloud_state";
@@ -74,6 +80,8 @@ public class CloudAccountActivity
     private boolean updatingModeSelection;
     private boolean openingPreparedCloudRestore;
     private boolean activityInForeground;
+    private boolean authenticationGate;
+    private boolean openingUserMode;
 
     @NonNull
     private String observedFirebaseUserId =
@@ -89,6 +97,23 @@ public class CloudAccountActivity
                 );
 
         setContentView(binding.getRoot());
+
+        authenticationGate = getIntent().getBooleanExtra(
+                EXTRA_REQUIRE_AUTHENTICATION,
+                false
+        );
+        if (authenticationGate) {
+            binding.buttonBack.setVisibility(View.GONE);
+            getOnBackPressedDispatcher().addCallback(
+                    this,
+                    new OnBackPressedCallback(true) {
+                        @Override
+                        public void handleOnBackPressed() {
+                            moveTaskToBack(true);
+                        }
+                    }
+            );
+        }
 
         firebaseAuth =
                 FirebaseAuth.getInstance();
@@ -131,6 +156,7 @@ public class CloudAccountActivity
         handlePossibleAccountChange();
         showCurrentAccountState();
         loadCloudBackupMetadataIfAvailable();
+        continueAfterVerifiedAuthentication();
     }
 
     @Override
@@ -221,6 +247,14 @@ public class CloudAccountActivity
                 .setOnClickListener(view ->
                         loadCloudBackupMetadataIfAvailable()
                 );
+
+        binding.buttonDeleteCloudBackup.setOnClickListener(view ->
+                requestCloudBackupDeletion()
+        );
+
+        binding.buttonDeleteAccount.setOnClickListener(view ->
+                requestPermanentAccountDeletion()
+        );
     }
 
     private void setupModeSelection() {
@@ -691,6 +725,7 @@ public class CloudAccountActivity
                     }
 
                     loadCloudBackupMetadataIfAvailable();
+                    continueAfterVerifiedAuthentication();
                 });
     }
 
@@ -866,7 +901,208 @@ public class CloudAccountActivity
                     );
 
                     loadCloudBackupMetadataIfAvailable();
+                    continueAfterVerifiedAuthentication();
                 });
+    }
+
+    private void continueAfterVerifiedAuthentication() {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (!authenticationGate
+                || openingUserMode
+                || user == null
+                || !user.isEmailVerified()) {
+            return;
+        }
+
+        openingUserMode = true;
+        Intent intent = new Intent(this, UserModeSelectionActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+
+    private void requestCloudBackupDeletion() {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user == null || !user.isEmailVerified()
+                || currentCloudBackupMetadata == null) {
+            showMessage(R.string.cloud_backup_restore_unavailable);
+            return;
+        }
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Delete cloud backup?")
+                .setMessage("Cloud में सुरक्षित backup permanently मिट जाएगा। App का local data नहीं मिटेगा।")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Verify & Delete", (dialog, which) ->
+                        requestPasswordVerification(
+                                "Verify cloud backup deletion",
+                                verifiedUser -> deleteVerifiedCloudBackup(verifiedUser, true)
+                        ))
+                .show();
+    }
+
+    private void deleteVerifiedCloudBackup(
+            @NonNull FirebaseUser user,
+            boolean showResult
+    ) {
+        setCloudBackupOperationState(true);
+        cloudBackupUploader.deleteLatestBackup(
+                user,
+                new CloudBackupUploader.DeleteCallback() {
+                    @Override
+                    public void onSuccess() {
+                        runOnUiThread(() -> {
+                            getSharedPreferences(CLOUD_STATE_PREFERENCES, MODE_PRIVATE)
+                                    .edit().clear().apply();
+                            currentCloudBackupMetadata = null;
+                            setCloudBackupOperationState(false);
+                            showNoCloudBackupState();
+                            if (showResult) {
+                                Snackbar.make(binding.getRoot(),
+                                        "Cloud backup permanently deleted.",
+                                        Snackbar.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        runOnUiThread(() -> {
+                            setCloudBackupOperationState(false);
+                            showCloudBackupError(exception,
+                                    R.string.cloud_backup_upload_failed);
+                        });
+                    }
+                }
+        );
+    }
+
+    private void requestPermanentAccountDeletion() {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user == null || !user.isEmailVerified()) {
+            showMessage(R.string.cloud_backup_verification_required);
+            return;
+        }
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Permanently delete account?")
+                .setMessage("Account, cloud backup और cloud profile हमेशा के लिए मिटेंगे। यह action वापस नहीं हो सकता। Local study data device पर रहेगा।")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Verify & Continue", (dialog, which) ->
+                        requestPasswordVerification(
+                                "Verify permanent account deletion",
+                                this::deleteVerifiedAccount
+                        ))
+                .show();
+    }
+
+    private void deleteVerifiedAccount(@NonNull FirebaseUser user) {
+        setCloudBackupOperationState(true);
+        cloudBackupUploader.deleteLatestBackup(
+                user,
+                new CloudBackupUploader.DeleteCallback() {
+                    @Override
+                    public void onSuccess() {
+                        deleteCloudProfileAndAuthUser(user);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        runOnUiThread(() -> {
+                            setCloudBackupOperationState(false);
+                            showCloudBackupError(exception,
+                                    R.string.cloud_backup_upload_failed);
+                        });
+                    }
+                }
+        );
+    }
+
+    private void deleteCloudProfileAndAuthUser(@NonNull FirebaseUser user) {
+        firestore.collection("users").document(user.getUid())
+                .delete()
+                .addOnSuccessListener(unused -> user.delete()
+                        .addOnSuccessListener(deleted -> runOnUiThread(() -> {
+                            clearSensitiveStateForAccountChange();
+                            getSharedPreferences(CLOUD_STATE_PREFERENCES, MODE_PRIVATE)
+                                    .edit().clear().apply();
+                            Intent intent = new Intent(
+                                    CloudAccountActivity.this,
+                                    CloudAccountActivity.class
+                            );
+                            intent.putExtra(EXTRA_REQUIRE_AUTHENTICATION, true);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                                    | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                        }))
+                        .addOnFailureListener(error -> runOnUiThread(() -> {
+                            setCloudBackupOperationState(false);
+                            showFirebaseError(error,
+                                    R.string.cloud_account_creation_failed);
+                        })))
+                .addOnFailureListener(error -> runOnUiThread(() -> {
+                    setCloudBackupOperationState(false);
+                    showFirebaseError(error,
+                            R.string.cloud_account_creation_failed);
+                }));
+    }
+
+    private void requestPasswordVerification(
+            @NonNull String title,
+            @NonNull VerifiedUserAction action
+    ) {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        String email = user == null ? "" : getSafeEmail(user);
+        if (user == null || email.isEmpty()) {
+            showMessage(R.string.cloud_account_required);
+            return;
+        }
+
+        EditText passwordInput = new EditText(this);
+        passwordInput.setHint("Current password");
+        passwordInput.setSingleLine(true);
+        passwordInput.setInputType(
+                android.text.InputType.TYPE_CLASS_TEXT
+                        | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+        );
+        int padding = (int) (20 * getResources().getDisplayMetrics().density);
+        passwordInput.setPadding(padding, padding / 2, padding, padding / 2);
+
+        androidx.appcompat.app.AlertDialog dialog =
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(title)
+                        .setMessage("सुरक्षा के लिए अपने account का current password लिखें।")
+                        .setView(passwordInput)
+                        .setNegativeButton("Cancel", null)
+                        .setPositiveButton("Verify", null)
+                        .create();
+
+        dialog.setOnShowListener(unused ->
+                dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+                        .setOnClickListener(view -> {
+                            String password = getInputText(passwordInput.getText());
+                            if (password.length() < 8) {
+                                passwordInput.setError("Valid current password required");
+                                return;
+                            }
+                            dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+                                    .setEnabled(false);
+                            user.reauthenticate(
+                                            EmailAuthProvider.getCredential(email, password))
+                                    .addOnSuccessListener(done -> {
+                                        dialog.dismiss();
+                                        action.run(user);
+                                    })
+                                    .addOnFailureListener(error -> {
+                                        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+                                                .setEnabled(true);
+                                        passwordInput.setError("Password verification failed");
+                                    });
+                        }));
+        dialog.show();
+    }
+
+    private interface VerifiedUserAction {
+        void run(@NonNull FirebaseUser user);
     }
 
     private void signOutAccount() {
@@ -1974,6 +2210,10 @@ public class CloudAccountActivity
                 restoreAvailable
         );
 
+        binding.buttonDeleteCloudBackup.setEnabled(
+                restoreAvailable
+        );
+
         binding.buttonCloudUploadBackup.setAlpha(
                 cloudActionsAvailable
                         ? 1f
@@ -1987,6 +2227,12 @@ public class CloudAccountActivity
         );
 
         binding.buttonCloudRestoreBackup.setAlpha(
+                restoreAvailable
+                        ? 1f
+                        : 0.55f
+        );
+
+        binding.buttonDeleteCloudBackup.setAlpha(
                 restoreAvailable
                         ? 1f
                         : 0.55f

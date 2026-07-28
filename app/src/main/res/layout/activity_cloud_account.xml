@@ -380,6 +380,18 @@
                         app:backgroundTint="@color/ss_red_soft"
                         app:strokeColor="@color/ss_red_border" />
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonDeleteAccount"
+                        style="@style/Widget.StudySaathi.Button.Outlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="11dp"
+                        android:text="Permanently Delete Account"
+                        android:textAllCaps="false"
+                        android:textColor="@color/ss_error"
+                        app:backgroundTint="@color/ss_red_soft"
+                        app:strokeColor="@color/ss_error" />
+
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
@@ -675,6 +687,18 @@
                         android:textAllCaps="false"
                         app:backgroundTint="@color/ss_surface"
                         app:strokeColor="@color/ss_teal_border" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonDeleteCloudBackup"
+                        style="@style/Widget.StudySaathi.Button.Outlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Delete Cloud Backup"
+                        android:textAllCaps="false"
+                        android:textColor="@color/ss_error"
+                        app:backgroundTint="@color/ss_red_soft"
+                        app:strokeColor="@color/ss_error" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonCloudDiagnostics"

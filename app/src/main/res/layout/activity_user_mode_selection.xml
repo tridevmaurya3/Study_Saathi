@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@drawable/bg_app_soft_mix">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Study Saathi"
+            android:textColor="@color/ss_primary"
+            android:textSize="30sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Who is using the app?"
+            android:textColor="@color/ss_text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textSignedInAccount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:textColor="@color/ss_text_secondary"
+            android:textSize="13sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            app:cardBackgroundColor="@color/ss_green_soft"
+            app:cardCornerRadius="24dp"
+            app:strokeColor="@color/ss_green_border"
+            app:strokeWidth="1dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonStudentMode"
+                style="@style/Widget.StudySaathi.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:layout_margin="12dp"
+                android:text="Student Mode&#10;Learn, ask doubts and revise"
+                android:textAllCaps="false"
+                android:textSize="16sp" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="@color/ss_purple_soft"
+            app:cardCornerRadius="24dp"
+            app:strokeColor="@color/ss_purple_border"
+            app:strokeWidth="1dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonParentMode"
+                style="@style/Widget.StudySaathi.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:layout_margin="12dp"
+                android:text="Parent Mode&#10;Profiles, reports and safety controls"
+                android:textAllCaps="false"
+                android:textSize="16sp" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonSignOut"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="Use another account"
+            android:textAllCaps="false" />
+    </LinearLayout>
+</ScrollView>
