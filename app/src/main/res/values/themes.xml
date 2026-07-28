@@ -35,7 +35,7 @@
         <item name="colorOnErrorContainer">@color/ss_error</item>
 
         <!-- Window appearance -->
-        <item name="android:windowBackground">@color/ss_background</item>
+        <item name="android:windowBackground">@drawable/bg_app_soft_mix</item>
         <item name="android:statusBarColor">@color/ss_background</item>
         <item name="android:navigationBarColor">@color/ss_background</item>
 

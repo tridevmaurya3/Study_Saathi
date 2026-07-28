@@ -4,7 +4,7 @@
     android:id="@+id/parentDashboardRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/ss_background">
+    android:background="@drawable/bg_app_soft_mix">
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/contentParentDashboard"
@@ -314,7 +314,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:gravity="start|center_vertical"
+                android:gravity="center"
                 android:text="School Curriculum Setup"
                 android:textAllCaps="false"
                 android:textSize="15sp"

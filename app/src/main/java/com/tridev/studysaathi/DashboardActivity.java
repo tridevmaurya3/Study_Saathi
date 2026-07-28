@@ -201,17 +201,24 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void setupProfileDrawerActions() {
+        binding.profileDrawerPanel.buttonDrawerStudentMode
+                .setOnClickListener(view ->
+                        binding.dashboardRoot.closeDrawer(
+                                GravityCompat.END
+                        )
+                );
+
+        binding.profileDrawerPanel.buttonDrawerParentMode
+                .setOnClickListener(view ->
+                        closeProfileDrawerAndOpen(
+                                ParentDashboardActivity.class
+                        )
+                );
+
         binding.profileDrawerPanel.buttonDrawerChangeProfile
                 .setOnClickListener(view ->
                         closeProfileDrawerAndOpen(
                                 StudentProfilesActivity.class
-                        )
-                );
-
-        binding.profileDrawerPanel.buttonDrawerParentDashboard
-                .setOnClickListener(view ->
-                        closeProfileDrawerAndOpen(
-                                ParentDashboardActivity.class
                         )
                 );
 

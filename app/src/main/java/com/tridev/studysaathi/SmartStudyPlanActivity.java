@@ -8,7 +8,6 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.tridev.studysaathi.data.catalog.SmartRecommendationEngine;
 import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
@@ -107,58 +106,9 @@ public class SmartStudyPlanActivity
                         openRecommendedPractice()
                 );
 
-        binding.buttonOpenRevision.setText(
-                R.string.study_tools_button
-        );
-
-        binding.buttonOpenRevision.setOnClickListener(view ->
-                showStudyToolsDialog()
-        );
-
         binding.buttonBrowseSubjects.setOnClickListener(view ->
                 openSubjects()
         );
-    }
-
-    private void showStudyToolsDialog() {
-        String[] studyTools = {
-                getString(
-                        R.string.study_tools_revision_option
-                ),
-                getString(
-                        R.string.study_tools_reminder_option
-                ),
-                getString(
-                        R.string.study_tools_notes_option
-                ),
-                getString(
-                        R.string.study_tools_settings_option
-                )
-        };
-
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(
-                        R.string.study_tools_dialog_title
-                )
-                .setItems(
-                        studyTools,
-                        (dialog, selectedPosition) -> {
-                            if (selectedPosition == 0) {
-                                openRevisionPlanner();
-                            } else if (selectedPosition == 1) {
-                                openReminderSettings();
-                            } else if (selectedPosition == 2) {
-                                openChapterNotes();
-                            } else if (selectedPosition == 3) {
-                                openSettingsCenter();
-                            }
-                        }
-                )
-                .setNegativeButton(
-                        R.string.doubt_action_cancel,
-                        null
-                )
-                .show();
     }
 
     private void loadSmartStudyPlan() {

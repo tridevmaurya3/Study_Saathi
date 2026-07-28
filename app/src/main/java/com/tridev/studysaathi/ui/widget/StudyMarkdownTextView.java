@@ -10,6 +10,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.text.style.TypefaceSpan;
@@ -810,6 +811,20 @@ public final class StudyMarkdownTextView
                         headingEnd,
                         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 );
+
+                destination.setSpan(
+                        new ForegroundColorSpan(
+                                ContextCompat.getColor(
+                                        getContext(),
+                                        getHeadingColor(
+                                                headingLevel
+                                        )
+                                )
+                        ),
+                        headingStart,
+                        headingEnd,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
             }
 
             return;
@@ -821,6 +836,9 @@ public final class StudyMarkdownTextView
                 );
 
         if (bulletMatcher.matches()) {
+            int bulletStart =
+                    destination.length();
+
             destination.append(
                     "• "
             );
@@ -831,6 +849,23 @@ public final class StudyMarkdownTextView
                             bulletMatcher,
                             1
                     )
+            );
+
+            int bulletEnd =
+                    destination.length();
+
+            destination.setSpan(
+                    new ForegroundColorSpan(
+                            ContextCompat.getColor(
+                                    getContext(),
+                                    getBulletColor(
+                                            bulletStart
+                                    )
+                            )
+                    ),
+                    bulletStart,
+                    bulletEnd,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );
 
             return;
@@ -863,6 +898,48 @@ public final class StudyMarkdownTextView
             default:
                 return 1.07f;
         }
+    }
+
+    private int getHeadingColor(
+            int headingLevel
+    ) {
+        switch (headingLevel) {
+            case 1:
+                return R.color.ss_primary;
+
+            case 2:
+                return R.color.ss_secondary;
+
+            case 3:
+                return R.color.ss_tertiary;
+
+            case 4:
+                return R.color.ss_success;
+
+            case 5:
+            case 6:
+            default:
+                return R.color.ss_text_primary;
+        }
+    }
+
+    private int getBulletColor(
+            int bulletStart
+    ) {
+        int colorPosition =
+                Math.abs(
+                        bulletStart
+                ) % 3;
+
+        if (colorPosition == 0) {
+            return R.color.ss_primary;
+        }
+
+        if (colorPosition == 1) {
+            return R.color.ss_secondary;
+        }
+
+        return R.color.ss_tertiary;
     }
 
     /**

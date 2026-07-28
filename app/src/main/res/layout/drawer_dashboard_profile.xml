@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingStart="20dp"
-        android:paddingTop="26dp"
+        android:paddingTop="18dp"
         android:paddingEnd="20dp"
         android:paddingBottom="28dp">
 
@@ -61,10 +61,44 @@
             android:textColor="@color/ss_text_secondary"
             android:textSize="13sp" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonDrawerStudentMode"
+                style="@style/Widget.StudySaathi.Button.Outlined"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="2dp"
+                android:layout_weight="1"
+                android:text="Student Mode"
+                android:textAllCaps="false"
+                android:textSize="12sp"
+                app:backgroundTint="@color/ss_green_soft"
+                app:strokeColor="@color/ss_green_border" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonDrawerParentMode"
+                style="@style/Widget.StudySaathi.Button.Outlined"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:layout_weight="1"
+                android:text="Parent Mode"
+                android:textAllCaps="false"
+                android:textSize="12sp"
+                app:backgroundTint="@color/ss_purple_soft"
+                app:strokeColor="@color/ss_purple_border" />
+
+        </LinearLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:background="@color/ss_outline" />
 
         <com.google.android.material.button.MaterialButton
@@ -72,36 +106,30 @@
             style="@style/Widget.StudySaathi.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="6dp"
             android:gravity="start|center_vertical"
             android:text="Change Profile"
-            android:textAllCaps="false" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonDrawerParentDashboard"
-            style="@style/Widget.StudySaathi.Button.Outlined"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="start|center_vertical"
-            android:text="Parent Dashboard"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_blue_soft"
+            app:strokeColor="@color/ss_blue_border" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonDrawerManageProfiles"
             style="@style/Widget.StudySaathi.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="2dp"
             android:gravity="start|center_vertical"
             android:text="Manage Student Profiles"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_teal_soft"
+            app:strokeColor="@color/ss_teal_border" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardDrawerDailyStudyGoal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="4dp"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground"
@@ -141,7 +169,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="10dp"
             android:text="BACKUP &amp; SYNC"
             android:textColor="@color/ss_text_muted"
             android:textSize="11sp"
@@ -152,27 +180,31 @@
             style="@style/Widget.StudySaathi.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="2dp"
             android:gravity="start|center_vertical"
             android:text="Local Backup"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_yellow_soft"
+            app:strokeColor="@color/ss_yellow_border" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonDrawerRestoreImport"
             style="@style/Widget.StudySaathi.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="2dp"
             android:gravity="start|center_vertical"
             android:text="Restore Backup &amp; Import"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_red_soft"
+            app:strokeColor="@color/ss_red_border" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonDrawerCloudSync"
             style="@style/Widget.StudySaathi.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="2dp"
             android:gravity="start|center_vertical"
             android:text="Cloud Account &amp; Sync"
             android:textAllCaps="false" />

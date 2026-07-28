@@ -4,7 +4,7 @@
     android:id="@+id/smartPlanRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/ss_background">
+    android:background="@drawable/bg_app_soft_mix">
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/contentSmartPlan"
@@ -354,16 +354,6 @@
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonOpenRevision"
-                style="@style/Widget.StudySaathi.Button.Outlined"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="17dp"
-                android:text="@string/smart_plan_open_revision"
-                android:textAllCaps="false"
-                android:textSize="15sp" />
 
         </LinearLayout>
 

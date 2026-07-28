@@ -1,15 +1,22 @@
 package com.tridev.studysaathi;
 
+import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowManager;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.tridev.studysaathi.adapter.ParentProfileSummaryAdapter;
 import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
 import com.tridev.studysaathi.data.local.entity.QuizAttemptEntity;
@@ -61,10 +68,21 @@ public class ParentDashboardActivity
 
     private boolean partialLoadFailure;
     private boolean profileActivationInProgress;
+    private boolean parentAccessVerified;
+    private boolean securityPromptInProgress;
+
+    private ActivityResultLauncher<Intent>
+            deviceCredentialLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        getWindow().addFlags(
+                WindowManager.LayoutParams.FLAG_SECURE
+        );
+
+        registerParentSecurityLauncher();
 
         binding =
                 ActivityParentDashboardBinding.inflate(
@@ -97,7 +115,169 @@ public class ParentDashboardActivity
         super.onResume();
 
         profileActivationInProgress = false;
-        loadParentDashboard();
+
+        if (parentAccessVerified) {
+            loadParentDashboard();
+        } else {
+            verifyParentAccess();
+        }
+    }
+
+    private void registerParentSecurityLauncher() {
+        deviceCredentialLauncher =
+                registerForActivityResult(
+                        new ActivityResultContracts
+                                .StartActivityForResult(),
+                        result -> {
+                            securityPromptInProgress = false;
+
+                            if (result.getResultCode()
+                                    == RESULT_OK) {
+
+                                parentAccessVerified = true;
+                                loadParentDashboard();
+                                return;
+                            }
+
+                            Snackbar.make(
+                                    binding.getRoot(),
+                                    "Parent verification पूरी नहीं हुई।",
+                                    Snackbar.LENGTH_LONG
+                            ).show();
+
+                            finish();
+                        }
+                );
+    }
+
+    private void verifyParentAccess() {
+        if (securityPromptInProgress
+                || isFinishing()
+                || isDestroyed()) {
+
+            return;
+        }
+
+        FirebaseUser currentUser =
+                FirebaseAuth.getInstance()
+                        .getCurrentUser();
+
+        if (currentUser == null) {
+            showCloudAccountRequiredDialog();
+            return;
+        }
+
+        String email =
+                currentUser.getEmail();
+
+        if (email != null
+                && !email.trim().isEmpty()
+                && !currentUser.isEmailVerified()) {
+
+            showVerifiedEmailRequiredDialog();
+            return;
+        }
+
+        KeyguardManager keyguardManager =
+                (KeyguardManager) getSystemService(
+                        KEYGUARD_SERVICE
+                );
+
+        if (keyguardManager == null
+                || !keyguardManager.isDeviceSecure()) {
+
+            showSecureLockRequiredDialog();
+            return;
+        }
+
+        Intent confirmationIntent =
+                keyguardManager
+                        .createConfirmDeviceCredentialIntent(
+                                "Parent Mode verification",
+                                "Parent Dashboard खोलने के लिए device PIN, pattern या password confirm करें।"
+                        );
+
+        if (confirmationIntent == null) {
+            showSecureLockRequiredDialog();
+            return;
+        }
+
+        securityPromptInProgress = true;
+        deviceCredentialLauncher.launch(
+                confirmationIntent
+        );
+    }
+
+    private void showCloudAccountRequiredDialog() {
+        securityPromptInProgress = true;
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Secure Parent Mode")
+                .setMessage(
+                        "Parent Dashboard के लिए पहले verified cloud account से sign in करें। इसके बाद device lock दूसरा security factor होगा।"
+                )
+                .setPositiveButton(
+                        "Cloud Account खोलें",
+                        (dialog, which) -> {
+                            securityPromptInProgress = false;
+                            startActivity(
+                                    new Intent(
+                                            this,
+                                            CloudAccountActivity.class
+                                    )
+                            );
+                        }
+                )
+                .setNegativeButton(
+                        "वापस",
+                        (dialog, which) -> finish()
+                )
+                .setOnCancelListener(dialog -> finish())
+                .show();
+    }
+
+    private void showVerifiedEmailRequiredDialog() {
+        securityPromptInProgress = true;
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Email verification जरूरी है")
+                .setMessage(
+                        "Parent Mode खोलने से पहले cloud account की email verify करें।"
+                )
+                .setPositiveButton(
+                        "Account खोलें",
+                        (dialog, which) -> {
+                            securityPromptInProgress = false;
+                            startActivity(
+                                    new Intent(
+                                            this,
+                                            CloudAccountActivity.class
+                                    )
+                            );
+                        }
+                )
+                .setNegativeButton(
+                        "वापस",
+                        (dialog, which) -> finish()
+                )
+                .setOnCancelListener(dialog -> finish())
+                .show();
+    }
+
+    private void showSecureLockRequiredDialog() {
+        securityPromptInProgress = true;
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Device lock जरूरी है")
+                .setMessage(
+                        "Parent Dashboard के 2-step protection के लिए phone Settings में PIN, pattern या password चालू करें।"
+                )
+                .setPositiveButton(
+                        "ठीक है",
+                        (dialog, which) -> finish()
+                )
+                .setOnCancelListener(dialog -> finish())
+                .show();
     }
 
     private void setupRecyclerView() {

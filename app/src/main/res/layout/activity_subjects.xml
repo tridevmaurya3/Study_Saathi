@@ -5,7 +5,7 @@
     android:id="@+id/subjectsRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/ss_background">
+    android:background="@drawable/bg_app_soft_mix">
 
     <LinearLayout
         android:id="@+id/contentSubjects"
@@ -132,93 +132,6 @@
                         android:textSize="14sp" />
 
                 </LinearLayout>
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Scan school book action -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardScanSchoolBook"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            app:cardBackgroundColor="@color/ss_green_soft"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp"
-            app:strokeColor="@color/ss_green_border"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:minHeight="82dp"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingTop="13dp"
-                android:paddingEnd="15dp"
-                android:paddingBottom="13dp">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    app:cardBackgroundColor="@color/ss_surface"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="@color/ss_green_border"
-                    app:strokeWidth="1dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:importantForAccessibility="no"
-                        android:text="📘"
-                        android:textSize="25sp" />
-
-                </com.google.android.material.card.MaterialCardView>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="sans-serif-rounded"
-                        android:text="Scan School Book"
-                        android:textColor="@color/ss_text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:fontFamily="sans-serif"
-                        android:lineSpacingExtra="2dp"
-                        android:text="Cover या ISBN scan करके school subject और book खोजें"
-                        android:textColor="@color/ss_text_secondary"
-                        android:textSize="12sp" />
-
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:gravity="center"
-                    android:importantForAccessibility="no"
-                    android:text="›"
-                    android:textColor="@color/ss_primary"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
 
             </LinearLayout>
 

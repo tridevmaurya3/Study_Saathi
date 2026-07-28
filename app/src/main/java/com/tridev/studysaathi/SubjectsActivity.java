@@ -4,8 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,8 +39,6 @@ public final class SubjectsActivity
     private SchoolSubjectRepository schoolSubjectRepository;
 
     private SubjectAdapter subjectAdapter;
-
-    private ActivityResultLauncher<Intent> bookScanLauncher;
 
     @NonNull
     private List<SchoolSubjectEntity> visibleSchoolSubjects =
@@ -86,31 +82,9 @@ public final class SubjectsActivity
                         this
                 );
 
-        registerBookScanLauncher();
         setupRecyclerView();
         setupClickListeners();
         loadActiveStudentProfile();
-    }
-
-    private void registerBookScanLauncher() {
-        bookScanLauncher =
-                registerForActivityResult(
-                        new ActivityResultContracts
-                                .StartActivityForResult(),
-                        result -> {
-                            if (!isActivityAvailable()
-                                    || result.getResultCode()
-                                    != RESULT_OK
-                                    || activeProfileId <= 0L) {
-
-                                return;
-                            }
-
-                            loadConfirmedSchoolSubjects(
-                                    activeProfileId
-                            );
-                        }
-                );
     }
 
     @Override
@@ -152,43 +126,6 @@ public final class SubjectsActivity
         binding.buttonBack.setOnClickListener(view ->
                 getOnBackPressedDispatcher()
                         .onBackPressed()
-        );
-
-        binding.cardScanSchoolBook
-                .setOnClickListener(view ->
-                        openBookCoverScanner()
-                );
-    }
-
-    private void openBookCoverScanner() {
-        if (!isActivityAvailable()) {
-            return;
-        }
-
-        if (activeProfileId <= 0L) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "पहले active student profile तैयार करें।",
-                    Snackbar.LENGTH_LONG
-            ).show();
-
-            return;
-        }
-
-        Intent bookScannerIntent =
-                new Intent(
-                        SubjectsActivity.this,
-                        BookCoverScanActivity.class
-                );
-
-        bookScannerIntent.putExtra(
-                BookCoverScanActivity
-                        .EXTRA_TARGET_PROFILE_ID,
-                activeProfileId
-        );
-
-        bookScanLauncher.launch(
-                bookScannerIntent
         );
     }
 
