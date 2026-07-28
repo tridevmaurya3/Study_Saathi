@@ -5,6 +5,16 @@
         Ask Study Saathi
     </string>
 
+    <string name="smart_companion_title">Study Saathi AI</string>
+    <string name="smart_companion_context_format">इस पेज के बारे में पूछें: %1$s</string>
+    <string name="smart_companion_question_hint">अपना सवाल लिखें…</string>
+    <string name="smart_companion_voice">🎙 बोलें</string>
+    <string name="smart_companion_photo">📷 फोटो</string>
+    <string name="smart_companion_send">पूछें</string>
+    <string name="smart_companion_icon">🎓 AI</string>
+    <string name="smart_companion_content_description">Study Saathi AI से सवाल पूछें</string>
+    <string name="smart_companion_empty_question">पहले अपना सवाल लिखें।</string>
+
     <string name="ask_study_saathi_subtitle">
         Ask a question from your selected chapter
     </string>

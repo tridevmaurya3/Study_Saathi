@@ -45,6 +45,7 @@ import com.tridev.studysaathi.data.repository.SchoolSubjectRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 import com.tridev.studysaathi.databinding.ActivityAskStudySaathiBinding;
 import com.tridev.studysaathi.model.LessonContent;
+import com.tridev.studysaathi.ui.SmartAiCompanionController;
 
 import java.io.File;
 import java.io.IOException;
@@ -171,6 +172,9 @@ public class AskStudySaathiActivity
     private String prefillQuestion =
             "";
 
+    private String requestedInputMode =
+            "";
+
     private String lastQuestionImageOcrText =
             "";
 
@@ -182,6 +186,7 @@ public class AskStudySaathiActivity
     private int aiAnswerRequestGeneration;
 
     private boolean prefilledQuestionApplied;
+    private boolean requestedInputModeApplied;
 
     private boolean questionImageOcrInProgress;
 
@@ -563,6 +568,11 @@ public class AskStudySaathiActivity
         prefillQuestion =
                 getSafeExtra(
                         EXTRA_PREFILL_QUESTION
+                );
+
+        requestedInputMode =
+                getSafeExtra(
+                        SmartAiCompanionController.EXTRA_OPEN_INPUT_MODE
                 );
     }
 
@@ -3161,6 +3171,7 @@ public class AskStudySaathiActivity
 
     private void applyPrefilledQuestion() {
         if (prefilledQuestionApplied) {
+            applyRequestedInputMode();
             return;
         }
 
@@ -3168,6 +3179,7 @@ public class AskStudySaathiActivity
             prefilledQuestionApplied =
                     true;
 
+            applyRequestedInputMode();
             return;
         }
 
@@ -3192,6 +3204,44 @@ public class AskStudySaathiActivity
 
         prefillQuestion =
                 "";
+
+        applyRequestedInputMode();
+    }
+
+    /**
+     * Global AI companion से चुना गया voice/photo रास्ता केवल तब खोलें जब
+     * active profile और subject controls पूरी तरह तैयार हो चुके हों।
+     */
+    private void applyRequestedInputMode() {
+        if (requestedInputModeApplied
+                || requestedInputMode.isEmpty()) {
+            return;
+        }
+
+        requestedInputModeApplied = true;
+        String inputMode = requestedInputMode;
+        requestedInputMode = "";
+
+        binding.getRoot().post(() -> {
+            if (!isActivityAvailable()
+                    || activeStudentProfile == null
+                    || selectedSchoolSubject == null) {
+                return;
+            }
+
+            if (SmartAiCompanionController.INPUT_MODE_VOICE.equals(
+                    inputMode
+            )) {
+                startVoiceQuestionInput();
+                return;
+            }
+
+            if (SmartAiCompanionController.INPUT_MODE_PHOTO.equals(
+                    inputMode
+            )) {
+                openQuestionCamera();
+            }
+        });
     }
 
     private void submitQuickQuestion(

@@ -20,6 +20,7 @@ import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
 import com.tridev.studysaathi.data.ai.FirebaseAiQuotaActivityObserver;
 import com.tridev.studysaathi.data.ai.SmartTutorTextToSpeechActivityObserver;
+import com.tridev.studysaathi.ui.SmartAiCompanionController;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -401,6 +402,10 @@ public final class StudySaathiApplication
     public void onActivityResumed(
             @NonNull Activity activity
     ) {
+        SmartAiCompanionController.attach(
+                activity
+        );
+
         /*
          * FirebaseAiQuotaActivityObserver और
          * SmartTutorTextToSpeechActivityObserver अपने lifecycle
@@ -440,6 +445,10 @@ public final class StudySaathiApplication
     public void onActivityDestroyed(
             @NonNull Activity activity
     ) {
+        SmartAiCompanionController.detach(
+                activity
+        );
+
         insetConfiguredActivities.remove(
                 activity
         );
