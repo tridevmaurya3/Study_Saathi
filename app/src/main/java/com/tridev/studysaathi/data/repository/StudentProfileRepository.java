@@ -14,11 +14,12 @@ import java.util.List;
 
 public class StudentProfileRepository {
 
+    private final StudySaathiDatabase database;
     private final StudentProfileDao studentProfileDao;
     private final Handler mainThreadHandler;
 
     public StudentProfileRepository(@NonNull Context context) {
-        StudySaathiDatabase database =
+        database =
                 StudySaathiDatabase.getInstance(context);
 
         studentProfileDao = database.studentProfileDao();
@@ -100,6 +101,73 @@ public class StudentProfileRepository {
                 mainThreadHandler.post(() ->
                         callback.onError(exception)
                 );
+            }
+        });
+    }
+
+    public void getProfileById(
+            long profileId,
+            @NonNull SingleProfileCallback callback
+    ) {
+        StudySaathiDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                StudentProfileEntity profile =
+                        studentProfileDao.getProfileById(profileId);
+                mainThreadHandler.post(() -> callback.onSuccess(profile));
+            } catch (Exception exception) {
+                mainThreadHandler.post(() -> callback.onError(exception));
+            }
+        });
+    }
+
+    public void updateProfile(
+            @NonNull StudentProfileEntity profile,
+            @NonNull OperationCallback callback
+    ) {
+        StudySaathiDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                profile.setUpdatedAt(System.currentTimeMillis());
+                studentProfileDao.updateProfile(profile);
+                mainThreadHandler.post(callback::onSuccess);
+            } catch (Exception exception) {
+                mainThreadHandler.post(() -> callback.onError(exception));
+            }
+        });
+    }
+
+    public void permanentlyDeleteProfile(
+            long profileId,
+            @NonNull OperationCallback callback
+    ) {
+        StudySaathiDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                database.runInTransaction(() -> {
+                    androidx.sqlite.db.SupportSQLiteDatabase sql =
+                            database.getOpenHelper().getWritableDatabase();
+                    Object[] args = new Object[]{profileId};
+                    sql.execSQL("DELETE FROM school_book_chapter_pages WHERE chapter_row_id IN (SELECT chapter_row_id FROM school_book_chapters WHERE book_row_id IN (SELECT book_row_id FROM school_books WHERE subject_row_id IN (SELECT subject_row_id FROM school_subjects WHERE profile_id = ?)))", args);
+                    sql.execSQL("DELETE FROM school_book_chapter_contents WHERE chapter_row_id IN (SELECT chapter_row_id FROM school_book_chapters WHERE book_row_id IN (SELECT book_row_id FROM school_books WHERE subject_row_id IN (SELECT subject_row_id FROM school_subjects WHERE profile_id = ?)))", args);
+                    sql.execSQL("DELETE FROM school_book_chapters WHERE book_row_id IN (SELECT book_row_id FROM school_books WHERE subject_row_id IN (SELECT subject_row_id FROM school_subjects WHERE profile_id = ?))", args);
+                    sql.execSQL("DELETE FROM school_books WHERE subject_row_id IN (SELECT subject_row_id FROM school_subjects WHERE profile_id = ?)", args);
+                    sql.execSQL("DELETE FROM school_subjects WHERE profile_id = ?", args);
+                    sql.execSQL("DELETE FROM school_curriculum_profiles WHERE profile_id = ?", args);
+                    sql.execSQL("DELETE FROM doubt_history WHERE profile_id = ?", args);
+                    sql.execSQL("DELETE FROM quiz_attempts WHERE profile_id = ?", args);
+                    sql.execSQL("DELETE FROM lesson_progress WHERE profile_id = ?", args);
+                    studentProfileDao.deleteProfileById(profileId);
+                    if (studentProfileDao.getActiveProfile() == null) {
+                        StudentProfileEntity latest = studentProfileDao.getLatestProfile();
+                        if (latest != null) {
+                            studentProfileDao.activateProfile(
+                                    latest.getProfileId(),
+                                    System.currentTimeMillis()
+                            );
+                        }
+                    }
+                });
+                mainThreadHandler.post(callback::onSuccess);
+            } catch (Exception exception) {
+                mainThreadHandler.post(() -> callback.onError(exception));
             }
         });
     }

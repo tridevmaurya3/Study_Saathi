@@ -15,10 +15,15 @@ import com.tridev.studysaathi.databinding.ActivityStudentProfileBinding;
 
 public class StudentProfileActivity extends AppCompatActivity {
 
+    public static final String EXTRA_EDIT_PROFILE_ID =
+            "extra_edit_profile_id";
+
     private ActivityStudentProfileBinding binding;
     private StudentProfileRepository studentProfileRepository;
 
     private boolean profileSaveInProgress;
+    private long editProfileId;
+    private StudentProfileEntity editingProfile;
 
     private final String[] boardOptions = {
             "CBSE",
@@ -73,6 +78,13 @@ public class StudentProfileActivity extends AppCompatActivity {
 
         setupDropdowns();
         setupClickListeners();
+        editProfileId = getIntent().getLongExtra(
+                EXTRA_EDIT_PROFILE_ID,
+                0L
+        );
+        if (editProfileId > 0L) {
+            loadProfileForEditing();
+        }
     }
 
     private void setupDropdowns() {
@@ -225,7 +237,88 @@ public class StudentProfileActivity extends AppCompatActivity {
                 );
 
         showSavingState(true);
-        insertStudentProfile(studentProfile);
+        if (editingProfile != null) {
+            editingProfile.setStudentName(studentName);
+            editingProfile.setEducationBoard(selectedBoard);
+            editingProfile.setStudentClass(selectedClass);
+            editingProfile.setStudyMedium(selectedMedium);
+            editingProfile.setExplanationLanguage(
+                    selectedExplanationLanguage
+            );
+            updateStudentProfile(editingProfile);
+        } else {
+            insertStudentProfile(studentProfile);
+        }
+    }
+
+    private void loadProfileForEditing() {
+        showSavingState(true);
+        studentProfileRepository.getProfileById(
+                editProfileId,
+                new StudentProfileRepository.SingleProfileCallback() {
+                    @Override
+                    public void onSuccess(StudentProfileEntity profile) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        if (profile == null) {
+                            finish();
+                            return;
+                        }
+                        editingProfile = profile;
+                        binding.editStudentName.setText(profile.getStudentName());
+                        binding.dropdownBoard.setText(profile.getEducationBoard(), false);
+                        binding.dropdownClass.setText(profile.getStudentClass(), false);
+                        binding.dropdownMedium.setText(profile.getStudyMedium(), false);
+                        binding.dropdownExplanationLanguage.setText(
+                                profile.getExplanationLanguage(),
+                                false
+                        );
+                        binding.buttonContinue.setText("Save Changes");
+                        showSavingState(false);
+                        binding.buttonContinue.setText("Save Changes");
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        if (!isFinishing() && !isDestroyed()) {
+                            finish();
+                        }
+                    }
+                }
+        );
+    }
+
+    private void updateStudentProfile(
+            @NonNull StudentProfileEntity profile
+    ) {
+        studentProfileRepository.updateProfile(
+                profile,
+                new StudentProfileRepository.OperationCallback() {
+                    @Override
+                    public void onSuccess() {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        setResult(RESULT_OK);
+                        finish();
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        showSavingState(false);
+                        binding.buttonContinue.setText("Save Changes");
+                        Snackbar.make(
+                                binding.getRoot(),
+                                "Profile update नहीं हो सका।",
+                                Snackbar.LENGTH_LONG
+                        ).show();
+                    }
+                }
+        );
     }
 
     private StudentProfileEntity createStudentProfileEntity(

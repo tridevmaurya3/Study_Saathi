@@ -20,13 +20,16 @@ public class StudentProfileAdapter extends RecyclerView.Adapter<
 
     private final List<StudentProfileEntity> studentProfiles;
     private final OnProfileClickListener onProfileClickListener;
+    private final OnProfileActionListener onProfileActionListener;
 
     public StudentProfileAdapter(
             @NonNull List<StudentProfileEntity> studentProfiles,
-            @NonNull OnProfileClickListener onProfileClickListener
+            @NonNull OnProfileClickListener onProfileClickListener,
+            @NonNull OnProfileActionListener onProfileActionListener
     ) {
         this.studentProfiles = new ArrayList<>(studentProfiles);
         this.onProfileClickListener = onProfileClickListener;
+        this.onProfileActionListener = onProfileActionListener;
     }
 
     @NonNull
@@ -71,6 +74,11 @@ public class StudentProfileAdapter extends RecyclerView.Adapter<
         void onProfileClicked(
                 @NonNull StudentProfileEntity studentProfile
         );
+    }
+
+    public interface OnProfileActionListener {
+        void onEdit(@NonNull StudentProfileEntity studentProfile);
+        void onDelete(@NonNull StudentProfileEntity studentProfile);
     }
 
     class StudentProfileViewHolder extends RecyclerView.ViewHolder {
@@ -121,6 +129,12 @@ public class StudentProfileAdapter extends RecyclerView.Adapter<
                     onProfileClickListener.onProfileClicked(
                             studentProfile
                     )
+            );
+            binding.buttonEditProfile.setOnClickListener(view ->
+                    onProfileActionListener.onEdit(studentProfile)
+            );
+            binding.buttonDeleteProfile.setOnClickListener(view ->
+                    onProfileActionListener.onDelete(studentProfile)
             );
         }
 

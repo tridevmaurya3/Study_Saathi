@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.tridev.studysaathi.adapter.StudentProfileAdapter;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
@@ -39,13 +40,23 @@ public class StudentProfilesActivity extends AppCompatActivity {
 
         setupRecyclerView();
         setupClickListeners();
-        loadStudentProfiles();
     }
 
     private void setupRecyclerView() {
         studentProfileAdapter = new StudentProfileAdapter(
                 new ArrayList<>(),
-                this::handleProfileSelection
+                this::handleProfileSelection,
+                new StudentProfileAdapter.OnProfileActionListener() {
+                    @Override
+                    public void onEdit(@NonNull StudentProfileEntity profile) {
+                        openEditStudentProfile(profile);
+                    }
+
+                    @Override
+                    public void onDelete(@NonNull StudentProfileEntity profile) {
+                        confirmProfileDeletion(profile);
+                    }
+                }
         );
 
         binding.recyclerStudentProfiles.setLayoutManager(
@@ -183,6 +194,78 @@ public class StudentProfilesActivity extends AppCompatActivity {
         );
 
         startActivity(profileIntent);
+    }
+
+    private void openEditStudentProfile(
+            @NonNull StudentProfileEntity profile
+    ) {
+        Intent profileIntent = new Intent(
+                this,
+                StudentProfileActivity.class
+        );
+        profileIntent.putExtra(
+                StudentProfileActivity.EXTRA_EDIT_PROFILE_ID,
+                profile.getProfileId()
+        );
+        startActivity(profileIntent);
+    }
+
+    private void confirmProfileDeletion(
+            @NonNull StudentProfileEntity profile
+    ) {
+        if (profileActivationInProgress) {
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Delete " + profile.getStudentName() + "?")
+                .setMessage("इस profile की progress, doubts, quiz, subjects और books इस device से permanently delete होंगे।")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Delete Permanently", (dialog, which) ->
+                        deleteProfile(profile.getProfileId()))
+                .show();
+    }
+
+    private void deleteProfile(long profileId) {
+        showActivationState(true);
+        studentProfileRepository.permanentlyDeleteProfile(
+                profileId,
+                new StudentProfileRepository.OperationCallback() {
+                    @Override
+                    public void onSuccess() {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        showActivationState(false);
+                        loadStudentProfiles();
+                        Snackbar.make(
+                                binding.getRoot(),
+                                "Student profile और उससे जुड़ा data permanently deleted.",
+                                Snackbar.LENGTH_LONG
+                        ).show();
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        showActivationState(false);
+                        Snackbar.make(
+                                binding.getRoot(),
+                                "Profile delete नहीं हो सका।",
+                                Snackbar.LENGTH_LONG
+                        ).show();
+                    }
+                }
+        );
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (studentProfileRepository != null && !profileActivationInProgress) {
+            loadStudentProfiles();
+        }
     }
 
     private void openDashboardAsRoot() {

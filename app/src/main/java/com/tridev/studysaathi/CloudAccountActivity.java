@@ -27,6 +27,7 @@ import com.tridev.studysaathi.cloud.CloudBackupSecurityGuard;
 import com.tridev.studysaathi.cloud.CloudBackupUploader;
 import com.tridev.studysaathi.data.local.database.StudySaathiDatabase;
 import com.tridev.studysaathi.databinding.ActivityCloudAccountBinding;
+import com.tridev.studysaathi.data.repository.LocalAccountDataRepository;
 
 import java.io.File;
 import java.time.Instant;
@@ -513,11 +514,42 @@ public class CloudAccountActivity
                         return;
                     }
 
-                    updateNewUserProfile(
+                    prepareCleanDeviceForNewAccount(
                             firebaseUser,
                             displayName
                     );
                 });
+    }
+
+    private void prepareCleanDeviceForNewAccount(
+            @NonNull FirebaseUser firebaseUser,
+            @NonNull String displayName
+    ) {
+        new LocalAccountDataRepository(this).permanentlyDeleteAll(
+                new LocalAccountDataRepository.Callback() {
+                    @Override
+                    public void onSuccess() {
+                        updateNewUserProfile(
+                                firebaseUser,
+                                displayName
+                        );
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        firebaseAuth.signOut();
+                        showOperationState(
+                                false,
+                                R.string.cloud_create_account_action
+                        );
+                        Snackbar.make(
+                                binding.getRoot(),
+                                "New account सुरक्षित रखने के लिए पुराने device data को साफ नहीं किया जा सका। दोबारा कोशिश करें।",
+                                Snackbar.LENGTH_INDEFINITE
+                        ).show();
+                    }
+                }
+        );
     }
 
     private void updateNewUserProfile(
@@ -985,7 +1017,7 @@ public class CloudAccountActivity
 
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Permanently delete account?")
-                .setMessage("Account, cloud backup और cloud profile हमेशा के लिए मिटेंगे। यह action वापस नहीं हो सकता। Local study data device पर रहेगा।")
+                .setMessage("Account, cloud backup, cloud profile और इस device का local study data हमेशा के लिए मिटेंगे। सभी student profiles, progress, doubts, books और settings delete होंगी। यह action वापस नहीं हो सकता।")
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Verify & Continue", (dialog, which) ->
                         requestPasswordVerification(
@@ -1021,19 +1053,8 @@ public class CloudAccountActivity
         firestore.collection("users").document(user.getUid())
                 .delete()
                 .addOnSuccessListener(unused -> user.delete()
-                        .addOnSuccessListener(deleted -> runOnUiThread(() -> {
-                            clearSensitiveStateForAccountChange();
-                            getSharedPreferences(CLOUD_STATE_PREFERENCES, MODE_PRIVATE)
-                                    .edit().clear().apply();
-                            Intent intent = new Intent(
-                                    CloudAccountActivity.this,
-                                    CloudAccountActivity.class
-                            );
-                            intent.putExtra(EXTRA_REQUIRE_AUTHENTICATION, true);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                                    | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
-                        }))
+                        .addOnSuccessListener(deleted ->
+                                permanentlyDeleteLocalAccountData())
                         .addOnFailureListener(error -> runOnUiThread(() -> {
                             setCloudBackupOperationState(false);
                             showFirebaseError(error,
@@ -1044,6 +1065,40 @@ public class CloudAccountActivity
                     showFirebaseError(error,
                             R.string.cloud_account_creation_failed);
                 }));
+    }
+
+    private void permanentlyDeleteLocalAccountData() {
+        new LocalAccountDataRepository(this).permanentlyDeleteAll(
+                new LocalAccountDataRepository.Callback() {
+                    @Override
+                    public void onSuccess() {
+                        openCleanAuthenticationScreen();
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        setCloudBackupOperationState(false);
+                        Snackbar.make(
+                                binding.getRoot(),
+                                "Account deleted, but device data cleanup failed. Clear app data before creating another account.",
+                                Snackbar.LENGTH_INDEFINITE
+                        ).show();
+                    }
+                }
+        );
+    }
+
+    private void openCleanAuthenticationScreen() {
+        clearSensitiveStateForAccountChange();
+        firebaseAuth.signOut();
+        Intent intent = new Intent(
+                CloudAccountActivity.this,
+                CloudAccountActivity.class
+        );
+        intent.putExtra(EXTRA_REQUIRE_AUTHENTICATION, true);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
     }
 
     private void requestPasswordVerification(
