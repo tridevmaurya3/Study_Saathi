@@ -122,13 +122,20 @@ public final class SmartAiCompanionController {
                 .getDisplayMetrics().widthPixels - (margin * 2);
         int panelWidth = Math.min(dp(activity, 360), availableWidth);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                panelWidth,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                Gravity.END | Gravity.BOTTOM
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
         );
-        params.setMargins(margin, margin, margin, margin);
         host.addView(companion, params);
         content.setTag(VIEW_TAG_KEY, companion);
+
+        View panel = companion.findViewById(
+                R.id.smartAiCompanionPanel
+        );
+        FrameLayout.LayoutParams panelParams =
+                (FrameLayout.LayoutParams) panel.getLayoutParams();
+        panelParams.width = panelWidth;
+        panelParams.gravity = Gravity.END | Gravity.BOTTOM;
+        panel.setLayoutParams(panelParams);
 
         CompanionSession session = new CompanionSession(
                 activity,
@@ -208,6 +215,8 @@ public final class SmartAiCompanionController {
         @NonNull
         private final MaterialCardView card;
         @NonNull
+        private final View dismissArea;
+        @NonNull
         private final EditText questionInput;
         @NonNull
         private final LinearLayout conversationContainer;
@@ -255,6 +264,9 @@ public final class SmartAiCompanionController {
             this.activity = activity;
             this.companion = companion;
             card = companion.findViewById(R.id.cardSmartAiCompanion);
+            dismissArea = companion.findViewById(
+                    R.id.smartAiDismissArea
+            );
             questionInput = companion.findViewById(
                     R.id.editSmartAiQuestion
             );
@@ -308,6 +320,7 @@ public final class SmartAiCompanionController {
             ));
 
             aiButton.setOnClickListener(view -> toggleCard());
+            dismissArea.setOnClickListener(view -> collapseCard());
             companion.findViewById(R.id.buttonSmartAiSend)
                     .setOnClickListener(view ->
                             submitQuestion(
@@ -459,9 +472,10 @@ public final class SmartAiCompanionController {
         private void toggleCard() {
             boolean opening = card.getVisibility() != View.VISIBLE;
             if (!opening) {
-                card.setVisibility(View.GONE);
+                collapseCard();
                 return;
             }
+            dismissArea.setVisibility(View.VISIBLE);
             card.setAlpha(0f);
             card.setScaleX(0.94f);
             card.setScaleY(0.94f);
@@ -473,6 +487,12 @@ public final class SmartAiCompanionController {
                     .setDuration(180L)
                     .start();
             scrollToBottom();
+        }
+
+        private void collapseCard() {
+            card.animate().cancel();
+            card.setVisibility(View.GONE);
+            dismissArea.setVisibility(View.GONE);
         }
 
         private void submitFollowUp(@NonNull String prompt) {

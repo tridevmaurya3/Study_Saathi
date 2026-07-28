@@ -28,6 +28,7 @@
     <string name="smart_companion_photo_question">इस फोटो में दिया सवाल समझाकर हल करो।</string>
     <string name="smart_companion_verified">✓ सत्यापित उत्तर</string>
     <string name="smart_companion_ai_checked">✦ Smart AI • दोबारा जाँच उपयोगी हो सकती है</string>
+    <string name="smart_companion_close">AI chat बंद करें</string>
 
     <string name="ask_study_saathi_subtitle">
         Ask a question from your selected chapter
