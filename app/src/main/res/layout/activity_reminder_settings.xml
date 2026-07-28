@@ -298,10 +298,13 @@
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/buttonDayMonday"
                                 style="@style/Widget.Material3.Button.OutlinedButton"
-                                android:layout_width="52dp"
+                                android:layout_width="62dp"
                                 android:layout_height="48dp"
                                 android:checkable="true"
+                                android:fontFamily="sans-serif-medium"
                                 android:minWidth="0dp"
+                                android:paddingStart="0dp"
+                                android:paddingEnd="0dp"
                                 android:text="@string/reminder_day_monday"
                                 android:textAllCaps="false"
                                 android:textSize="12sp" />
@@ -309,10 +312,13 @@
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/buttonDayTuesday"
                                 style="@style/Widget.Material3.Button.OutlinedButton"
-                                android:layout_width="52dp"
+                                android:layout_width="62dp"
                                 android:layout_height="48dp"
                                 android:checkable="true"
+                                android:fontFamily="sans-serif-medium"
                                 android:minWidth="0dp"
+                                android:paddingStart="0dp"
+                                android:paddingEnd="0dp"
                                 android:text="@string/reminder_day_tuesday"
                                 android:textAllCaps="false"
                                 android:textSize="12sp" />
@@ -320,10 +326,13 @@
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/buttonDayWednesday"
                                 style="@style/Widget.Material3.Button.OutlinedButton"
-                                android:layout_width="52dp"
+                                android:layout_width="62dp"
                                 android:layout_height="48dp"
                                 android:checkable="true"
+                                android:fontFamily="sans-serif-medium"
                                 android:minWidth="0dp"
+                                android:paddingStart="0dp"
+                                android:paddingEnd="0dp"
                                 android:text="@string/reminder_day_wednesday"
                                 android:textAllCaps="false"
                                 android:textSize="12sp" />
@@ -331,10 +340,13 @@
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/buttonDayThursday"
                                 style="@style/Widget.Material3.Button.OutlinedButton"
-                                android:layout_width="52dp"
+                                android:layout_width="62dp"
                                 android:layout_height="48dp"
                                 android:checkable="true"
+                                android:fontFamily="sans-serif-medium"
                                 android:minWidth="0dp"
+                                android:paddingStart="0dp"
+                                android:paddingEnd="0dp"
                                 android:text="@string/reminder_day_thursday"
                                 android:textAllCaps="false"
                                 android:textSize="12sp" />
@@ -342,10 +354,13 @@
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/buttonDayFriday"
                                 style="@style/Widget.Material3.Button.OutlinedButton"
-                                android:layout_width="52dp"
+                                android:layout_width="62dp"
                                 android:layout_height="48dp"
                                 android:checkable="true"
+                                android:fontFamily="sans-serif-medium"
                                 android:minWidth="0dp"
+                                android:paddingStart="0dp"
+                                android:paddingEnd="0dp"
                                 android:text="@string/reminder_day_friday"
                                 android:textAllCaps="false"
                                 android:textSize="12sp" />
@@ -353,10 +368,13 @@
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/buttonDaySaturday"
                                 style="@style/Widget.Material3.Button.OutlinedButton"
-                                android:layout_width="52dp"
+                                android:layout_width="62dp"
                                 android:layout_height="48dp"
                                 android:checkable="true"
+                                android:fontFamily="sans-serif-medium"
                                 android:minWidth="0dp"
+                                android:paddingStart="0dp"
+                                android:paddingEnd="0dp"
                                 android:text="@string/reminder_day_saturday"
                                 android:textAllCaps="false"
                                 android:textSize="12sp" />
@@ -364,10 +382,13 @@
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/buttonDaySunday"
                                 style="@style/Widget.Material3.Button.OutlinedButton"
-                                android:layout_width="52dp"
+                                android:layout_width="62dp"
                                 android:layout_height="48dp"
                                 android:checkable="true"
+                                android:fontFamily="sans-serif-medium"
                                 android:minWidth="0dp"
+                                android:paddingStart="0dp"
+                                android:paddingEnd="0dp"
                                 android:text="@string/reminder_day_sunday"
                                 android:textAllCaps="false"
                                 android:textSize="12sp" />
