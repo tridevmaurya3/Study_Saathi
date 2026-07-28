@@ -480,13 +480,6 @@ public class DoubtHistoryActivity
         int filteredHistoryCount =
                 filteredItems.size();
 
-        binding.textHistoryCount.setText(
-                getString(
-                        R.string.doubt_history_count_format,
-                        totalHistoryCount
-                )
-        );
-
         binding.textFilterResultCount.setText(
                 getString(
                         R.string.filter_result_count_format,
@@ -813,7 +806,7 @@ public class DoubtHistoryActivity
         binding.contentDoubtHistory.setAlpha(0.55f);
         binding.contentDoubtHistory.setEnabled(false);
 
-        binding.textHistoryCount.setText(
+        binding.textFilterResultCount.setText(
                 messageRes
         );
 
