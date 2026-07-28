@@ -545,6 +545,7 @@
                         android:visibility="gone" />
 
                     <TextView
+                        android:id="@+id/labelCurrentQuestion"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
@@ -566,6 +567,7 @@
                         android:textStyle="bold" />
 
                     <View
+                        android:id="@+id/dividerCurrentTurn"
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginTop="17dp"
@@ -573,6 +575,7 @@
                         android:background="@color/ss_divider" />
 
                     <TextView
+                        android:id="@+id/labelCurrentAnswer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"

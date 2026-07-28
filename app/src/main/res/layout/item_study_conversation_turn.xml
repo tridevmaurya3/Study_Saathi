@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
-    app:cardBackgroundColor="@color/ss_surface_soft"
+    app:cardBackgroundColor="@color/ss_surface"
     app:cardCornerRadius="18dp"
     app:cardElevation="0dp"
     app:strokeColor="@color/ss_outline"
@@ -17,41 +17,75 @@
         android:orientation="vertical"
         android:padding="15dp">
 
-        <TextView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/your_question"
-            android:textColor="@color/ss_text_muted"
-            android:textSize="10sp"
-            android:textStyle="bold" />
+            app:cardBackgroundColor="@color/ss_blue_soft"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="0dp">
 
-        <TextView
-            android:id="@+id/textConversationQuestion"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:textColor="@color/ss_primary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="13dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/study_saathi_answer"
-            android:textColor="@color/ss_text_muted"
-            android:textSize="10sp"
-            android:textStyle="bold" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/your_question"
+                    android:textColor="@color/ss_primary"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/textConversationAnswer"
+                <TextView
+                    android:id="@+id/textConversationQuestion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:textColor="@color/ss_text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:lineSpacingExtra="4dp"
-            android:textColor="@color/ss_text_primary"
-            android:textIsSelectable="true"
-            android:textSize="15sp" />
+            android:layout_marginTop="7dp"
+            app:cardBackgroundColor="@color/ss_green_soft"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="13dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/study_saathi_answer"
+                    android:textColor="@color/ss_secondary"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/textConversationAnswer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/ss_text_primary"
+                    android:textIsSelectable="true"
+                    android:textSize="15sp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 

@@ -3607,7 +3607,9 @@ public class AskStudySaathiActivity
         aiAnswerRequestInProgress =
                 true;
 
-        archiveCompletedTurnIfNeeded();
+        setCurrentTurnVisible(
+                true
+        );
 
         binding.textUserQuestion.setText(
                 question
@@ -3748,6 +3750,12 @@ public class AskStudySaathiActivity
 
         completedTurnArchived =
                 false;
+
+        archiveCompletedTurnIfNeeded();
+
+        setCurrentTurnVisible(
+                false
+        );
 
         binding.buttonOpenLesson.setVisibility(
                 selectedChapter == null
@@ -4292,6 +4300,35 @@ public class AskStudySaathiActivity
 
         completedTurnArchived =
                 true;
+    }
+
+    private void setCurrentTurnVisible(
+            boolean visible
+    ) {
+        int visibility =
+                visible
+                        ? View.VISIBLE
+                        : View.GONE;
+
+        binding.labelCurrentQuestion.setVisibility(
+                visibility
+        );
+
+        binding.textUserQuestion.setVisibility(
+                visibility
+        );
+
+        binding.dividerCurrentTurn.setVisibility(
+                visibility
+        );
+
+        binding.labelCurrentAnswer.setVisibility(
+                visibility
+        );
+
+        binding.textSaathiAnswer.setVisibility(
+                visibility
+        );
     }
 
     @NonNull
