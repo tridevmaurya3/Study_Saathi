@@ -229,6 +229,13 @@ public class DashboardActivity extends AppCompatActivity {
                         )
                 );
 
+        binding.profileDrawerPanel.buttonDrawerSettings
+                .setOnClickListener(view ->
+                        closeProfileDrawerAndOpen(
+                                SettingsActivity.class
+                        )
+                );
+
         binding.profileDrawerPanel.cardDrawerDailyStudyGoal
                 .setOnClickListener(view ->
                         closeProfileDrawerAndOpen(

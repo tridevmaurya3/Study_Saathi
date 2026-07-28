@@ -55,10 +55,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonMenuDashboard"
-            style="@style/Widget.StudySaathi.Button.Primary"
+            style="@style/Widget.StudySaathi.Button.DrawerCompact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="0dp"
             android:gravity="start|center_vertical"
             android:text="Dashboard Home"
             android:textAllCaps="false"
@@ -67,10 +67,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonMenuSubjects"
-            style="@style/Widget.StudySaathi.Button.Outlined"
+            style="@style/Widget.StudySaathi.Button.DrawerCompact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="0dp"
             android:gravity="start|center_vertical"
             android:text="Subjects &amp; Curriculum"
             android:textAllCaps="false"
@@ -79,10 +79,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonMenuSmartStudyPlan"
-            style="@style/Widget.StudySaathi.Button.Outlined"
+            style="@style/Widget.StudySaathi.Button.DrawerCompact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="0dp"
             android:gravity="start|center_vertical"
             android:text="Smart Study Plan"
             android:textAllCaps="false"
@@ -91,10 +91,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonMenuRevision"
-            style="@style/Widget.StudySaathi.Button.Outlined"
+            style="@style/Widget.StudySaathi.Button.DrawerCompact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="0dp"
             android:gravity="start|center_vertical"
             android:text="Revision Planner"
             android:textAllCaps="false"
@@ -103,10 +103,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonMenuWeeklyStudy"
-            style="@style/Widget.StudySaathi.Button.Outlined"
+            style="@style/Widget.StudySaathi.Button.DrawerCompact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="0dp"
             android:gravity="start|center_vertical"
             android:text="Weekly Study"
             android:textAllCaps="false"
@@ -115,10 +115,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonMenuLearningProgress"
-            style="@style/Widget.StudySaathi.Button.Outlined"
+            style="@style/Widget.StudySaathi.Button.DrawerCompact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="0dp"
             android:gravity="start|center_vertical"
             android:text="Learning Progress"
             android:textAllCaps="false"
@@ -127,10 +127,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonMenuAskSaathi"
-            style="@style/Widget.StudySaathi.Button.Outlined"
+            style="@style/Widget.StudySaathi.Button.DrawerCompact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="0dp"
             android:gravity="start|center_vertical"
             android:text="Ask Study Saathi"
             android:textAllCaps="false"
@@ -139,10 +139,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonMenuChapterNotes"
-            style="@style/Widget.StudySaathi.Button.Outlined"
+            style="@style/Widget.StudySaathi.Button.DrawerCompact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="0dp"
             android:gravity="start|center_vertical"
             android:text="Chapter Notes"
             android:textAllCaps="false"
@@ -151,10 +151,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonMenuReminders"
-            style="@style/Widget.StudySaathi.Button.Outlined"
+            style="@style/Widget.StudySaathi.Button.DrawerCompact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="0dp"
             android:gravity="start|center_vertical"
             android:text="Study Reminders"
             android:textAllCaps="false"

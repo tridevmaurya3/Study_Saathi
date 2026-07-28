@@ -12,6 +12,7 @@
     <string name="settings_language_english">English</string>
     <string name="settings_language_bilingual">Bilingual</string>
     <string name="settings_appearance_saved">Theme और language preference save हो गई।</string>
+    <string name="settings_drawer_entry">Settings • Theme &amp; Language</string>
 
     <string name="study_tools_settings_option">
         Settings &amp; Profiles
