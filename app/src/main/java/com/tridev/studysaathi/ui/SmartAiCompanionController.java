@@ -24,6 +24,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.widget.NestedScrollView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
@@ -49,6 +50,7 @@ import com.tridev.studysaathi.SchoolBookChapterPageReviewActivity;
 import com.tridev.studysaathi.SchoolCurriculumSetupActivity;
 import com.tridev.studysaathi.StudentProfileActivity;
 import com.tridev.studysaathi.StudentProfilesActivity;
+import com.tridev.studysaathi.UserModeSelectionActivity;
 import com.tridev.studysaathi.data.ai.FirebaseStudyTutorClient;
 import com.tridev.studysaathi.data.ai.QuestionImageBitmapLoader;
 import com.tridev.studysaathi.data.ai.SmartCompanionConversationStore;
@@ -91,6 +93,11 @@ public final class SmartAiCompanionController {
     }
 
     public static void attach(@NonNull Activity activity) {
+        if (!hasAuthenticatedUser()) {
+            detach(activity);
+            return;
+        }
+
         if (!isStudentLearningScreen(activity)
                 || activity.isFinishing()
                 || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1
@@ -990,6 +997,7 @@ public final class SmartAiCompanionController {
             @NonNull Activity activity
     ) {
         return !(activity instanceof MainActivity)
+                && !(activity instanceof UserModeSelectionActivity)
                 && !(activity instanceof StudentProfileActivity)
                 && !(activity instanceof StudentProfilesActivity)
                 && !(activity instanceof AskStudySaathiActivity)
@@ -1010,5 +1018,17 @@ public final class SmartAiCompanionController {
                 && !(activity instanceof BackupExportActivity)
                 && !(activity instanceof CloudAccountActivity)
                 && !(activity instanceof CloudBackupDiagnosticActivity);
+    }
+
+    private static boolean hasAuthenticatedUser() {
+        try {
+            return FirebaseAuth.getInstance().getCurrentUser() != null;
+        } catch (RuntimeException exception) {
+            /*
+             * Authentication initialization failure must never expose the
+             * learning assistant on a public/pre-login screen.
+             */
+            return false;
+        }
     }
 }
