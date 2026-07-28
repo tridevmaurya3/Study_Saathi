@@ -331,6 +331,18 @@
                 android:textAllCaps="false"
                 android:textSize="15sp" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonParentDoubtInsights"
+                style="@style/Widget.StudySaathi.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="11dp"
+                android:text="@string/parent_doubt_insights"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                app:backgroundTint="@color/ss_purple_soft"
+                app:strokeColor="@color/ss_purple_border" />
+
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>

@@ -14,6 +14,20 @@
     <string name="smart_companion_icon">🎓 AI</string>
     <string name="smart_companion_content_description">Study Saathi AI से सवाल पूछें</string>
     <string name="smart_companion_empty_question">पहले अपना सवाल लिखें।</string>
+    <string name="smart_companion_simpler">और आसान बताओ</string>
+    <string name="smart_companion_example">उदाहरण दो</string>
+    <string name="smart_companion_visual">चित्र से समझाओ</string>
+    <string name="smart_companion_quiz">मुझे टेस्ट करो</string>
+    <string name="smart_companion_welcome">नमस्ते! इस पेज या अपने विषय का कोई भी सवाल पूछो। पुराने सवाल और जवाब यहीं सुरक्षित रहेंगे।</string>
+    <string name="smart_companion_thinking">Study Saathi सोच रही है…</string>
+    <string name="smart_companion_profile_loading">Student profile तैयार हो रही है…</string>
+    <string name="smart_companion_new_chat">नई बातचीत शुरू करें</string>
+    <string name="smart_companion_no_previous_answer">पहले कोई सवाल पूछें, फिर यह विकल्प चुनें।</string>
+    <string name="smart_companion_restored">पिछली बातचीत वापस खोल दी गई है।</string>
+    <string name="smart_companion_answer_failed">अभी जवाब नहीं बन सका। Internet जाँचकर फिर कोशिश करें।</string>
+    <string name="smart_companion_photo_question">इस फोटो में दिया सवाल समझाकर हल करो।</string>
+    <string name="smart_companion_verified">✓ सत्यापित उत्तर</string>
+    <string name="smart_companion_ai_checked">✦ Smart AI • दोबारा जाँच उपयोगी हो सकती है</string>
 
     <string name="ask_study_saathi_subtitle">
         Ask a question from your selected chapter

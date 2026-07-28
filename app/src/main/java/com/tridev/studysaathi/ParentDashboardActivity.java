@@ -313,6 +313,15 @@ public class ParentDashboardActivity
         binding.buttonManageParentProfiles.setOnClickListener(view ->
                 openProfileManager()
         );
+
+        binding.buttonParentDoubtInsights.setOnClickListener(view ->
+                startActivity(
+                        new Intent(
+                                ParentDashboardActivity.this,
+                                DoubtHistoryActivity.class
+                        )
+                )
+        );
     }
 
     private void loadParentDashboard() {

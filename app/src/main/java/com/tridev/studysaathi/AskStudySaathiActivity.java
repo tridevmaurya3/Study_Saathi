@@ -612,6 +612,10 @@ public class AskStudySaathiActivity
                 false
         );
 
+        binding.buttonDoubtHistory.setVisibility(
+                View.GONE
+        );
+
         binding.buttonQuickExplain.setEnabled(
                 false
         );

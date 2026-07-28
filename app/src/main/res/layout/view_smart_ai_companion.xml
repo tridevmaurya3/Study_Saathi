@@ -12,7 +12,7 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardSmartAiCompanion"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="500dp"
         android:layout_marginBottom="8dp"
         android:visibility="gone"
         app:cardBackgroundColor="@color/ss_surface"
@@ -45,11 +45,116 @@
                 android:textColor="@color/ss_text_secondary"
                 android:textSize="12sp" />
 
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonSmartAiSimpler"
+                        style="@style/Widget.StudySaathi.Button.Outlined"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="40dp"
+                        android:text="@string/smart_companion_simpler"
+                        android:textAllCaps="false"
+                        android:textSize="11sp"
+                        app:backgroundTint="@color/ss_blue_soft"
+                        app:strokeColor="@color/ss_blue_border" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonSmartAiExample"
+                        style="@style/Widget.StudySaathi.Button.Outlined"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:minHeight="40dp"
+                        android:text="@string/smart_companion_example"
+                        android:textAllCaps="false"
+                        android:textSize="11sp"
+                        app:backgroundTint="@color/ss_green_soft"
+                        app:strokeColor="@color/ss_green_border" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonSmartAiVisual"
+                        style="@style/Widget.StudySaathi.Button.Outlined"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:minHeight="40dp"
+                        android:text="@string/smart_companion_visual"
+                        android:textAllCaps="false"
+                        android:textSize="11sp"
+                        app:backgroundTint="@color/ss_yellow_soft"
+                        app:strokeColor="@color/ss_yellow_border" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonSmartAiQuiz"
+                        style="@style/Widget.StudySaathi.Button.Outlined"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:minHeight="40dp"
+                        android:text="@string/smart_companion_quiz"
+                        android:textAllCaps="false"
+                        android:textSize="11sp"
+                        app:backgroundTint="@color/ss_purple_soft"
+                        app:strokeColor="@color/ss_purple_border" />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
+
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/scrollSmartAiConversation"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:background="@color/ss_surface_soft"
+                android:fillViewport="true"
+                android:padding="8dp">
+
+                <LinearLayout
+                    android:id="@+id/containerSmartAiConversation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textSmartAiWelcome"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:padding="18dp"
+                        android:text="@string/smart_companion_welcome"
+                        android:textColor="@color/ss_text_secondary"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+
+            </androidx.core.widget.NestedScrollView>
+
+            <TextView
+                android:id="@+id/textSmartAiStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:textColor="@color/ss_secondary"
+                android:textSize="11sp"
+                android:visibility="gone" />
+
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="6dp"
                 android:hint="@string/smart_companion_question_hint"
                 app:boxBackgroundColor="@color/ss_surface"
                 app:boxCornerRadiusBottomEnd="16dp"
@@ -116,6 +221,16 @@
                     android:textSize="12sp" />
 
             </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonSmartAiNewChat"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="34dp"
+                android:text="@string/smart_companion_new_chat"
+                android:textAllCaps="false"
+                android:textSize="11sp" />
 
         </LinearLayout>
 
