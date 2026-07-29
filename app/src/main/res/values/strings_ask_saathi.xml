@@ -26,6 +26,7 @@
     <string name="smart_companion_restored">पिछली बातचीत वापस खोल दी गई है।</string>
     <string name="smart_companion_answer_failed">अभी जवाब नहीं बन सका। Internet जाँचकर फिर कोशिश करें।</string>
     <string name="smart_companion_photo_question">इस फोटो में दिया सवाल समझाकर हल करो।</string>
+    <string name="smart_companion_photo_ready">Photo जुड़ गई। अब question number या केवल वह सवाल लिखें जिसका जवाब चाहिए।</string>
     <string name="smart_companion_verified">✓ सत्यापित उत्तर</string>
     <string name="smart_companion_ai_checked">✦ Smart AI • दोबारा जाँच उपयोगी हो सकती है</string>
     <string name="smart_companion_close">AI chat बंद करें</string>

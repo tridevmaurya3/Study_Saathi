@@ -1396,9 +1396,12 @@ public class AskStudySaathiActivity
             return;
         }
 
-        applyQuestionImageOcrText(
-                selection.getSelectedText()
-        );
+        /*
+         * Full-page OCR is retained only as private image context. It must
+         * never replace or append to the child's targeted typed question.
+         */
+        lastQuestionImageOcrText =
+                safeText(selection.getSelectedText());
 
         binding.textQuestionImageStatus.setText(
                 selection.createStatusMessage()
@@ -1409,14 +1412,12 @@ public class AskStudySaathiActivity
         );
 
         binding.inputQuestion.setHelperText(
-                selection.isManualReviewRequired()
-                        ? "OCR से आया सवाल ध्यान से जाँचें और गलत शब्द सुधारें।"
-                        : "सवाल पढ़ लिया गया है। Ask दबाने से पहले एक बार जाँचें।"
+                "अब केवल लक्ष्य लिखें, जैसे: सवाल नं. 3 हल करो। पूरा page text यहाँ नहीं जोड़ा जाएगा।"
         );
 
         Snackbar.make(
                 binding.getRoot(),
-                "फोटो से सवाल editable text में आ गया है।",
+                "Photo तैयार है। केवल जिस question का answer चाहिए वह लिखें।",
                 Snackbar.LENGTH_SHORT
         ).show();
     }
@@ -2296,41 +2297,8 @@ public class AskStudySaathiActivity
     private void applyQuestionImageOcrText(
             @NonNull String recognizedQuestion
     ) {
-        String safeRecognizedQuestion =
-                safeText(
-                        recognizedQuestion
-                );
-
-        if (safeRecognizedQuestion.isEmpty()) {
-            return;
-        }
-
-        String currentQuestion =
-                getCurrentQuestionText();
-
-        String finalQuestion;
-
-        if (currentQuestion.isEmpty()
-                || currentQuestion.equals(
-                lastQuestionImageOcrText
-        )) {
-
-            finalQuestion =
-                    safeRecognizedQuestion;
-
-        } else {
-            finalQuestion =
-                    currentQuestion
-                            + "\n"
-                            + safeRecognizedQuestion;
-        }
-
         lastQuestionImageOcrText =
-                safeRecognizedQuestion;
-
-        setQuestionText(
-                finalQuestion
-        );
+                safeText(recognizedQuestion);
     }
 
     private void removeSelectedQuestionImage() {
@@ -2371,14 +2339,14 @@ public class AskStudySaathiActivity
         );
 
         binding.textQuestionImageStatus.setText(
-                "फोटो चुनी गई है। App सवाल पढ़कर editable text में दिखाएगी।"
+                "फोटो चुनी गई है। केवल question number या लक्ष्य लिखें; पूरा page text copy नहीं होगा।"
         );
 
         updateQuestionImageButtonsEnabledState();
 
         Snackbar.make(
                 binding.getRoot(),
-                "Question photo हटा दी गई है। OCR text edit box में रखा गया है।",
+                "Question photo हटा दी गई है। आपका typed सवाल सुरक्षित है।",
                 Snackbar.LENGTH_SHORT
         ).show();
     }

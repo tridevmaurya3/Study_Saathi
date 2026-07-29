@@ -215,12 +215,7 @@ public final class SmartAiCompanionController {
     ) {
         CompanionSession session = SESSIONS.get(activity);
         if (session != null) {
-            session.submitQuestion(
-                    activity.getString(
-                            R.string.smart_companion_photo_question
-                    ),
-                    bitmap
-            );
+            session.attachCameraBitmap(bitmap);
         } else if (!bitmap.isRecycled()) {
             bitmap.recycle();
         }
@@ -266,6 +261,8 @@ public final class SmartAiCompanionController {
         private LessonContent approvedLessonContent;
         @Nullable
         private ObjectAnimator pulseAnimator;
+        @Nullable
+        private Bitmap pendingQuestionImage;
 
         @NonNull
         private final String subjectName;
@@ -342,11 +339,7 @@ public final class SmartAiCompanionController {
             aiButton.setOnClickListener(view -> toggleCard());
             dismissArea.setOnClickListener(view -> collapseCard());
             companion.findViewById(R.id.buttonSmartAiSend)
-                    .setOnClickListener(view ->
-                            submitQuestion(
-                                    safe(questionInput.getText()),
-                                    null
-                            ));
+                    .setOnClickListener(view -> submitComposerQuestion());
             TextInputLayout questionLayout = companion.findViewById(
                     R.id.layoutSmartAiQuestion
             );
@@ -527,6 +520,16 @@ public final class SmartAiCompanionController {
                 return;
             }
             submitQuestion(prompt, null);
+        }
+
+        private void submitComposerQuestion() {
+            String question = safe(questionInput.getText());
+            submitQuestion(
+                    question,
+                    question.isEmpty()
+                            ? null
+                            : takePendingQuestionImage()
+            );
         }
 
         private void submitQuestion(
@@ -804,12 +807,14 @@ public final class SmartAiCompanionController {
                                 return;
                             }
                             hideStatus();
-                            submitQuestion(
-                                    activity.getString(
-                                            R.string
-                                                    .smart_companion_photo_question
-                                    ),
-                                    bitmap
+                            recycle(pendingQuestionImage);
+                            pendingQuestionImage = bitmap;
+                            questionInput.requestFocus();
+                            questionInput.setHint(
+                                    "जैसे: सवाल नं. 3 का जवाब बताओ"
+                            );
+                            showTemporaryStatus(
+                                    R.string.smart_companion_photo_ready
                             );
                         }
 
@@ -824,6 +829,25 @@ public final class SmartAiCompanionController {
                         }
                     }
             );
+        }
+
+        private void attachCameraBitmap(@NonNull Bitmap bitmap) {
+            if (closed) {
+                recycle(bitmap);
+                return;
+            }
+            recycle(pendingQuestionImage);
+            pendingQuestionImage = bitmap;
+            questionInput.requestFocus();
+            questionInput.setHint("जैसे: सवाल नं. 3 का जवाब बताओ");
+            showTemporaryStatus(R.string.smart_companion_photo_ready);
+        }
+
+        @Nullable
+        private Bitmap takePendingQuestionImage() {
+            Bitmap image = pendingQuestionImage;
+            pendingQuestionImage = null;
+            return image;
         }
 
         private void startPulse() {
@@ -863,6 +887,8 @@ public final class SmartAiCompanionController {
         private void close() {
             closed = true;
             imageLoader.close();
+            recycle(pendingQuestionImage);
+            pendingQuestionImage = null;
             if (pulseAnimator != null) {
                 pulseAnimator.cancel();
             }

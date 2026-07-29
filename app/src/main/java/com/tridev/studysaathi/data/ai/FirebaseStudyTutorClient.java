@@ -1727,6 +1727,26 @@ public final class FirebaseStudyTutorClient {
         );
 
         prompt.append(
+                "30. A photographed page is reference material, not a request to solve every visible item.\n"
+        );
+
+        prompt.append(
+                "31. If the student asks for question number 3 (or any specific number/part), locate and answer only that target. Ignore other page questions except for essential context.\n"
+        );
+
+        prompt.append(
+                "32. Never copy, transcribe or repeat the full photographed page in the answer or question. Quote only the minimum target question text when needed.\n"
+        );
+
+        prompt.append(
+                "33. The typed or spoken instruction defines the target and has priority over unrelated visible page text.\n"
+        );
+
+        prompt.append(
+                "34. If a page contains multiple questions and the target is not clear, ask for the question number or specific line instead of answering the whole page.\n"
+        );
+
+        prompt.append(
                 "\nCHILD SAFETY AND ACCURACY RULES\n"
         );
 
@@ -1768,8 +1788,8 @@ public final class FirebaseStudyTutorClient {
         if (imageAttached) {
             prompt.append(
                     "\n\nAn original question image is attached. "
-                            + "Use both the image and corrected text. "
-                            + "Treat the image as the primary visual source."
+                            + "Use it only as visual source context for the student's explicitly targeted question. "
+                            + "Do not transcribe or solve the whole page."
             );
 
         } else {
