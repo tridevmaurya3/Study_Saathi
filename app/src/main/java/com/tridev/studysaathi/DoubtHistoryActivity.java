@@ -6,6 +6,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -56,6 +57,9 @@ public class DoubtHistoryActivity
     private boolean historyOperationInProgress;
 
     private boolean filterListenersReady;
+    private final List<StudentProfileEntity> availableProfiles =
+            new ArrayList<>();
+    private boolean selectingStudent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +86,86 @@ public class DoubtHistoryActivity
     protected void onResume() {
         super.onResume();
 
-        loadDoubtHistory();
+        loadStudentChoices();
+    }
+
+    private void loadStudentChoices() {
+        studentProfileRepository.getAllProfiles(
+                new StudentProfileRepository.ProfilesCallback() {
+                    @Override
+                    public void onSuccess(
+                            @NonNull List<StudentProfileEntity> profiles
+                    ) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        availableProfiles.clear();
+                        availableProfiles.addAll(profiles);
+                        List<String> labels = new ArrayList<>();
+                        int activePosition = 0;
+                        for (int index = 0; index < profiles.size(); index++) {
+                            StudentProfileEntity profile = profiles.get(index);
+                            labels.add(profile.getStudentName()
+                                    + " • " + profile.getStudentClass());
+                            if (profile.isActive()) {
+                                activePosition = index;
+                            }
+                        }
+                        selectingStudent = true;
+                        binding.spinnerHistoryStudent.setAdapter(
+                                new ArrayAdapter<>(
+                                        DoubtHistoryActivity.this,
+                                        android.R.layout.simple_spinner_dropdown_item,
+                                        labels));
+                        binding.spinnerHistoryStudent.setSelection(
+                                activePosition,
+                                false);
+                        selectingStudent = false;
+                        binding.spinnerHistoryStudent.setOnItemSelectedListener(
+                                new AdapterView.OnItemSelectedListener() {
+                                    @Override
+                                    public void onItemSelected(
+                                            AdapterView<?> parent,
+                                            View view,
+                                            int position,
+                                            long id
+                                    ) {
+                                        if (!selectingStudent
+                                                && position >= 0
+                                                && position < availableProfiles.size()) {
+                                            loadSelectedStudentHistory(
+                                                    availableProfiles.get(position));
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onNothingSelected(AdapterView<?> parent) {
+                                    }
+                                });
+                        if (!profiles.isEmpty()) {
+                            loadSelectedStudentHistory(
+                                    profiles.get(activePosition));
+                        } else {
+                            showLoadingState(false);
+                            showNoProfileState();
+                        }
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        showLoadingState(false);
+                        showNoProfileState();
+                    }
+                });
+    }
+
+    private void loadSelectedStudentHistory(
+            @NonNull StudentProfileEntity profile
+    ) {
+        activeProfileId = profile.getProfileId();
+        activeStudentName = profile.getStudentName();
+        showStudentInformation(profile);
+        loadProfileHistory(profile.getProfileId());
     }
 
     private void setupRecyclerView() {

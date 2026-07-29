@@ -92,7 +92,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-rounded"
-                        android:text="@string/parent_family_summary"
+                        android:text="Selected Student Summary"
                         android:textColor="@color/ss_text_primary"
                         android:textSize="19sp"
                         android:textStyle="bold" />
@@ -154,7 +154,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
                                 android:gravity="center"
-                                android:text="@string/parent_profiles_with_activity"
+                                android:text="Active Today"
                                 android:textColor="@color/ss_text_secondary"
                                 android:textSize="11sp" />
 
@@ -182,7 +182,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
                                 android:gravity="center"
-                                android:text="@string/parent_total_lessons"
+                                android:text="Student Lessons"
                                 android:textColor="@color/ss_text_secondary"
                                 android:textSize="11sp" />
 
@@ -210,7 +210,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
                                 android:gravity="center"
-                                android:text="@string/parent_average_best_score"
+                                android:text="Student Best Score"
                                 android:textColor="@color/ss_text_secondary"
                                 android:textSize="11sp" />
 

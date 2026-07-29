@@ -15,6 +15,8 @@ import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.repository.LessonProgressRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
+import com.tridev.studysaathi.data.repository.SchoolCurriculumProfileRepository;
+import com.tridev.studysaathi.data.local.entity.SchoolCurriculumProfileEntity;
 import com.tridev.studysaathi.databinding.ActivityDashboardBinding;
 import com.tridev.studysaathi.databinding.BottomSheetStudyToolsBinding;
 import com.tridev.studysaathi.model.ChapterItem;
@@ -32,6 +34,7 @@ public class DashboardActivity extends AppCompatActivity {
     private ActivityDashboardBinding binding;
 
     private StudentProfileRepository studentProfileRepository;
+    private SchoolCurriculumProfileRepository curriculumProfileRepository;
     private LessonProgressRepository lessonProgressRepository;
 
     private StudentProfileEntity activeStudentProfile;
@@ -56,6 +59,8 @@ public class DashboardActivity extends AppCompatActivity {
 
         studentProfileRepository =
                 new StudentProfileRepository(this);
+        curriculumProfileRepository =
+                new SchoolCurriculumProfileRepository(this);
 
         lessonProgressRepository =
                 new LessonProgressRepository(this);
@@ -389,7 +394,61 @@ public class DashboardActivity extends AppCompatActivity {
         binding.profileDrawerPanel.textDrawerProfileDetails
                 .setText(profileDetails);
 
+        loadStudentSchoolDetails(studentProfile.getProfileId());
         showProgressLoadingState();
+    }
+
+    private void loadStudentSchoolDetails(long profileId) {
+        curriculumProfileRepository.getCurriculumProfile(
+                profileId,
+                new SchoolCurriculumProfileRepository.SingleProfileCallback() {
+                    @Override
+                    public void onSuccess(
+                            SchoolCurriculumProfileEntity profile
+                    ) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        if (profile == null
+                                || profile.getSchoolName().trim().isEmpty()
+                                || "School details pending".equalsIgnoreCase(
+                                profile.getSchoolName().trim())) {
+                            binding.textStudentSchoolDetails.setVisibility(
+                                    View.GONE
+                            );
+                            return;
+                        }
+                        String details = "🏫 " + profile.getSchoolName();
+                        if (!profile.getSchoolCode().trim().isEmpty()) {
+                            details += " • Code " + profile.getSchoolCode();
+                        }
+                        if (!profile.getSection().trim().isEmpty()) {
+                            details += " • Section " + profile.getSection();
+                        }
+                        binding.textStudentSchoolDetails.setText(details);
+                        binding.textStudentSchoolDetails.setVisibility(
+                                View.VISIBLE
+                        );
+                        binding.profileDrawerPanel.textDrawerProfileDetails
+                                .setText(
+                                        binding.profileDrawerPanel
+                                                .textDrawerProfileDetails
+                                                .getText()
+                                                + "\n"
+                                                + details
+                                );
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        if (!isFinishing() && !isDestroyed()) {
+                            binding.textStudentSchoolDetails.setVisibility(
+                                    View.GONE
+                            );
+                        }
+                    }
+                }
+        );
     }
 
     private void loadDashboardProgress(

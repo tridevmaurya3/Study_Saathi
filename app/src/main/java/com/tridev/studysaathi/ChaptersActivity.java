@@ -320,8 +320,8 @@ public class ChaptersActivity
                                 false;
 
                         if (!result.isAvailable()) {
-                            showSuggestedChapterFallback(
-                                    result.getUnavailableMessage()
+                            showExactChapterUnavailableState(
+                                    result
                             );
 
                             return;
@@ -347,12 +347,16 @@ public class ChaptersActivity
                         exactChaptersLoading =
                                 false;
 
-                        showSuggestedChapterFallback(
+                        showEmptyState();
+
+                        Snackbar.make(
+                                binding.getRoot(),
                                 getErrorMessage(
                                         exception,
-                                        "Book contents unavailable."
-                                )
-                        );
+                                        "Parent-approved chapters could not be loaded."
+                                ),
+                                Snackbar.LENGTH_LONG
+                        ).show();
                     }
                 }
         );
@@ -404,32 +408,6 @@ public class ChaptersActivity
                     Snackbar.LENGTH_LONG
             ).show();
         }
-    }
-
-    private void showSuggestedChapterFallback(
-            @Nullable String reason
-    ) {
-        genericChapterAdapter =
-                new ChapterAdapter(
-                        new ArrayList<>(),
-                        this::handleGenericChapterSelection
-                );
-
-        binding.recyclerChapters.setAdapter(
-                genericChapterAdapter
-        );
-
-        prepareGenericChapterCatalog();
-
-        String message =
-                safeText(reason);
-        Snackbar.make(
-                binding.getRoot(),
-                message.isEmpty()
-                        ? "Editable class-wise starter contents shown."
-                        : message + " Class-wise starter contents shown.",
-                Snackbar.LENGTH_LONG
-        ).show();
     }
 
     private void showExactChapterList(

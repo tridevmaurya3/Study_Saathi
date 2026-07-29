@@ -114,6 +114,42 @@ public final class StudyReminderScheduler {
 
     public static void saveSettings(
             @NonNull Context context,
+            long profileId,
+            boolean enabled,
+            int hour,
+            int minute,
+            int daysMask
+    ) {
+        getPreferences(context).edit()
+                .putBoolean(profileKey(KEY_REMINDER_ENABLED, profileId), enabled)
+                .putInt(profileKey(KEY_REMINDER_HOUR, profileId), sanitizeHour(hour))
+                .putInt(profileKey(KEY_REMINDER_MINUTE, profileId), sanitizeMinute(minute))
+                .putInt(profileKey(KEY_REMINDER_DAYS_MASK, profileId), sanitizeDaysMask(daysMask))
+                .apply();
+    }
+
+    public static boolean isReminderEnabled(@NonNull Context context, long profileId) {
+        return getPreferences(context).getBoolean(
+                profileKey(KEY_REMINDER_ENABLED, profileId), false);
+    }
+
+    public static int getReminderHour(@NonNull Context context, long profileId) {
+        return sanitizeHour(getPreferences(context).getInt(
+                profileKey(KEY_REMINDER_HOUR, profileId), DEFAULT_REMINDER_HOUR));
+    }
+
+    public static int getReminderMinute(@NonNull Context context, long profileId) {
+        return sanitizeMinute(getPreferences(context).getInt(
+                profileKey(KEY_REMINDER_MINUTE, profileId), DEFAULT_REMINDER_MINUTE));
+    }
+
+    public static int getReminderDaysMask(@NonNull Context context, long profileId) {
+        return sanitizeDaysMask(getPreferences(context).getInt(
+                profileKey(KEY_REMINDER_DAYS_MASK, profileId), ALL_DAYS_MASK));
+    }
+
+    public static void saveSettings(
+            @NonNull Context context,
             boolean enabled,
             int hour,
             int minute
@@ -246,6 +282,37 @@ public final class StudyReminderScheduler {
 
     public static void scheduleReminder(
             @NonNull Context context,
+            long profileId,
+            int hour,
+            int minute,
+            int daysMask
+    ) {
+        Context applicationContext = context.getApplicationContext();
+        int safeDaysMask = sanitizeDaysMask(daysMask);
+        Data data = new Data.Builder()
+                .putBoolean(KEY_IS_TEST_REMINDER, false)
+                .putBoolean(KEY_IS_SNOOZED_REMINDER, false)
+                .putInt(KEY_REMINDER_DAYS_MASK, safeDaysMask)
+                .putLong("student_profile_id", profileId)
+                .build();
+        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(
+                StudyReminderWorker.class, 24, TimeUnit.HOURS)
+                .setInitialDelay(
+                        calculateInitialDelayMillis(
+                                sanitizeHour(hour),
+                                sanitizeMinute(minute)),
+                        TimeUnit.MILLISECONDS)
+                .setInputData(data)
+                .build();
+        WorkManager.getInstance(applicationContext)
+                .enqueueUniquePeriodicWork(
+                        periodicWorkName(profileId),
+                        ExistingPeriodicWorkPolicy.UPDATE,
+                        request);
+    }
+
+    public static void scheduleReminder(
+            @NonNull Context context,
             int hour,
             int minute
     ) {
@@ -348,6 +415,24 @@ public final class StudyReminderScheduler {
         workManager.cancelUniqueWork(
                 UNIQUE_SNOOZED_WORK_NAME
         );
+    }
+
+    public static void cancelReminder(
+            @NonNull Context context,
+            long profileId
+    ) {
+        WorkManager.getInstance(context.getApplicationContext())
+                .cancelUniqueWork(periodicWorkName(profileId));
+    }
+
+    @NonNull
+    private static String profileKey(@NonNull String key, long profileId) {
+        return key + "_profile_" + Math.max(0L, profileId);
+    }
+
+    @NonNull
+    private static String periodicWorkName(long profileId) {
+        return UNIQUE_PERIODIC_WORK_NAME + "_profile_" + Math.max(0L, profileId);
     }
 
     public static int sanitizeDaysMask(

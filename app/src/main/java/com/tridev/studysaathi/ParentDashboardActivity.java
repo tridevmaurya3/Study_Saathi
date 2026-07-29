@@ -986,21 +986,24 @@ public class ParentDashboardActivity
         int totalBestScores = 0;
         int profilesWithQuizScores = 0;
 
-        for (ParentProfileSummary summary
-                : loadedSummaries) {
-
-            if (summary.getLastActivityAt() > 0L) {
-                profilesWithActivity++;
+        ParentProfileSummary selectedStudent = null;
+        for (ParentProfileSummary summary : loadedSummaries) {
+            if (summary.isActiveProfile()) {
+                selectedStudent = summary;
+                break;
             }
-
-            totalCompletedLessons +=
-                    summary.getCompletedLessons();
-
-            if (summary.hasQuizData()) {
-                totalBestScores +=
-                        summary.getBestQuizScore();
-
-                profilesWithQuizScores++;
+        }
+        if (selectedStudent == null && !loadedSummaries.isEmpty()) {
+            selectedStudent = loadedSummaries.get(0);
+        }
+        if (selectedStudent != null) {
+            profilesWithActivity =
+                    selectedStudent.getLastActivityAt() > 0L ? 1 : 0;
+            totalCompletedLessons =
+                    selectedStudent.getCompletedLessons();
+            if (selectedStudent.hasQuizData()) {
+                totalBestScores = selectedStudent.getBestQuizScore();
+                profilesWithQuizScores = 1;
             }
         }
 

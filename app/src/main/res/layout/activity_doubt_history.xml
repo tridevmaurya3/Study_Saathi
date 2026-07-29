@@ -53,14 +53,23 @@
                     android:text="@string/doubt_history_title"
                     android:textSize="24sp" />
 
-                <TextView
-                    android:id="@+id/textHistoryStudent"
+                    <TextView
+                        android:id="@+id/textHistoryStudent"
                     style="@style/TextAppearance.StudySaathi.Body"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
                     android:text="@string/doubt_history_subtitle"
-                    android:textSize="13sp" />
+                        android:textSize="13sp" />
+
+                    <Spinner
+                        android:id="@+id/spinnerHistoryStudent"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="8dp"
+                        android:contentDescription="Select student"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp" />
 
             </LinearLayout>
 

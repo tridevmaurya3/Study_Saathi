@@ -170,6 +170,17 @@
                             android:textSize="14sp" />
 
                         <TextView
+                            android:id="@+id/textStudentSchoolDetails"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="School details pending"
+                            android:textColor="@color/ss_secondary"
+                            android:textSize="13sp"
+                            android:visibility="gone" />
+
+                        <TextView
                             android:id="@+id/textExplanationLanguage"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"

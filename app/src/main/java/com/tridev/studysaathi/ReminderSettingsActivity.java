@@ -5,6 +5,9 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.format.DateFormat;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -18,6 +21,8 @@ import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.tridev.studysaathi.databinding.ActivityReminderSettingsBinding;
 import com.tridev.studysaathi.reminder.StudyReminderScheduler;
+import com.tridev.studysaathi.data.repository.StudentProfileRepository;
+import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -53,6 +58,10 @@ public class ReminderSettingsActivity
 
     private PendingPermissionAction pendingPermissionAction =
             PendingPermissionAction.NONE;
+    private long activeProfileId = -1L;
+    private StudentProfileRepository studentProfileRepository;
+    private final List<StudentProfileEntity> availableProfiles =
+            new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,9 +77,90 @@ public class ReminderSettingsActivity
         registerNotificationPermissionLauncher();
         setupClickListeners();
         setupDaySelectionListener();
-        loadSavedSettings();
-        updateScreen();
-        showSavedReminderStatus();
+        studentProfileRepository = new StudentProfileRepository(this);
+        loadActiveStudentReminder();
+    }
+
+    private void loadActiveStudentReminder() {
+        studentProfileRepository.getAllProfiles(
+                new StudentProfileRepository.ProfilesCallback() {
+                    @Override
+                    public void onSuccess(
+                            @NonNull List<StudentProfileEntity> profiles
+                    ) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        if (profiles.isEmpty()) {
+                            binding.textReminderStudent.setText(
+                                    "पहले Student Profile चुनें");
+                            binding.buttonSaveReminder.setEnabled(false);
+                            binding.buttonTestReminder.setEnabled(false);
+                            return;
+                        }
+                        availableProfiles.clear();
+                        availableProfiles.addAll(profiles);
+                        List<String> labels = new ArrayList<>();
+                        int activePosition = 0;
+                        for (int index = 0; index < profiles.size(); index++) {
+                            StudentProfileEntity profile = profiles.get(index);
+                            labels.add(profile.getStudentName()
+                                    + " • " + profile.getStudentClass());
+                            if (profile.isActive()) {
+                                activePosition = index;
+                            }
+                        }
+                        binding.spinnerReminderStudent.setAdapter(
+                                new ArrayAdapter<>(
+                                        ReminderSettingsActivity.this,
+                                        android.R.layout.simple_spinner_dropdown_item,
+                                        labels));
+                        binding.spinnerReminderStudent.setSelection(
+                                activePosition,
+                                false);
+                        binding.spinnerReminderStudent.setOnItemSelectedListener(
+                                new AdapterView.OnItemSelectedListener() {
+                                    @Override
+                                    public void onItemSelected(
+                                            AdapterView<?> parent,
+                                            View view,
+                                            int position,
+                                            long id
+                                    ) {
+                                        if (position >= 0
+                                                && position < availableProfiles.size()) {
+                                            showReminderForStudent(
+                                                    availableProfiles.get(position));
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onNothingSelected(AdapterView<?> parent) {
+                                    }
+                                });
+                        showReminderForStudent(profiles.get(activePosition));
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        if (!isFinishing() && !isDestroyed()) {
+                            binding.textReminderStudent.setText(
+                                    "Student reminder load नहीं हो सका");
+                        }
+                    }
+                });
+    }
+
+    private void showReminderForStudent(
+            @NonNull StudentProfileEntity profile
+    ) {
+                        activeProfileId = profile.getProfileId();
+                        binding.textReminderStudent.setText(
+                                "Reminder for: " + profile.getStudentName()
+                                        + " • " + profile.getStudentClass());
+                        loadSavedSettings();
+                        updateScreen();
+                        showSavedReminderStatus();
     }
 
     private void registerNotificationPermissionLauncher() {
@@ -146,19 +236,19 @@ public class ReminderSettingsActivity
     private void loadSavedSettings() {
         reminderEnabled =
                 StudyReminderScheduler
-                        .isReminderEnabled(this);
+                        .isReminderEnabled(this, activeProfileId);
 
         selectedHour =
                 StudyReminderScheduler
-                        .getReminderHour(this);
+                        .getReminderHour(this, activeProfileId);
 
         selectedMinute =
                 StudyReminderScheduler
-                        .getReminderMinute(this);
+                        .getReminderMinute(this, activeProfileId);
 
         selectedDaysMask =
                 StudyReminderScheduler
-                        .getReminderDaysMask(this);
+                        .getReminderDaysMask(this, activeProfileId);
 
         updatingReminderSwitch = true;
 
@@ -437,6 +527,7 @@ public class ReminderSettingsActivity
 
         StudyReminderScheduler.saveSettings(
                 this,
+                activeProfileId,
                 reminderEnabled,
                 selectedHour,
                 selectedMinute,
@@ -448,6 +539,7 @@ public class ReminderSettingsActivity
 
             StudyReminderScheduler.scheduleReminder(
                     this,
+                    activeProfileId,
                     selectedHour,
                     selectedMinute,
                     selectedDaysMask
@@ -468,7 +560,8 @@ public class ReminderSettingsActivity
 
         } else {
             StudyReminderScheduler.cancelReminder(
-                    this
+                    this,
+                    activeProfileId
             );
 
             updateScreen();
