@@ -60,7 +60,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
-                    android:text="CBSE • Class 6 • Subject"
+                    android:text="Curriculum • Class • Subject"
                     android:textSize="13sp" />
 
             </LinearLayout>
@@ -180,10 +180,10 @@
                     android:insetRight="0dp"
                     android:insetBottom="0dp"
                     android:minWidth="0dp"
-                    android:text="A−"
+                    android:text="−"
                     android:textAllCaps="false"
                     android:textColor="@color/ss_primary"
-                    android:textSize="15sp"
+                    android:textSize="25sp"
                     app:cornerRadius="14dp"
                     app:strokeColor="@color/ss_outline" />
 
@@ -207,10 +207,10 @@
                     android:insetRight="0dp"
                     android:insetBottom="0dp"
                     android:minWidth="0dp"
-                    android:text="A+"
+                    android:text="+"
                     android:textAllCaps="false"
                     android:textColor="@color/ss_primary"
-                    android:textSize="15sp"
+                    android:textSize="25sp"
                     app:cornerRadius="14dp"
                     app:strokeColor="@color/ss_outline" />
 

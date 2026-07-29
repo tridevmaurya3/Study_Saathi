@@ -147,6 +147,27 @@ public class LessonActivity extends AppCompatActivity {
                 );
 
         readScreenArguments();
+
+        if (subjectName.isEmpty()
+                || chapterTitle.isEmpty()) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    "Verified subject और chapter उपलब्ध नहीं है। Parent से curriculum confirm कराएँ।",
+                    Snackbar.LENGTH_LONG
+            ).addCallback(
+                    new Snackbar.Callback() {
+                        @Override
+                        public void onDismissed(
+                                Snackbar transientBottomBar,
+                                int event
+                        ) {
+                            finish();
+                        }
+                    }
+            ).show();
+            return;
+        }
+
         loadLessonContent();
         loadSavedReadingSize();
 
@@ -312,27 +333,27 @@ public class LessonActivity extends AppCompatActivity {
     private void readScreenArguments() {
         subjectName = getSafeExtra(
                 EXTRA_SUBJECT_NAME,
-                "Subject"
+                ""
         );
 
         chapterTitle = getSafeExtra(
                 EXTRA_CHAPTER_TITLE,
-                "Chapter"
+                ""
         );
 
         chapterDescription = getSafeExtra(
                 EXTRA_CHAPTER_DESCRIPTION,
-                "Chapter introduction"
+                ""
         );
 
         studentClass = getSafeExtra(
                 EXTRA_STUDENT_CLASS,
-                "Class 6"
+                ""
         );
 
         educationBoard = getSafeExtra(
                 EXTRA_EDUCATION_BOARD,
-                "CBSE"
+                ""
         );
 
         revisionMode = getIntent().getBooleanExtra(
@@ -759,16 +780,45 @@ public class LessonActivity extends AppCompatActivity {
         );
 
         binding.textLessonCurriculum.setText(
-                educationBoard
-                        + "  â€¢  "
-                        + studentClass
-                        + "  â€¢  "
-                        + subjectName
+                joinCurriculumDetails(
+                        educationBoard,
+                        studentClass,
+                        subjectName
+                )
         );
 
         binding.textLessonTitle.setText(
                 lessonContent.getLessonTitle()
         );
+    }
+
+    @NonNull
+    private String joinCurriculumDetails(
+            String board,
+            String classValue,
+            String subject
+    ) {
+        StringBuilder details = new StringBuilder();
+        appendCurriculumPart(details, board);
+        appendCurriculumPart(details, classValue);
+        appendCurriculumPart(details, subject);
+        return details.length() == 0
+                ? "Verified lesson"
+                : details.toString();
+    }
+
+    private void appendCurriculumPart(
+            @NonNull StringBuilder details,
+            String value
+    ) {
+        String safeValue = value == null ? "" : value.trim();
+        if (safeValue.isEmpty()) {
+            return;
+        }
+        if (details.length() > 0) {
+            details.append("  •  ");
+        }
+        details.append(safeValue);
     }
 
     private void showLessonContent() {
@@ -897,6 +947,18 @@ public class LessonActivity extends AppCompatActivity {
 
                         activeStudentName =
                                 studentProfile.getStudentName();
+
+                        if (studentClass.isEmpty()) {
+                            studentClass =
+                                    studentProfile.getStudentClass();
+                        }
+
+                        if (educationBoard.isEmpty()) {
+                            educationBoard =
+                                    studentProfile.getEducationBoard();
+                        }
+
+                        showLessonHeader();
 
                         loadCurrentBookmarkState();
                         loadExistingLessonProgress();
