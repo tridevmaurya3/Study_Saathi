@@ -11,12 +11,23 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.activity.OnBackPressedCallback;
+import androidx.core.content.ContextCompat;
+import androidx.credentials.Credential;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.CustomCredential;
+import androidx.credentials.exceptions.GetCredentialException;
 
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -61,6 +72,7 @@ public class CloudAccountActivity
 
     private FirebaseAuth firebaseAuth;
     private FirebaseFirestore firestore;
+    private CredentialManager credentialManager;
 
     private CloudBackupUploader cloudBackupUploader;
 
@@ -118,6 +130,8 @@ public class CloudAccountActivity
 
         firebaseAuth =
                 FirebaseAuth.getInstance();
+        credentialManager =
+                CredentialManager.create(this);
 
         firestore =
                 FirebaseFirestore.getInstance();
@@ -248,6 +262,10 @@ public class CloudAccountActivity
                 .setOnClickListener(view ->
                         loadCloudBackupMetadataIfAvailable()
                 );
+
+        binding.buttonGoogleAccount.setOnClickListener(view ->
+                startGoogleAccountFlow()
+        );
 
         binding.buttonDeleteCloudBackup.setOnClickListener(view ->
                 requestCloudBackupDeletion()
@@ -519,6 +537,169 @@ public class CloudAccountActivity
                             displayName
                     );
                 });
+    }
+
+    private void startGoogleAccountFlow() {
+        if (operationInProgress || cloudBackupOperationInProgress) {
+            return;
+        }
+        int clientIdResource = getResources().getIdentifier(
+                "default_web_client_id",
+                "string",
+                getPackageName()
+        );
+        if (clientIdResource == 0) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    "Google sign-in setup pending: Firebase Console में Google provider, SHA-1/SHA-256 और updated google-services.json जोड़ें।",
+                    Snackbar.LENGTH_INDEFINITE
+            ).show();
+            return;
+        }
+        String serverClientId = getString(clientIdResource).trim();
+        if (serverClientId.isEmpty()) {
+            Snackbar.make(
+                    binding.getRoot(),
+                    "Google OAuth web client ID उपलब्ध नहीं है।",
+                    Snackbar.LENGTH_LONG
+            ).show();
+            return;
+        }
+
+        showOperationState(true, R.string.cloud_signing_in);
+        GetSignInWithGoogleOption googleOption =
+                new GetSignInWithGoogleOption.Builder(serverClientId)
+                        .build();
+        GetCredentialRequest request =
+                new GetCredentialRequest.Builder()
+                        .addCredentialOption(googleOption)
+                        .build();
+
+        credentialManager.getCredentialAsync(
+                this,
+                request,
+                null,
+                ContextCompat.getMainExecutor(this),
+                new androidx.credentials.CredentialManagerCallback<
+                        GetCredentialResponse,
+                        GetCredentialException>() {
+                    @Override
+                    public void onResult(GetCredentialResponse response) {
+                        handleGoogleCredential(response.getCredential());
+                    }
+
+                    @Override
+                    public void onError(@NonNull GetCredentialException error) {
+                        showOperationState(
+                                false,
+                                formMode == AccountFormMode.CREATE_ACCOUNT
+                                        ? R.string.cloud_create_account_action
+                                        : R.string.cloud_sign_in_action
+                        );
+                        Snackbar.make(
+                                binding.getRoot(),
+                                "Google account चयन पूरा नहीं हुआ। दोबारा कोशिश करें।",
+                                Snackbar.LENGTH_LONG
+                        ).show();
+                    }
+                }
+        );
+    }
+
+    private void handleGoogleCredential(@NonNull Credential credential) {
+        if (!(credential instanceof CustomCredential)
+                || !GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                .equals(credential.getType())) {
+            showOperationState(false, R.string.cloud_sign_in_action);
+            showMessage(R.string.cloud_account_creation_failed);
+            return;
+        }
+        try {
+            CustomCredential customCredential =
+                    (CustomCredential) credential;
+            GoogleIdTokenCredential googleCredential =
+                    GoogleIdTokenCredential.createFrom(
+                            customCredential.getData()
+                    );
+            AuthCredential firebaseCredential =
+                    GoogleAuthProvider.getCredential(
+                            googleCredential.getIdToken(),
+                            null
+                    );
+            firebaseAuth.signInWithCredential(firebaseCredential)
+                    .addOnCompleteListener(this, task -> {
+                        if (!task.isSuccessful()
+                                || task.getResult() == null
+                                || task.getResult().getUser() == null) {
+                            showOperationState(false, R.string.cloud_sign_in_action);
+                            showFirebaseError(
+                                    task.getException(),
+                                    R.string.cloud_sign_in_failed
+                            );
+                            return;
+                        }
+                        FirebaseUser user = task.getResult().getUser();
+                        boolean newAccount =
+                                task.getResult().getAdditionalUserInfo() != null
+                                        && task.getResult()
+                                        .getAdditionalUserInfo()
+                                        .isNewUser();
+                        String displayName = getSafeDisplayName(user);
+                        if (newAccount) {
+                            prepareCleanGoogleAccount(
+                                    user,
+                                    displayName
+                            );
+                        } else {
+                            saveCloudUserDocument(
+                                    user,
+                                    displayName,
+                                    false,
+                                    false
+                            );
+                        }
+                    });
+        } catch (RuntimeException exception) {
+            showOperationState(false, R.string.cloud_sign_in_action);
+            Snackbar.make(
+                    binding.getRoot(),
+                    "Google credential सुरक्षित रूप से पढ़ा नहीं जा सका।",
+                    Snackbar.LENGTH_LONG
+            ).show();
+        }
+    }
+
+    private void prepareCleanGoogleAccount(
+            @NonNull FirebaseUser user,
+            @NonNull String displayName
+    ) {
+        new LocalAccountDataRepository(this).permanentlyDeleteAll(
+                new LocalAccountDataRepository.Callback() {
+                    @Override
+                    public void onSuccess() {
+                        saveCloudUserDocument(
+                                user,
+                                displayName,
+                                true,
+                                false
+                        );
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        firebaseAuth.signOut();
+                        showOperationState(
+                                false,
+                                R.string.cloud_create_account_action
+                        );
+                        Snackbar.make(
+                                binding.getRoot(),
+                                "पुराना device data साफ नहीं हुआ, इसलिए नया Google account शुरू नहीं किया गया।",
+                                Snackbar.LENGTH_INDEFINITE
+                        ).show();
+                    }
+                }
+        );
     }
 
     private void prepareCleanDeviceForNewAccount(
@@ -2138,6 +2319,10 @@ public class CloudAccountActivity
         );
 
         binding.buttonCloudForgotPassword.setEnabled(
+                !inProgress
+        );
+
+        binding.buttonGoogleAccount.setEnabled(
                 !inProgress
         );
 

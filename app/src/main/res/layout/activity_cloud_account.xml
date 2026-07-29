@@ -276,6 +276,38 @@
                         android:textAllCaps="false"
                         android:textColor="@color/ss_primary" />
 
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center"
+                        android:text="────────  OR  ────────"
+                        android:textColor="@color/ss_text_muted"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonGoogleAccount"
+                        style="@style/Widget.StudySaathi.Button.Outlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="10dp"
+                        android:text="G   Continue with Google"
+                        android:textAllCaps="false"
+                        android:textColor="@color/ss_text_primary"
+                        android:textSize="15sp"
+                        app:backgroundTint="@color/ss_surface"
+                        app:strokeColor="@color/ss_outline_strong" />
+
+                    <TextView
+                        android:id="@+id/textAccountMethodsInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="9dp"
+                        android:gravity="center"
+                        android:text="Available securely: Google Account or verified Email &amp; Password"
+                        android:textColor="@color/ss_text_muted"
+                        android:textSize="11sp" />
+
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
