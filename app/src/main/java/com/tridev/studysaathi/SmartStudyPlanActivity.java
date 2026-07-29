@@ -23,6 +23,7 @@ import com.tridev.studysaathi.data.repository.SchoolSubjectRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 import com.tridev.studysaathi.databinding.ActivitySmartStudyPlanBinding;
 import com.tridev.studysaathi.model.StudyRecommendation;
+import com.tridev.studysaathi.navigation.ExactSchoolBookLessonContract;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -65,6 +66,8 @@ public class SmartStudyPlanActivity
 
     private StudyRecommendation currentRecommendation =
             StudyRecommendation.empty();
+
+    private long currentApprovedChapterRowId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -407,6 +410,9 @@ public class SmartStudyPlanActivity
                                         calculatedRecommendation
                                 );
 
+                        currentApprovedChapterRowId =
+                                approvedChapter.getChapterRowId();
+
                         showRecommendation(currentRecommendation);
                     }
 
@@ -725,6 +731,7 @@ public class SmartStudyPlanActivity
     private void showNoRecommendationState() {
         currentRecommendation =
                 StudyRecommendation.empty();
+        currentApprovedChapterRowId = 0L;
 
         binding.cardRecommendation.setVisibility(
                 View.GONE
@@ -738,7 +745,8 @@ public class SmartStudyPlanActivity
     private void openRecommendedLesson() {
         if (activeStudentProfile == null
                 || !currentRecommendation
-                .hasRecommendation()) {
+                .hasRecommendation()
+                || currentApprovedChapterRowId <= 0L) {
 
             Snackbar.make(
                     binding.getRoot(),
@@ -778,6 +786,11 @@ public class SmartStudyPlanActivity
         lessonIntent.putExtra(
                 LessonActivity.EXTRA_EDUCATION_BOARD,
                 activeStudentProfile.getEducationBoard()
+        );
+
+        ExactSchoolBookLessonContract.putExactChapterRowId(
+                lessonIntent,
+                currentApprovedChapterRowId
         );
 
         startActivity(lessonIntent);

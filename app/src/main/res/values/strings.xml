@@ -116,5 +116,8 @@
 
     <string name="decrease_reading_font">Decrease reading font size</string>
     <string name="increase_reading_font">Increase reading font size</string>
+    <string name="lesson_approved_content_loading">Loading parent-approved lesson content…</string>
+    <string name="lesson_approved_content_missing_en">Approved lesson content has not been added for this chapter yet. Ask a parent to add or scan the chapter content and approve it.</string>
+    <string name="lesson_approved_content_missing_hi">इस अध्याय के लिए approved lesson content अभी जोड़ा नहीं गया है। Parent से chapter content जोड़ने या scan करके approve करने के लिए कहें।</string>
 
 </resources>

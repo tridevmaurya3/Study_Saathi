@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.util.TypedValue;
+import android.view.View;
 
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
@@ -13,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
-import com.tridev.studysaathi.data.catalog.LessonCatalog;
 import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
 import com.tridev.studysaathi.data.local.entity
         .SchoolBookChapterContentEntity;
@@ -175,6 +175,7 @@ public class LessonActivity extends AppCompatActivity {
         setupLanguageToggle();
         showLessonHeader();
         showLessonContent();
+        showApprovedContentLoadingState();
         applyReadingTextSize();
         showBookmarkLoadingState();
 
@@ -231,10 +232,10 @@ public class LessonActivity extends AppCompatActivity {
                                 } catch (RuntimeException exception) {
                                     Snackbar.make(
                                             binding.getRoot(),
-                                            "Kinder page reader could "
+                                            "Approved chapter pages could "
                                                     + "not be opened. "
-                                                    + "Showing the standard "
-                                                    + "lesson instead.",
+                                                    + "Only approved saved "
+                                                    + "content will be shown.",
                                             Snackbar.LENGTH_LONG
                                     ).show();
                                 }
@@ -252,8 +253,9 @@ public class LessonActivity extends AppCompatActivity {
                                 Snackbar.make(
                                         binding.getRoot(),
                                         "Approved pages could not be "
-                                                + "checked. Showing the "
-                                                + "standard lesson instead.",
+                                                + "checked. Unverified "
+                                                + "fallback content will "
+                                                + "not be shown.",
                                         Snackbar.LENGTH_LONG
                                 ).show();
                             }
@@ -264,6 +266,7 @@ public class LessonActivity extends AppCompatActivity {
     private void loadApprovedExactChapterContent() {
         if (!exactLessonProgressCoordinator
                 .isExactSchoolBookLesson()) {
+            showApprovedContentUnavailableState();
             return;
         }
 
@@ -283,8 +286,12 @@ public class LessonActivity extends AppCompatActivity {
                                             content
                             ) {
                                 if (isFinishing()
-                                        || isDestroyed()
-                                        || content == null) {
+                                        || isDestroyed()) {
+                                    return;
+                                }
+
+                                if (content == null) {
+                                    showApprovedContentUnavailableState();
                                     return;
                                 }
 
@@ -295,6 +302,7 @@ public class LessonActivity extends AppCompatActivity {
                                                         content
                                                 );
 
+                                showApprovedContentAvailableState();
                                 showLessonHeader();
                                 showLessonContent();
                             }
@@ -308,14 +316,7 @@ public class LessonActivity extends AppCompatActivity {
                                     return;
                                 }
 
-                                Snackbar.make(
-                                        binding.getRoot(),
-                                        "Approved exact chapter content "
-                                                + "could not be loaded. "
-                                                + "Showing the standard "
-                                                + "lesson instead.",
-                                        Snackbar.LENGTH_LONG
-                                ).show();
+                                showApprovedContentUnavailableState();
                             }
                         }
                 );
@@ -379,11 +380,72 @@ public class LessonActivity extends AppCompatActivity {
 
     private void loadLessonContent() {
         lessonContent =
-                LessonCatalog.getLessonContent(
-                        subjectName,
+                new LessonContent(
                         chapterTitle,
-                        chapterDescription
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        ""
                 );
+    }
+
+    private void showApprovedContentLoadingState() {
+        binding.textExplanation.setText(
+                R.string.lesson_approved_content_loading
+        );
+        setOptionalLessonSectionsVisible(false);
+        binding.buttonPractice.setVisibility(View.GONE);
+        binding.buttonCompleteLesson.setEnabled(false);
+    }
+
+    private void showApprovedContentUnavailableState() {
+        lessonContent =
+                new LessonContent(
+                        chapterTitle,
+                        getString(
+                                R.string.lesson_approved_content_missing_en
+                        ),
+                        getString(
+                                R.string.lesson_approved_content_missing_hi
+                        ),
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        ""
+                );
+
+        showLessonHeader();
+        showLessonContent();
+        setOptionalLessonSectionsVisible(false);
+        binding.buttonPractice.setVisibility(View.GONE);
+        binding.buttonCompleteLesson.setEnabled(false);
+        binding.buttonCompleteLesson.setVisibility(View.GONE);
+    }
+
+    private void showApprovedContentAvailableState() {
+        setOptionalLessonSectionsVisible(true);
+        binding.buttonPractice.setVisibility(View.VISIBLE);
+        binding.buttonCompleteLesson.setVisibility(View.VISIBLE);
+    }
+
+    private void setOptionalLessonSectionsVisible(
+            boolean visible
+    ) {
+        int visibility =
+                visible ? View.VISIBLE : View.GONE;
+
+        binding.textKeyPointsHeading.setVisibility(visibility);
+        binding.cardKeyPoints.setVisibility(visibility);
+        binding.textExampleHeading.setVisibility(visibility);
+        binding.cardExample.setVisibility(visibility);
+        binding.textPracticeHeading.setVisibility(visibility);
+        binding.cardPracticeQuestion.setVisibility(visibility);
     }
 
     private void loadSavedReadingSize() {
