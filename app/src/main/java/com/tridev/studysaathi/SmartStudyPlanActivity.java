@@ -10,11 +10,16 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.tridev.studysaathi.data.catalog.SmartRecommendationEngine;
+import com.tridev.studysaathi.data.content.policy.ChildSubjectVisibilityPolicy;
 import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
 import com.tridev.studysaathi.data.local.entity.QuizAttemptEntity;
+import com.tridev.studysaathi.data.local.entity.SchoolBookChapterEntity;
+import com.tridev.studysaathi.data.local.entity.SchoolSubjectEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
+import com.tridev.studysaathi.data.repository.ChildSchoolBookChapterRepository;
 import com.tridev.studysaathi.data.repository.LessonProgressRepository;
 import com.tridev.studysaathi.data.repository.QuizAttemptRepository;
+import com.tridev.studysaathi.data.repository.SchoolSubjectRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 import com.tridev.studysaathi.databinding.ActivitySmartStudyPlanBinding;
 import com.tridev.studysaathi.model.StudyRecommendation;
@@ -48,6 +53,12 @@ public class SmartStudyPlanActivity
     private QuizAttemptRepository
             quizAttemptRepository;
 
+    private SchoolSubjectRepository
+            schoolSubjectRepository;
+
+    private ChildSchoolBookChapterRepository
+            childChapterRepository;
+
     private SharedPreferences goalPreferences;
 
     private StudentProfileEntity activeStudentProfile;
@@ -74,6 +85,12 @@ public class SmartStudyPlanActivity
 
         quizAttemptRepository =
                 new QuizAttemptRepository(this);
+
+        schoolSubjectRepository =
+                new SchoolSubjectRepository(this);
+
+        childChapterRepository =
+                new ChildSchoolBookChapterRepository(this);
 
         goalPreferences = getSharedPreferences(
                 GOAL_PREFERENCES_NAME,
@@ -285,7 +302,7 @@ public class SmartStudyPlanActivity
                 quizAttempts
         );
 
-        currentRecommendation =
+        StudyRecommendation calculatedRecommendation =
                 SmartRecommendationEngine
                         .createRecommendation(
                                 studentProfile,
@@ -293,8 +310,178 @@ public class SmartStudyPlanActivity
                                 quizAttempts
                         );
 
-        showRecommendation(
-                currentRecommendation
+        loadApprovedRecommendation(
+                studentProfile,
+                calculatedRecommendation
+        );
+    }
+
+    private void loadApprovedRecommendation(
+            @NonNull StudentProfileEntity studentProfile,
+            @NonNull StudyRecommendation calculatedRecommendation
+    ) {
+        schoolSubjectRepository.getSubjectsForProfile(
+                studentProfile.getProfileId(),
+                false,
+                new SchoolSubjectRepository.SubjectsCallback() {
+                    @Override
+                    public void onSuccess(
+                            @NonNull List<SchoolSubjectEntity> subjects
+                    ) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+
+                        List<SchoolSubjectEntity> visibleSubjects =
+                                ChildSubjectVisibilityPolicy
+                                        .filterVisibleSubjects(subjects);
+
+                        findApprovedChapter(
+                                visibleSubjects,
+                                0,
+                                calculatedRecommendation
+                        );
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+
+                        showNoRecommendationState();
+                    }
+                }
+        );
+    }
+
+    private void findApprovedChapter(
+            @NonNull List<SchoolSubjectEntity> subjects,
+            int subjectIndex,
+            @NonNull StudyRecommendation calculatedRecommendation
+    ) {
+        if (subjectIndex >= subjects.size()) {
+            showNoRecommendationState();
+            return;
+        }
+
+        SchoolSubjectEntity subject =
+                subjects.get(subjectIndex);
+
+        childChapterRepository.getChildChaptersForSubject(
+                subject.getSubjectRowId(),
+                new ChildSchoolBookChapterRepository
+                        .ChildChaptersCallback() {
+                    @Override
+                    public void onSuccess(
+                            @NonNull ChildSchoolBookChapterRepository
+                                    .ChildChapterResult result
+                    ) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+
+                        if (!result.isAvailable()
+                                || result.getChapters().isEmpty()) {
+
+                            findApprovedChapter(
+                                    subjects,
+                                    subjectIndex + 1,
+                                    calculatedRecommendation
+                            );
+                            return;
+                        }
+
+                        SchoolBookChapterEntity approvedChapter =
+                                chooseApprovedChapter(
+                                        result.getChapters(),
+                                        calculatedRecommendation
+                                );
+
+                        currentRecommendation =
+                                createApprovedRecommendation(
+                                        subject,
+                                        approvedChapter,
+                                        calculatedRecommendation
+                                );
+
+                        showRecommendation(currentRecommendation);
+                    }
+
+                    @Override
+                    public void onError(
+                            @NonNull Exception exception
+                    ) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+
+                        findApprovedChapter(
+                                subjects,
+                                subjectIndex + 1,
+                                calculatedRecommendation
+                        );
+                    }
+                }
+        );
+    }
+
+    @NonNull
+    private SchoolBookChapterEntity chooseApprovedChapter(
+            @NonNull List<SchoolBookChapterEntity> chapters,
+            @NonNull StudyRecommendation calculatedRecommendation
+    ) {
+        String recommendedTitle =
+                calculatedRecommendation
+                        .getChapterTitle()
+                        .trim();
+
+        for (SchoolBookChapterEntity chapter : chapters) {
+            if (chapter.getDisplayTitle()
+                    .equalsIgnoreCase(recommendedTitle)) {
+
+                return chapter;
+            }
+        }
+
+        return chapters.get(0);
+    }
+
+    @NonNull
+    private StudyRecommendation createApprovedRecommendation(
+            @NonNull SchoolSubjectEntity subject,
+            @NonNull SchoolBookChapterEntity chapter,
+            @NonNull StudyRecommendation calculatedRecommendation
+    ) {
+        boolean exactRecommendation =
+                subject.getSubjectNameEnglish().equalsIgnoreCase(
+                        calculatedRecommendation.getSubjectName()
+                )
+                        && chapter.getDisplayTitle().equalsIgnoreCase(
+                        calculatedRecommendation.getChapterTitle()
+                );
+
+        StudyRecommendation.RecommendationType type =
+                exactRecommendation
+                        ? calculatedRecommendation
+                                .getRecommendationType()
+                        : StudyRecommendation
+                                .RecommendationType.NEXT_LESSON;
+
+        int quizScore =
+                exactRecommendation
+                        ? calculatedRecommendation
+                                .getQuizAverageScore()
+                        : 0;
+
+        return new StudyRecommendation(
+                subject.getDisplayName(false),
+                chapter.getDisplayTitle(),
+                chapter.getChapterDescription(),
+                type,
+                quizScore
         );
     }
 

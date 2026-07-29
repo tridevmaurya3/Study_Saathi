@@ -114,4 +114,7 @@
     <string name="ai_teacher_coming_soon">AI Study Saathi बाद के चरण में उपलब्ध होगा।</string>
     <string name="study_coach_coming_soon">Smart Study Coach की पूरी planning अगले चरणों में जोड़ी जाएगी।</string>
 
+    <string name="decrease_reading_font">Decrease reading font size</string>
+    <string name="increase_reading_font">Increase reading font size</string>
+
 </resources>

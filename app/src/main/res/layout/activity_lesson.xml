@@ -180,11 +180,14 @@
                     android:insetRight="0dp"
                     android:insetBottom="0dp"
                     android:minWidth="0dp"
-                    android:text="−"
+                    android:contentDescription="@string/decrease_reading_font"
+                    android:text=""
                     android:textAllCaps="false"
-                    android:textColor="@color/ss_primary"
-                    android:textSize="25sp"
                     app:cornerRadius="14dp"
+                    app:icon="@drawable/ic_font_decrease"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="24dp"
                     app:strokeColor="@color/ss_outline" />
 
                 <TextView
@@ -207,11 +210,14 @@
                     android:insetRight="0dp"
                     android:insetBottom="0dp"
                     android:minWidth="0dp"
-                    android:text="+"
+                    android:contentDescription="@string/increase_reading_font"
+                    android:text=""
                     android:textAllCaps="false"
-                    android:textColor="@color/ss_primary"
-                    android:textSize="25sp"
                     app:cornerRadius="14dp"
+                    app:icon="@drawable/ic_font_increase"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="24dp"
                     app:strokeColor="@color/ss_outline" />
 
             </LinearLayout>
