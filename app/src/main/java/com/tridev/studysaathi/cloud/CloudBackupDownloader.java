@@ -16,6 +16,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Source;
+import com.tridev.studysaathi.backup.BackupDatabaseTablePolicy;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -62,13 +63,6 @@ public final class CloudBackupDownloader {
             CloudBackupPayloadBuilder.MAX_CHUNK_COUNT
                     * CloudBackupPayloadBuilder
                     .CHUNK_CHARACTER_LIMIT;
-
-    private static final String[] REQUIRED_TABLES = {
-            "student_profiles",
-            "lesson_progress",
-            "quiz_attempts",
-            "doubt_history"
-    };
 
     private static final ExecutorService
             payloadValidationExecutor =
@@ -449,9 +443,10 @@ public final class CloudBackupDownloader {
             );
         }
 
-        if (databaseSchemaVersion
-                != CloudBackupPayloadBuilder
-                .DATABASE_SCHEMA_VERSION) {
+        if (!BackupDatabaseTablePolicy
+                .isSupportedSchemaVersion(
+                        databaseSchemaVersion
+                )) {
 
             throw new CloudBackupDownloadException(
                     "Cloud backup database version "
@@ -956,10 +951,15 @@ public final class CloudBackupDownloader {
                 );
             }
 
-            if (backupJson.getInt(
-                    "database_schema_version"
-            ) != CloudBackupPayloadBuilder
-                    .DATABASE_SCHEMA_VERSION) {
+            int backupSchemaVersion =
+                    backupJson.getInt(
+                            "database_schema_version"
+                    );
+
+            if (!BackupDatabaseTablePolicy
+                    .isSupportedSchemaVersion(
+                            backupSchemaVersion
+                    )) {
 
                 throw new CloudBackupDownloadException(
                         "Downloaded JSON database "
@@ -1009,10 +1009,13 @@ public final class CloudBackupDownloader {
                             "database"
                     );
 
-            if (databaseObject.getInt(
-                    "schema_version"
-            ) != CloudBackupPayloadBuilder
-                    .DATABASE_SCHEMA_VERSION) {
+            int databaseSchemaVersion =
+                    databaseObject.getInt(
+                            "schema_version"
+                    );
+
+            if (databaseSchemaVersion
+                    != backupSchemaVersion) {
 
                 throw new CloudBackupDownloadException(
                         "Downloaded database schema "
@@ -1026,6 +1029,7 @@ public final class CloudBackupDownloader {
                     );
 
             validateRequiredTables(
+                    databaseSchemaVersion,
                     tableArray
             );
 
@@ -1048,6 +1052,7 @@ public final class CloudBackupDownloader {
     }
 
     private void validateRequiredTables(
+            int schemaVersion,
             @NonNull JSONArray tableArray
     ) throws JSONException,
             CloudBackupDownloadException {
@@ -1067,7 +1072,21 @@ public final class CloudBackupDownloader {
             String tableName =
                     tableObject.getString(
                             "table_name"
-                    );
+                    ).trim();
+
+            if (!BackupDatabaseTablePolicy
+                    .isSupportedTable(
+                            schemaVersion,
+                            tableName
+                    )) {
+
+                throw new CloudBackupDownloadException(
+                        "Downloaded backup contains "
+                                + "unsupported table "
+                                + tableName
+                                + "."
+                );
+            }
 
             if (!foundTableNames.add(
                     tableName
@@ -1102,7 +1121,8 @@ public final class CloudBackupDownloader {
         }
 
         for (String requiredTable
-                : REQUIRED_TABLES) {
+                : BackupDatabaseTablePolicy
+                .getRequiredTables(schemaVersion)) {
 
             if (!foundTableNames.contains(
                     requiredTable

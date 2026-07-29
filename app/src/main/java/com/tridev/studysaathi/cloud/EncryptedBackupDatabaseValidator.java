@@ -279,6 +279,31 @@ public final class EncryptedBackupDatabaseValidator {
                         "updated_at"
                 };
 
+            case "school_book_chapter_contents":
+                return new String[]{
+                        "content_row_id",
+                        "chapter_row_id",
+                        "content_id",
+                        "language_mode",
+                        "content_source",
+                        "review_status",
+                        "parent_approved",
+                        "created_at",
+                        "updated_at"
+                };
+
+            case "school_book_chapter_pages":
+                return new String[]{
+                        "chapter_page_row_id",
+                        "chapter_row_id",
+                        "chapter_page_id",
+                        "page_order",
+                        "page_type",
+                        "parent_approved",
+                        "created_at",
+                        "updated_at"
+                };
+
             default:
                 throw new ValidationException(
                         "Unsupported encrypted backup table "

@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.tridev.studysaathi.backup.BackupDatabaseTablePolicy;
 import com.tridev.studysaathi.data.local.database.StudySaathiDatabase;
 import com.tridev.studysaathi.databinding.ActivityBackupExportBinding;
 
@@ -45,20 +46,14 @@ public class BackupExportActivity
             "study_saathi_backup";
 
     private static final int BACKUP_FORMAT_VERSION = 1;
-    private static final int DATABASE_SCHEMA_VERSION = 5;
+    private static final int DATABASE_SCHEMA_VERSION =
+            BackupDatabaseTablePolicy.CURRENT_SCHEMA_VERSION;
 
     private static final String BACKUP_STATE_PREFERENCES =
             "study_saathi_backup_state";
 
     private static final String KEY_LAST_BACKUP_AT =
             "last_backup_at";
-
-    private static final String[] DATABASE_TABLES = {
-            "student_profiles",
-            "lesson_progress",
-            "quiz_attempts",
-            "doubt_history"
-    };
 
     private ActivityBackupExportBinding binding;
 
@@ -443,7 +438,9 @@ public class BackupExportActivity
                 new JSONArray();
 
         for (String tableName
-                : DATABASE_TABLES) {
+                : BackupDatabaseTablePolicy.getInsertOrder(
+                        DATABASE_SCHEMA_VERSION
+                )) {
 
             tableArray.put(
                     exportDatabaseTable(

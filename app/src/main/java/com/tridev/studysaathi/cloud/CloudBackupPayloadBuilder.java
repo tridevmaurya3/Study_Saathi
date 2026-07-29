@@ -8,6 +8,7 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.tridev.studysaathi.backup.BackupDatabaseTablePolicy;
 import com.tridev.studysaathi.data.local.database.StudySaathiDatabase;
 
 import org.json.JSONArray;
@@ -39,7 +40,8 @@ public final class CloudBackupPayloadBuilder {
 
     public static final int BACKUP_FORMAT_VERSION = 1;
 
-    public static final int DATABASE_SCHEMA_VERSION = 7;
+    public static final int DATABASE_SCHEMA_VERSION =
+            BackupDatabaseTablePolicy.CURRENT_SCHEMA_VERSION;
 
     public static final String COMPRESSION_TYPE =
             "gzip";
@@ -78,17 +80,6 @@ public final class CloudBackupPayloadBuilder {
 
     private static final String CLOUD_STATE_PREFERENCES =
             "study_saathi_cloud_state";
-
-    private static final String[] DATABASE_TABLES = {
-            "student_profiles",
-            "lesson_progress",
-            "quiz_attempts",
-            "doubt_history",
-            "school_curriculum_profiles",
-            "school_subjects",
-            "school_books",
-            "school_book_chapters"
-    };
 
     private final Context applicationContext;
 
@@ -293,7 +284,10 @@ public final class CloudBackupPayloadBuilder {
         readableDatabase.beginTransaction();
 
         try {
-            for (String tableName : DATABASE_TABLES) {
+            for (String tableName
+                    : BackupDatabaseTablePolicy.getInsertOrder(
+                            DATABASE_SCHEMA_VERSION
+                    )) {
                 JSONObject tableObject =
                         exportDatabaseTable(
                                 readableDatabase,

@@ -14,8 +14,11 @@ public final class BackupDatabaseTablePolicy {
     public static final int LEGACY_SCHEMA_VERSION =
             5;
 
-    public static final int CURRENT_SCHEMA_VERSION =
+    public static final int CURRICULUM_SCHEMA_VERSION =
             7;
+
+    public static final int CURRENT_SCHEMA_VERSION =
+            9;
 
     @NonNull
     private static final List<String> LEGACY_TABLES =
@@ -36,12 +39,29 @@ public final class BackupDatabaseTablePolicy {
                     "school_curriculum_profiles",
                     "school_subjects",
                     "school_books",
+                    "school_book_chapters",
+                    "school_book_chapter_contents",
+                    "school_book_chapter_pages"
+            );
+
+    @NonNull
+    private static final List<String> CURRICULUM_INSERT_ORDER =
+            immutableList(
+                    "student_profiles",
+                    "lesson_progress",
+                    "quiz_attempts",
+                    "doubt_history",
+                    "school_curriculum_profiles",
+                    "school_subjects",
+                    "school_books",
                     "school_book_chapters"
             );
 
     @NonNull
     private static final List<String> CURRENT_DELETE_ORDER =
             immutableList(
+                    "school_book_chapter_pages",
+                    "school_book_chapter_contents",
                     "school_book_chapters",
                     "school_books",
                     "school_subjects",
@@ -67,6 +87,7 @@ public final class BackupDatabaseTablePolicy {
             int schemaVersion
     ) {
         return schemaVersion == LEGACY_SCHEMA_VERSION
+                || schemaVersion == CURRICULUM_SCHEMA_VERSION
                 || schemaVersion == CURRENT_SCHEMA_VERSION;
     }
 
@@ -86,6 +107,10 @@ public final class BackupDatabaseTablePolicy {
 
         if (schemaVersion == LEGACY_SCHEMA_VERSION) {
             return LEGACY_TABLES;
+        }
+
+        if (schemaVersion == CURRICULUM_SCHEMA_VERSION) {
+            return CURRICULUM_INSERT_ORDER;
         }
 
         return CURRENT_INSERT_ORDER;
@@ -192,6 +217,16 @@ public final class BackupDatabaseTablePolicy {
         idColumns.put(
                 "school_book_chapters",
                 "chapter_row_id"
+        );
+
+        idColumns.put(
+                "school_book_chapter_contents",
+                "content_row_id"
+        );
+
+        idColumns.put(
+                "school_book_chapter_pages",
+                "chapter_page_row_id"
         );
 
         return Collections.unmodifiableMap(

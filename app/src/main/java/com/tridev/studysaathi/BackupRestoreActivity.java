@@ -66,7 +66,8 @@ public class BackupRestoreActivity
             "study_saathi_backup";
 
     private static final int BACKUP_FORMAT_VERSION = 1;
-    private static final int DATABASE_SCHEMA_VERSION = 7;
+    private static final int DATABASE_SCHEMA_VERSION =
+            BackupDatabaseTablePolicy.CURRENT_SCHEMA_VERSION;
 
     private static final long MAX_BACKUP_FILE_SIZE =
             25L * 1024L * 1024L;
@@ -81,17 +82,6 @@ public class BackupRestoreActivity
             "safety_backups";
 
     private static final int MAX_SAFETY_BACKUPS = 3;
-
-    private static final String[] DATABASE_TABLES = {
-            "student_profiles",
-            "lesson_progress",
-            "quiz_attempts",
-            "doubt_history",
-            "school_curriculum_profiles",
-            "school_subjects",
-            "school_books",
-            "school_book_chapters"
-    };
 
     private ActivityBackupRestoreBinding binding;
 
@@ -706,6 +696,22 @@ public class BackupRestoreActivity
                 backupJson.getJSONObject(
                         "database"
                 );
+
+        int databaseSchemaVersion =
+                databaseObject.optInt(
+                        "schema_version",
+                        -1
+                );
+
+        if (databaseSchemaVersion != schemaVersion) {
+            throw new BackupValidationException(
+                    getString(
+                            R.string.backup_restore_schema_mismatch_format,
+                            databaseSchemaVersion,
+                            schemaVersion
+                    )
+            );
+        }
 
         JSONArray tableArray =
                 databaseObject.getJSONArray(
@@ -1895,7 +1901,9 @@ public class BackupRestoreActivity
                 new JSONArray();
 
         for (String tableName
-                : DATABASE_TABLES) {
+                : BackupDatabaseTablePolicy.getInsertOrder(
+                        DATABASE_SCHEMA_VERSION
+                )) {
 
             tableArray.put(
                     exportDatabaseTable(
