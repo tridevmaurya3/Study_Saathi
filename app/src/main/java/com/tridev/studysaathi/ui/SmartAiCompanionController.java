@@ -399,6 +399,8 @@ public final class SmartAiCompanionController {
                             ));
             companion.findViewById(R.id.buttonSmartAiNewChat)
                     .setOnClickListener(view -> clearConversation());
+            companion.findViewById(R.id.buttonSmartAiMenu)
+                    .setOnClickListener(view -> showCompanionMenu());
 
             questionInput.setOnEditorActionListener(
                     (view, actionId, event) -> {
@@ -536,6 +538,33 @@ public final class SmartAiCompanionController {
             panel.setLayoutParams(panelParams);
             card.setLayoutParams(cardParams);
             maximized = !maximized;
+        }
+
+        private void showCompanionMenu() {
+            String[] options = {
+                    "＋  नई बातचीत शुरू करें",
+                    "◷  सवाल-जवाब इतिहास",
+                    "▣  Over-screen floating AI चालू करें",
+                    maximized ? "↙  सामान्य आकार" : "↗  पूरी स्क्रीन में फैलाएँ",
+                    "—  AI dialog छोटा करें"
+            };
+            new AlertDialog.Builder(activity)
+                    .setTitle("Study Saathi AI Menu")
+                    .setItems(options, (dialog, which) -> {
+                        if (which == 0) {
+                            clearConversation();
+                        } else if (which == 1) {
+                            activity.startActivity(new Intent(activity, DoubtHistoryActivity.class));
+                        } else if (which == 2) {
+                            requestOverlayPermission();
+                        } else if (which == 3) {
+                            toggleMaximize();
+                        } else if (which == 4) {
+                            collapseCard();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
         }
 
         private void requestOverlayPermission() {

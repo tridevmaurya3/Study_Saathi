@@ -37,6 +37,8 @@ import androidx.core.content.ContextCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.tridev.studysaathi.R;
+import com.tridev.studysaathi.AskStudySaathiActivity;
+import com.tridev.studysaathi.DoubtHistoryActivity;
 import com.tridev.studysaathi.data.ai.FirebaseStudyTutorClient;
 import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
@@ -79,7 +81,7 @@ public final class StudyOverlayBubbleService extends Service {
     private LinearLayout historyDrawer;
     private LinearLayout historyList;
     private WindowManager.LayoutParams panelParams;
-    private TextView transcript;
+    private LinearLayout transcript;
     private TextView status;
     private EditText question;
     private FrameLayout questionFrame;
@@ -252,13 +254,11 @@ public final class StudyOverlayBubbleService extends Service {
         body.addView(quickTwo);
 
         ScrollView scroll = new ScrollView(this);
-        transcript = text(currentChat().content,
-                14, Color.rgb(67, 78, 104));
-        transcript.setGravity(Gravity.CENTER_HORIZONTAL);
-        transcript.setPadding(dp(14), dp(14), dp(14), dp(14));
-        transcript.setBackground(rounded(Color.rgb(239, 245, 255),
-                Color.rgb(220, 231, 250), 2));
+        transcript = new LinearLayout(this);
+        transcript.setOrientation(LinearLayout.VERTICAL);
+        transcript.setPadding(dp(4), dp(8), dp(4), dp(8));
         scroll.addView(transcript);
+        renderTranscript();
         LinearLayout.LayoutParams scrollLp = new LinearLayout.LayoutParams(-1, 0, 1);
         scrollLp.topMargin = dp(8);
         body.addView(scroll, scrollLp);
@@ -379,6 +379,16 @@ public final class StudyOverlayBubbleService extends Service {
         historyDrawer.addView(newChat, newChatParams);
         newChat.setOnClickListener(v -> startNewChat());
 
+        Button openApp = drawerButton("▣  पूरी Study Saathi खोलें");
+        historyDrawer.addView(openApp, drawerButtonParams());
+        openApp.setOnClickListener(v -> openActivity(AskStudySaathiActivity.class));
+        Button doubts = drawerButton("◷  सवाल-जवाब इतिहास");
+        historyDrawer.addView(doubts, drawerButtonParams());
+        doubts.setOnClickListener(v -> openActivity(DoubtHistoryActivity.class));
+        Button hideBubble = drawerButton("—  Floating panel बंद करें");
+        historyDrawer.addView(hideBubble, drawerButtonParams());
+        hideBubble.setOnClickListener(v -> removePanel());
+
         ScrollView historyScroll = new ScrollView(this);
         historyList = new LinearLayout(this);
         historyList.setOrientation(LinearLayout.VERTICAL);
@@ -432,7 +442,7 @@ public final class StudyOverlayBubbleService extends Service {
         chats.add(0, chat);
         activeChatId = chat.id;
         saveChats();
-        transcript.setText(chat.content);
+        renderTranscript();
         hideHistoryDrawer();
         question.setText("");
         showKeyboard();
@@ -442,7 +452,7 @@ public final class StudyOverlayBubbleService extends Service {
         activeChatId = chatId;
         getSharedPreferences(PREFS, MODE_PRIVATE).edit()
                 .putString(KEY_ACTIVE_CHAT, activeChatId).apply();
-        transcript.setText(currentChat().content);
+        renderTranscript();
         hideHistoryDrawer();
     }
 
@@ -732,8 +742,104 @@ public final class StudyOverlayBubbleService extends Service {
             String clean = firstQuestion.trim().replace('\n', ' ');
             chat.title = clean.length() > 38 ? clean.substring(0, 38) + "…" : clean;
         }
-        if (transcript != null) transcript.setText(chat.content);
+        if (transcript != null) renderTranscript();
         saveChats();
+    }
+
+    private void renderTranscript() {
+        if (transcript == null) return;
+        transcript.removeAllViews();
+        String content = currentChat().content;
+        int firstQuestion = content.indexOf("\n\nआप: ");
+        String welcome = firstQuestion < 0 ? content : content.substring(0, firstQuestion);
+        if (!welcome.trim().isEmpty()) {
+            TextView intro = text(welcome.trim(), 13, Color.rgb(78, 91, 118));
+            intro.setGravity(Gravity.CENTER);
+            intro.setPadding(dp(14), dp(14), dp(14), dp(14));
+            intro.setBackground(rounded(Color.rgb(239, 245, 255),
+                    Color.rgb(220, 231, 250), 16));
+            transcript.addView(intro, matchWrap());
+        }
+        if (firstQuestion < 0) return;
+        String[] turns = content.substring(firstQuestion + 2).split("\\n\\nआप: ");
+        for (String rawTurn : turns) {
+            String turn = rawTurn.startsWith("आप: ") ? rawTurn.substring(5) : rawTurn;
+            int answerAt = turn.indexOf("\n\nStudy Saathi\n");
+            String asked = answerAt < 0 ? turn : turn.substring(0, answerAt);
+            String answered = answerAt < 0 ? "उत्तर तैयार किया जा रहा है…"
+                    : turn.substring(answerAt + "\n\nStudy Saathi\n".length());
+            addQuestionAnswerTurn(asked.trim(), answered.trim());
+        }
+    }
+
+    private void addQuestionAnswerTurn(@NonNull String asked, @NonNull String answered) {
+        LinearLayout questionCard = new LinearLayout(this);
+        questionCard.setOrientation(LinearLayout.VERTICAL);
+        questionCard.setPadding(dp(14), dp(10), dp(14), dp(11));
+        questionCard.setBackground(rounded(Color.rgb(43, 91, 201),
+                Color.rgb(43, 91, 201), 18));
+        TextView questionLabel = text("आपका सवाल • YOUR QUESTION", 9,
+                Color.rgb(221, 233, 255));
+        questionLabel.setTypeface(questionLabel.getTypeface(), android.graphics.Typeface.BOLD);
+        questionCard.addView(questionLabel, matchWrap());
+        TextView questionText = text(asked, 15, Color.WHITE);
+        questionText.setPadding(0, dp(4), 0, 0);
+        questionText.setTypeface(questionText.getTypeface(), android.graphics.Typeface.BOLD);
+        questionCard.addView(questionText, matchWrap());
+        LinearLayout.LayoutParams questionParams = matchWrap();
+        questionParams.leftMargin = dp(38);
+        questionParams.topMargin = dp(10);
+        transcript.addView(questionCard, questionParams);
+
+        LinearLayout answerRow = new LinearLayout(this);
+        answerRow.setGravity(Gravity.TOP);
+        TextView avatar = text("AI", 10, Color.WHITE);
+        avatar.setGravity(Gravity.CENTER);
+        avatar.setTypeface(avatar.getTypeface(), android.graphics.Typeface.BOLD);
+        GradientDrawable avatarBackground = rounded(Color.rgb(54, 91, 203),
+                Color.rgb(205, 220, 249), 18);
+        avatar.setBackground(avatarBackground);
+        answerRow.addView(avatar, new LinearLayout.LayoutParams(dp(34), dp(34)));
+        LinearLayout answerCard = new LinearLayout(this);
+        answerCard.setOrientation(LinearLayout.VERTICAL);
+        answerCard.setPadding(dp(13), dp(11), dp(13), dp(13));
+        answerCard.setBackground(rounded(Color.rgb(247, 250, 255),
+                Color.rgb(165, 218, 190), 18));
+        TextView answerLabel = text("STUDY SAATHI ANSWER • उत्तर", 9,
+                Color.rgb(18, 137, 126));
+        answerLabel.setTypeface(answerLabel.getTypeface(), android.graphics.Typeface.BOLD);
+        answerCard.addView(answerLabel, matchWrap());
+        TextView answerText = text(answered, 15, Color.rgb(30, 40, 60));
+        answerText.setPadding(0, dp(6), 0, 0);
+        answerText.setLineSpacing(dp(3), 1f);
+        answerCard.addView(answerText, matchWrap());
+        LinearLayout.LayoutParams answerParams = new LinearLayout.LayoutParams(0, -2, 1);
+        answerParams.leftMargin = dp(7);
+        answerRow.addView(answerCard, answerParams);
+        LinearLayout.LayoutParams rowParams = matchWrap();
+        rowParams.topMargin = dp(7);
+        rowParams.bottomMargin = dp(7);
+        transcript.addView(answerRow, rowParams);
+    }
+
+    private Button drawerButton(@NonNull String label) {
+        return actionButton(label, Color.WHITE, Color.rgb(213, 224, 244));
+    }
+
+    private LinearLayout.LayoutParams drawerButtonParams() {
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, dp(42));
+        params.topMargin = dp(6);
+        return params;
+    }
+
+    private void openActivity(@NonNull Class<?> activityClass) {
+        try {
+            startActivity(new Intent(this, activityClass)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            removePanel();
+        } catch (RuntimeException error) {
+            if (status != null) status.setText("यह विकल्प अभी नहीं खुल पाया।");
+        }
     }
 
     private void loadChats() {
