@@ -39,6 +39,7 @@ import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
 import com.tridev.studysaathi.data.learning.LearningStyleMemoryStore;
 import com.tridev.studysaathi.data.learning.LearningStylePreference;
 import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
+import com.tridev.studysaathi.data.ai.RecommendedRevisionProgressStore;
 import com.tridev.studysaathi.data.catalog.DoubtAssistantEngine;
 import com.tridev.studysaathi.data.catalog.LessonCatalog;
 import com.tridev.studysaathi.data.local.entity.DoubtHistoryEntity;
@@ -72,6 +73,9 @@ public class AskStudySaathiActivity
 
     public static final String EXTRA_PREFILL_QUESTION =
             "extra_prefill_question";
+
+    public static final String EXTRA_RECOMMENDED_REVISION =
+            "extra_recommended_revision";
 
     private static final String LOG_TAG =
             "AskStudySaathi";
@@ -180,6 +184,9 @@ public class AskStudySaathiActivity
 
     private String requestedInputMode =
             "";
+
+    private boolean recommendedRevisionSession;
+    private boolean recommendedRevisionCompletionRecorded;
 
     private String lastQuestionImageOcrText =
             "";
@@ -580,6 +587,8 @@ public class AskStudySaathiActivity
                 getSafeExtra(
                         SmartAiCompanionController.EXTRA_OPEN_INPUT_MODE
                 );
+        recommendedRevisionSession = getIntent().getBooleanExtra(
+                EXTRA_RECOMMENDED_REVISION, false);
     }
 
     @NonNull
@@ -3591,6 +3600,16 @@ public class AskStudySaathiActivity
                                                 : selectedChapter.getDisplayTitle(),
                                         question,
                                         misconception);
+
+                        if (recommendedRevisionSession
+                                && !recommendedRevisionCompletionRecorded) {
+                            new RecommendedRevisionProgressStore(
+                                    AskStudySaathiActivity.this).recordCompleted(
+                                    selectedSubjectName,
+                                    selectedChapter == null ? prefillChapterTitle
+                                            : selectedChapter.getDisplayTitle());
+                            recommendedRevisionCompletionRecorded = true;
+                        }
 
                         showCompletedAnswer(
                                 question,

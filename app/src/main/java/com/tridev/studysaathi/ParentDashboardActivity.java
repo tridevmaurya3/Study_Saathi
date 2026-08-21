@@ -21,6 +21,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.tridev.studysaathi.adapter.ParentProfileSummaryAdapter;
 import com.tridev.studysaathi.data.ai.CitationCoverageHistoryStore;
 import com.tridev.studysaathi.data.ai.LowCoverageChapterRecommendationEngine;
+import com.tridev.studysaathi.data.ai.RecommendedRevisionProgressStore;
 import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
 import com.tridev.studysaathi.data.local.entity.QuizAttemptEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
@@ -59,6 +60,7 @@ public class ParentDashboardActivity
     private LessonProgressRepository lessonProgressRepository;
     private QuizAttemptRepository quizAttemptRepository;
     private CitationCoverageHistoryStore citationCoverageHistoryStore;
+    private RecommendedRevisionProgressStore recommendedRevisionProgressStore;
 
     private SharedPreferences goalPreferences;
 
@@ -118,6 +120,8 @@ public class ParentDashboardActivity
 
         citationCoverageHistoryStore =
                 new CitationCoverageHistoryStore(this);
+        recommendedRevisionProgressStore =
+                new RecommendedRevisionProgressStore(this);
 
         goalPreferences =
                 getSharedPreferences(
@@ -507,6 +511,7 @@ public class ParentDashboardActivity
                     "Subject और chapter breakdown अभी उपलब्ध नहीं है।");
             topCitationRecommendation = null;
             binding.buttonOpenRecommendedRevision.setEnabled(false);
+            binding.textParentRevisionProgress.setText("Revision progress अभी उपलब्ध नहीं है।");
             return;
         }
         StringBuilder scopeText = new StringBuilder();
@@ -527,10 +532,19 @@ public class ParentDashboardActivity
                     "अभी कोई low-coverage chapter recommendation नहीं है।");
             topCitationRecommendation = null;
             binding.buttonOpenRecommendedRevision.setEnabled(false);
+            binding.textParentRevisionProgress.setText("Revision progress अभी उपलब्ध नहीं है।");
             return;
         }
         topCitationRecommendation = recommendations.get(0);
         binding.buttonOpenRecommendedRevision.setEnabled(true);
+        RecommendedRevisionProgressStore.Summary revisionSummary =
+                recommendedRevisionProgressStore.getSummary(
+                        topCitationRecommendation.getSubject(),
+                        topCitationRecommendation.getChapter());
+        binding.textParentRevisionProgress.setText(
+                "Revision progress: " + revisionSummary.getCompleted() + "/"
+                        + revisionSummary.getStarted() + " completed • "
+                        + revisionSummary.getCompletionPercent() + "%");
         StringBuilder recommendationText = new StringBuilder();
         for (LowCoverageChapterRecommendationEngine.Recommendation recommendation
                 : recommendations) {
@@ -551,6 +565,9 @@ public class ParentDashboardActivity
                 recommendation.getChapter());
         revisionIntent.putExtra(AskStudySaathiActivity.EXTRA_PREFILL_QUESTION,
                 recommendation.buildRevisionQuestion());
+        revisionIntent.putExtra(AskStudySaathiActivity.EXTRA_RECOMMENDED_REVISION, true);
+        recommendedRevisionProgressStore.recordStarted(
+                recommendation.getSubject(), recommendation.getChapter());
         startActivity(revisionIntent);
     }
 
