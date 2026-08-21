@@ -19,6 +19,7 @@ import com.google.firebase.ai.type.GenerationConfig;
 import com.google.firebase.ai.type.GenerativeBackend;
 import com.tridev.studysaathi.data.knowledge.OfflineKnowledgeRepository;
 import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
+import com.tridev.studysaathi.data.learning.AdvancedTutorCapabilityResolver;
 import com.tridev.studysaathi.data.learning.LearningStylePreference;
 import com.tridev.studysaathi.data.learning.SocraticTutorModeResolver;
 
@@ -1653,6 +1654,15 @@ public final class FirebaseStudyTutorClient {
             prompt.append("\nSOCRATIC TUTOR MODE\n")
                     .append(socraticMode.getPromptInstruction())
                     .append("\n");
+        }
+
+        AdvancedTutorCapabilityResolver.Decision advancedCapabilities =
+                AdvancedTutorCapabilityResolver.resolve(request.getQuestion(), imageAttached);
+        if (advancedCapabilities.hasCapabilities()) {
+            prompt.append("\nADVANCED LEARNING MODE\n")
+                    .append(advancedCapabilities.getPromptInstruction())
+                    .append("\nUse only capabilities requested or supported by the attached input. ")
+                    .append("Never claim that audio, handwriting, diagrams or answers were checked when the required input is absent.\n");
         }
 
         appendApprovedChapterReference(
