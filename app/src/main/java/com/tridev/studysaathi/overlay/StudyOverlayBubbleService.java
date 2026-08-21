@@ -550,7 +550,11 @@ public final class StudyOverlayBubbleService extends Service {
                                         if (panel == null) return;
                                         send.setEnabled(true);
                                         status.setText("उत्तर तैयार है");
-                                        appendToActiveChat("\n\nStudy Saathi: "
+                                        appendToActiveChat("\n\nStudy Saathi\n"
+                                                + result.buildSourceBadgeText()
+                                                + " • "
+                                                + result.getConfidenceLevel().getDisplayLabel()
+                                                + "\n"
                                                 + result.getRawAnswerText(), null);
                                     }
                                     @Override public void onError(@NonNull Throwable error) {

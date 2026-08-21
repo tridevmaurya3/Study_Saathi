@@ -28,6 +28,30 @@ import androidx.annotation.Nullable;
  */
 public final class SmartTutorAnswerResult {
 
+    /** Student-facing confidence, source quality और verification का सरल स्तर। */
+    public enum ConfidenceLevel {
+        VERY_HIGH("बहुत उच्च भरोसा", "सत्यापित", 98),
+        HIGH("उच्च भरोसा", "मजबूत स्रोत", 92),
+        MEDIUM("मध्यम भरोसा", "AI से जाँचें", 74),
+        CAUTION("सावधानी से उपयोग करें", "स्रोत सीमित", 55);
+
+        @NonNull private final String displayLabel;
+        @NonNull private final String shortLabel;
+        private final int score;
+
+        ConfidenceLevel(@NonNull String displayLabel,
+                        @NonNull String shortLabel,
+                        int score) {
+            this.displayLabel = displayLabel;
+            this.shortLabel = shortLabel;
+            this.score = score;
+        }
+
+        @NonNull public String getDisplayLabel() { return displayLabel; }
+        @NonNull public String getShortLabel() { return shortLabel; }
+        public int getScore() { return score; }
+    }
+
     /**
      * Answer किस engine अथवा source से आया।
      */
@@ -454,6 +478,9 @@ public final class SmartTutorAnswerResult {
                 buildSourceBadgeText()
         );
 
+        displayBuilder.append("\n");
+        displayBuilder.append(buildStudentTrustBadgeText());
+
         displayBuilder.append(
                 "\n\n"
         );
@@ -474,6 +501,58 @@ public final class SmartTutorAnswerResult {
         return answerSource.getDisplayIcon()
                 + " "
                 + answerSource.getDisplayLabel();
+    }
+
+    /** Technical प्रतिशत के बजाय विद्यार्थी के लिए स्पष्ट trust label। */
+    @NonNull
+    public String buildStudentTrustBadgeText() {
+        ConfidenceLevel confidence = getConfidenceLevel();
+        return (isVerified() ? "✓ " : "ⓘ ")
+                + confidence.getDisplayLabel()
+                + " • "
+                + confidence.getShortLabel();
+    }
+
+    /** Source route के आधार पर conservative confidence निर्धारित करता है। */
+    @NonNull
+    public ConfidenceLevel getConfidenceLevel() {
+        switch (answerSource) {
+            case OFFLINE_BASIC_MATH:
+            case OFFLINE_DIVISIBILITY:
+            case VERIFIED_OFFLINE_KNOWLEDGE:
+                return ConfidenceLevel.VERY_HIGH;
+            case PERSISTENT_CACHE:
+                if (sourceDetails.toLowerCase().contains("firebase")
+                        || sourceDetails.toLowerCase().contains("smart ai")) {
+                    return ConfidenceLevel.MEDIUM;
+                }
+                return ConfidenceLevel.HIGH;
+            case FIREBASE_AI:
+                return verified ? ConfidenceLevel.HIGH : ConfidenceLevel.MEDIUM;
+            case LOCAL_FALLBACK:
+            case UNKNOWN:
+            default:
+                return ConfidenceLevel.CAUTION;
+        }
+    }
+
+    /** Parent/debug dashboards के लिए stable numeric confidence score। */
+    public int getConfidenceScore() {
+        return getConfidenceLevel().getScore();
+    }
+
+    @NonNull
+    public String buildStudentSourceExplanation() {
+        if (isVerified()) {
+            return "यह उत्तर सत्यापित गणना या स्वीकृत अध्ययन सामग्री से मिला है।";
+        }
+        if (isCached()) {
+            return "यह पहले सुरक्षित किए गए उत्तर से मिला है।";
+        }
+        if (isRemoteAiAnswer()) {
+            return "यह AI द्वारा तैयार उत्तर है; किताब से जुड़े तथ्य दोबारा जाँच सकते हैं।";
+        }
+        return "इस उत्तर का स्रोत सीमित है; शिक्षक या किताब से पुष्टि करें।";
     }
 
     /**

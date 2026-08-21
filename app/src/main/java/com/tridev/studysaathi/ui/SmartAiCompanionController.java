@@ -818,7 +818,9 @@ public final class SmartAiCompanionController {
             String answer = formatForStudentClass(
                     result.getRawAnswerText()
             );
-            String source = result.getAnswerSource().getDisplayLabel();
+            String source = result.getAnswerSource().getDisplayLabel()
+                    + " • "
+                    + result.getConfidenceLevel().getDisplayLabel();
             SmartCompanionConversationStore.Turn turn =
                     new SmartCompanionConversationStore.Turn(
                             question,

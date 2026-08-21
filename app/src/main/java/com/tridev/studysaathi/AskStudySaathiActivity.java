@@ -33,6 +33,7 @@ import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import com.tridev.studysaathi.data.ai.FirebaseStudyTutorClient;
 import com.tridev.studysaathi.data.ai.QuestionImageBitmapLoader;
+import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.catalog.DoubtAssistantEngine;
 import com.tridev.studysaathi.data.catalog.LessonCatalog;
 import com.tridev.studysaathi.data.local.entity.DoubtHistoryEntity;
@@ -3513,14 +3514,14 @@ public class AskStudySaathiActivity
         final boolean originalImageAttached =
                 questionBitmap != null;
 
-        firebaseStudyTutorClient.askQuestion(
+        firebaseStudyTutorClient.askQuestionWithResult(
                 tutorRequest,
                 questionBitmap,
-                new FirebaseStudyTutorClient.TutorCallback() {
+                new FirebaseStudyTutorClient.TutorResultCallback() {
 
                     @Override
                     public void onSuccess(
-                            @NonNull String answer
+                            @NonNull SmartTutorAnswerResult result
                     ) {
                         recycleAiQuestionBitmap(
                                 questionBitmap
@@ -3540,7 +3541,7 @@ public class AskStudySaathiActivity
 
                         showCompletedAnswer(
                                 question,
-                                answer
+                                result.buildDisplayAnswerText()
                         );
 
                         if (originalImageAttached
@@ -3553,7 +3554,7 @@ public class AskStudySaathiActivity
 
                         saveDoubtHistory(
                                 question,
-                                answer
+                                result.buildDisplayAnswerText()
                         );
 
                         Snackbar.make(
