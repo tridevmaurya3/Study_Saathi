@@ -42,6 +42,7 @@ import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
+import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 
 import org.json.JSONArray;
@@ -545,6 +546,8 @@ public final class StudyOverlayBubbleService extends Service {
                                         StudyOverlayBubbleService.this)
                                         .resolve(profile.getProfileId(),
                                                 "General Studies", "General", prompt);
+                        StudentMisconceptionDetector.Detection misconception =
+                                StudentMisconceptionDetector.inspect("General Studies", prompt);
                         status.setText(adaptiveLevel.getDisplayLabel()
                                 + " पर उत्तर तैयार किया जा रहा है…");
                         FirebaseStudyTutorClient.TutorRequest request =
@@ -552,13 +555,18 @@ public final class StudyOverlayBubbleService extends Service {
                                         profile.getStudentName(), profile.getEducationBoard(),
                                         profile.getStudentClass(), profile.getExplanationLanguage(),
                                         "General Studies", "", prompt,
-                                        "", "", adaptiveLevel.getRequestValue());
+                                        "", "", adaptiveLevel.getRequestValue(),
+                                        misconception.getRequestContext());
                         tutorClient.askTextQuestionWithResult(request,
                                 new FirebaseStudyTutorClient.TutorResultCallback() {
                                     @Override public void onSuccess(@NonNull SmartTutorAnswerResult result) {
                                         new StudentKnowledgeGraphStore(StudyOverlayBubbleService.this)
                                                 .recordAnswer(profile.getProfileId(),
                                                         "General Studies", "General", prompt, result);
+                                        new StudentKnowledgeGraphStore(StudyOverlayBubbleService.this)
+                                                .recordMisconceptionReview(profile.getProfileId(),
+                                                        "General Studies", "General", prompt,
+                                                        misconception);
                                         asking = false;
                                         if (panel == null) return;
                                         send.setEnabled(true);
@@ -568,6 +576,8 @@ public final class StudyOverlayBubbleService extends Service {
                                                 + " • "
                                                 + result.getConfidenceLevel().getDisplayLabel()
                                                 + " • " + adaptiveLevel.getDisplayLabel()
+                                                + (misconception.shouldReview()
+                                                ? " • " + misconception.getDisplayLabel() : "")
                                                 + "\n"
                                                 + result.getRawAnswerText(), null);
                                     }

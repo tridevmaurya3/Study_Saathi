@@ -77,6 +77,23 @@ public final class StudentKnowledgeGraphStore {
         }
     }
 
+    public void recordMisconceptionReview(long profileId,
+                                          @Nullable String subject,
+                                          @Nullable String chapter,
+                                          @NonNull String question,
+                                          @NonNull StudentMisconceptionDetector.Detection detection) {
+        if (profileId <= 0 || !detection.shouldReview()) return;
+        synchronized (STORE_LOCK) {
+            List<KnowledgeNode> nodes = readNodes();
+            KnowledgeNode node = findOrCreate(nodes, profileId, subject, chapter,
+                    extractConceptKey(question), buildConceptLabel(question));
+            node.misconceptionReviewCount++;
+            node.lastMisconceptionType = detection.getType().name();
+            node.lastUpdatedAt = System.currentTimeMillis();
+            writeNodes(nodes);
+        }
+    }
+
     @NonNull
     public ProfileSummary getProfileSummary(long profileId) {
         synchronized (STORE_LOCK) {
@@ -85,6 +102,7 @@ public final class StudentKnowledgeGraphStore {
             int mastered = 0;
             int practicing = 0;
             int confidenceTotal = 0;
+            int misconceptionReviews = 0;
             for (KnowledgeNode node : readNodes()) {
                 if (node.profileId != profileId) continue;
                 profileNodes.add(node.copy());
@@ -92,13 +110,14 @@ public final class StudentKnowledgeGraphStore {
                 if (node.getStage() == LearningStage.MASTERED) mastered++;
                 if (node.getStage() == LearningStage.PRACTICING) practicing++;
                 confidenceTotal += node.getAverageConfidence();
+                misconceptionReviews += node.misconceptionReviewCount;
             }
             Collections.sort(profileNodes,
                     (left, right) -> Long.compare(right.lastUpdatedAt, left.lastUpdatedAt));
             int averageConfidence = profileNodes.isEmpty()
                     ? 0 : confidenceTotal / profileNodes.size();
             return new ProfileSummary(subjects.size(), profileNodes.size(), mastered,
-                    practicing, averageConfidence, profileNodes);
+                    practicing, averageConfidence, misconceptionReviews, profileNodes);
         }
     }
 
@@ -241,6 +260,8 @@ public final class StudentKnowledgeGraphStore {
         private int confidenceTotal;
         private int quizAttempts;
         private int quizPercentageTotal;
+        private int misconceptionReviewCount;
+        private String lastMisconceptionType = "";
         private String lastQuestion = "";
         private long firstSeenAt;
         private long lastUpdatedAt;
@@ -271,6 +292,8 @@ public final class StudentKnowledgeGraphStore {
         @NonNull public String getConceptLabel() { return conceptLabel; }
         public int getAnswerInteractions() { return answerInteractions; }
         public int getQuizAttempts() { return quizAttempts; }
+        public int getMisconceptionReviewCount() { return misconceptionReviewCount; }
+        @NonNull public String getLastMisconceptionType() { return lastMisconceptionType; }
         public long getLastUpdatedAt() { return lastUpdatedAt; }
 
         private KnowledgeNode copy() {
@@ -289,6 +312,8 @@ public final class StudentKnowledgeGraphStore {
                 json.put("confidenceTotal", confidenceTotal);
                 json.put("quizAttempts", quizAttempts);
                 json.put("quizPercentageTotal", quizPercentageTotal);
+                json.put("misconceptionReviewCount", misconceptionReviewCount);
+                json.put("lastMisconceptionType", lastMisconceptionType);
                 json.put("lastQuestion", lastQuestion);
                 json.put("firstSeenAt", firstSeenAt); json.put("lastUpdatedAt", lastUpdatedAt);
             } catch (JSONException ignored) { }
@@ -310,6 +335,8 @@ public final class StudentKnowledgeGraphStore {
             node.confidenceTotal = json.optInt("confidenceTotal");
             node.quizAttempts = json.optInt("quizAttempts");
             node.quizPercentageTotal = json.optInt("quizPercentageTotal");
+            node.misconceptionReviewCount = json.optInt("misconceptionReviewCount");
+            node.lastMisconceptionType = json.optString("lastMisconceptionType");
             node.lastQuestion = json.optString("lastQuestion");
             node.firstSeenAt = json.optLong("firstSeenAt");
             node.lastUpdatedAt = json.optLong("lastUpdatedAt");
@@ -323,14 +350,16 @@ public final class StudentKnowledgeGraphStore {
         private final int masteredCount;
         private final int practicingCount;
         private final int averageConfidence;
+        private final int misconceptionReviewCount;
         @NonNull private final List<KnowledgeNode> recentNodes;
 
         ProfileSummary(int subjectCount, int conceptCount, int masteredCount,
-                       int practicingCount, int averageConfidence,
+                       int practicingCount, int averageConfidence, int misconceptionReviewCount,
                        @NonNull List<KnowledgeNode> recentNodes) {
             this.subjectCount = subjectCount; this.conceptCount = conceptCount;
             this.masteredCount = masteredCount; this.practicingCount = practicingCount;
             this.averageConfidence = averageConfidence;
+            this.misconceptionReviewCount = misconceptionReviewCount;
             this.recentNodes = Collections.unmodifiableList(recentNodes);
         }
 
@@ -339,6 +368,7 @@ public final class StudentKnowledgeGraphStore {
         public int getMasteredCount() { return masteredCount; }
         public int getPracticingCount() { return practicingCount; }
         public int getAverageConfidence() { return averageConfidence; }
+        public int getMisconceptionReviewCount() { return misconceptionReviewCount; }
         @NonNull public List<KnowledgeNode> getRecentNodes() { return recentNodes; }
     }
 

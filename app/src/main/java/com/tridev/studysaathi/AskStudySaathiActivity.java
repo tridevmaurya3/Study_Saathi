@@ -36,6 +36,7 @@ import com.tridev.studysaathi.data.ai.QuestionImageBitmapLoader;
 import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
+import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
 import com.tridev.studysaathi.data.catalog.DoubtAssistantEngine;
 import com.tridev.studysaathi.data.catalog.LessonCatalog;
 import com.tridev.studysaathi.data.local.entity.DoubtHistoryEntity;
@@ -3388,6 +3389,8 @@ public class AskStudySaathiActivity
                         selectedSubjectName,
                         getSelectedChapterTitle(),
                         question);
+        StudentMisconceptionDetector.Detection misconception =
+                StudentMisconceptionDetector.inspect(selectedSubjectName, question);
 
         FirebaseStudyTutorClient.TutorRequest tutorRequest =
                 new FirebaseStudyTutorClient.TutorRequest(
@@ -3400,7 +3403,8 @@ public class AskStudySaathiActivity
                         question,
                         "",
                         "",
-                        adaptiveLevel.getRequestValue()
+                        adaptiveLevel.getRequestValue(),
+                        misconception.getRequestContext()
                 );
 
         if (questionImageUri == null) {
@@ -3561,10 +3565,20 @@ public class AskStudySaathiActivity
                                         question,
                                         result
                                 );
+                        new StudentKnowledgeGraphStore(AskStudySaathiActivity.this)
+                                .recordMisconceptionReview(
+                                        activeStudentProfile.getProfileId(),
+                                        selectedSubjectName,
+                                        selectedChapter == null ? "General"
+                                                : selectedChapter.getDisplayTitle(),
+                                        question,
+                                        misconception);
 
                         showCompletedAnswer(
                                 question,
                                 "🎯 " + adaptiveLevel.getDisplayLabel() + "\n\n"
+                                        + (misconception.shouldReview()
+                                        ? "🧭 " + misconception.getDisplayLabel() + "\n\n" : "")
                                         + result.buildDisplayAnswerText()
                         );
 
@@ -3579,6 +3593,8 @@ public class AskStudySaathiActivity
                         saveDoubtHistory(
                                 question,
                                 "🎯 " + adaptiveLevel.getDisplayLabel() + "\n\n"
+                                        + (misconception.shouldReview()
+                                        ? "🧭 " + misconception.getDisplayLabel() + "\n\n" : "")
                                         + result.buildDisplayAnswerText()
                         );
 

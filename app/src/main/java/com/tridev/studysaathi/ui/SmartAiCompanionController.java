@@ -64,6 +64,7 @@ import com.tridev.studysaathi.data.local.entity.SchoolBookChapterContentEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
+import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
 import com.tridev.studysaathi.data.repository.DoubtHistoryRepository;
 import com.tridev.studysaathi.data.repository.SchoolBookChapterContentRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
@@ -736,6 +737,8 @@ public final class SmartAiCompanionController {
             AdaptiveLearningLevelResolver.AdaptiveLevel adaptiveLevel =
                     new AdaptiveLearningLevelResolver(activity).resolve(
                             activeProfile.getProfileId(), effectiveSubject, chapterTitle, question);
+            StudentMisconceptionDetector.Detection misconception =
+                    StudentMisconceptionDetector.inspect(effectiveSubject, question);
             FirebaseStudyTutorClient.TutorRequest request =
                     new FirebaseStudyTutorClient.TutorRequest(
                             activeProfile.getStudentName(),
@@ -747,7 +750,8 @@ public final class SmartAiCompanionController {
                             question,
                             conversationStore.buildConversationContext(turns),
                             approvedChapterReference,
-                            adaptiveLevel.getRequestValue()
+                            adaptiveLevel.getRequestValue(),
+                            misconception.getRequestContext()
                     );
 
             tutorClient.askQuestionWithResult(
@@ -768,7 +772,8 @@ public final class SmartAiCompanionController {
                                     question,
                                     result,
                                     effectiveSubject,
-                                    adaptiveLevel
+                                    adaptiveLevel,
+                                    misconception
                             );
                         }
 
@@ -805,7 +810,8 @@ public final class SmartAiCompanionController {
                                         question,
                                         localResult,
                                         effectiveSubject,
-                                        adaptiveLevel
+                                        adaptiveLevel,
+                                        misconception
                                 );
                                 return;
                             }
@@ -822,7 +828,8 @@ public final class SmartAiCompanionController {
                 @NonNull String question,
                 @NonNull SmartTutorAnswerResult result,
                 @NonNull String effectiveSubject,
-                @NonNull AdaptiveLearningLevelResolver.AdaptiveLevel adaptiveLevel
+                @NonNull AdaptiveLearningLevelResolver.AdaptiveLevel adaptiveLevel,
+                @NonNull StudentMisconceptionDetector.Detection misconception
         ) {
             String answer = formatForStudentClass(
                     result.getRawAnswerText()
@@ -832,6 +839,9 @@ public final class SmartAiCompanionController {
                     + result.getConfidenceLevel().getDisplayLabel()
                     + " • "
                     + adaptiveLevel.getDisplayLabel();
+            if (misconception.shouldReview()) {
+                source += " • " + misconception.getDisplayLabel();
+            }
             SmartCompanionConversationStore.Turn turn =
                     new SmartCompanionConversationStore.Turn(
                             question,
@@ -849,6 +859,9 @@ public final class SmartAiCompanionController {
                     question,
                     result
             );
+            new StudentKnowledgeGraphStore(activity).recordMisconceptionReview(
+                    profile.getProfileId(), effectiveSubject, chapterTitle,
+                    question, misconception);
             renderTurn(turn);
             scrollToBottom();
             saveParentInsight(

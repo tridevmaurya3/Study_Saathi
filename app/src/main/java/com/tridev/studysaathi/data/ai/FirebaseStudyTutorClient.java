@@ -1591,6 +1591,13 @@ public final class FirebaseStudyTutorClient {
         appendPromptLine(prompt, "Adaptive teaching level",
                 adaptiveLevel.getRequestValue());
 
+        if (!request.getMisconceptionContext().isEmpty()) {
+            prompt.append("\nMISCONCEPTION REVIEW\n")
+                    .append(request.getMisconceptionContext())
+                    .append("\nDo not assume the student is wrong. Verify the claim first. ")
+                    .append("If correction is needed, be specific, kind, and show the first incorrect step.\n");
+        }
+
         appendApprovedChapterReference(
                 prompt,
                 request.getApprovedChapterReference()
@@ -2139,6 +2146,9 @@ public final class FirebaseStudyTutorClient {
         @NonNull
         private final String adaptiveLearningLevel;
 
+        @NonNull
+        private final String misconceptionContext;
+
         public TutorRequest(
                 @Nullable String studentName,
                 @Nullable String educationBoard,
@@ -2158,7 +2168,8 @@ public final class FirebaseStudyTutorClient {
                     question,
                     "",
                     "",
-                    "Standard"
+                    "Standard",
+                    ""
             );
         }
 
@@ -2182,7 +2193,8 @@ public final class FirebaseStudyTutorClient {
                     question,
                     conversationContext,
                     "",
-                    "Standard"
+                    "Standard",
+                    ""
             );
         }
 
@@ -2199,7 +2211,7 @@ public final class FirebaseStudyTutorClient {
         ) {
             this(studentName, educationBoard, studentClass, explanationLanguage,
                     subjectName, chapterTitle, question, conversationContext,
-                    approvedChapterReference, "Standard");
+                    approvedChapterReference, "Standard", "");
         }
 
         public TutorRequest(
@@ -2213,6 +2225,24 @@ public final class FirebaseStudyTutorClient {
                 @Nullable String conversationContext,
                 @Nullable String approvedChapterReference,
                 @Nullable String adaptiveLearningLevel
+        ) {
+            this(studentName, educationBoard, studentClass, explanationLanguage,
+                    subjectName, chapterTitle, question, conversationContext,
+                    approvedChapterReference, adaptiveLearningLevel, "");
+        }
+
+        public TutorRequest(
+                @Nullable String studentName,
+                @Nullable String educationBoard,
+                @Nullable String studentClass,
+                @Nullable String explanationLanguage,
+                @Nullable String subjectName,
+                @Nullable String chapterTitle,
+                @Nullable String question,
+                @Nullable String conversationContext,
+                @Nullable String approvedChapterReference,
+                @Nullable String adaptiveLearningLevel,
+                @Nullable String misconceptionContext
         ) {
             this.studentName =
                     safeText(
@@ -2263,6 +2293,8 @@ public final class FirebaseStudyTutorClient {
                     safeText(adaptiveLearningLevel).isEmpty()
                             ? "Standard"
                             : safeText(adaptiveLearningLevel);
+
+            this.misconceptionContext = safeText(misconceptionContext);
         }
 
         private boolean isValid() {
@@ -2319,6 +2351,11 @@ public final class FirebaseStudyTutorClient {
         @NonNull
         public String getAdaptiveLearningLevel() {
             return adaptiveLearningLevel;
+        }
+
+        @NonNull
+        public String getMisconceptionContext() {
+            return misconceptionContext;
         }
     }
 }
