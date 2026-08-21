@@ -100,4 +100,14 @@
         <item name="android:insetBottom">0dp</item>
     </style>
 
+    <style name="Theme.StudySaathi.TransparentVoice"
+        parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowIsFloating">false</item>
+    </style>
+
 </resources>

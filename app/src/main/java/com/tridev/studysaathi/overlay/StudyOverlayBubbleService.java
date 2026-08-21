@@ -17,6 +17,7 @@ import android.provider.Settings;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -44,7 +45,9 @@ import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 /** Floating Study AI that stays above the current app without opening Dashboard. */
 public final class StudyOverlayBubbleService extends Service {
     private static final String CHANNEL = "study_ai_overlay";
-    private static final String ACTION_TOGGLE = "com.tridev.studysaathi.overlay.TOGGLE";
+    static final String ACTION_TOGGLE = "com.tridev.studysaathi.overlay.TOGGLE";
+    static final String ACTION_VOICE_RESULT = "com.tridev.studysaathi.overlay.VOICE_RESULT";
+    static final String EXTRA_VOICE_TEXT = "overlay_voice_text";
     private static final String PREFS = "study_ai_overlay_preferences";
     private static final String KEY_ALPHA = "bubble_alpha";
 
@@ -57,6 +60,7 @@ public final class StudyOverlayBubbleService extends Service {
     private TextView transcript;
     private TextView status;
     private EditText question;
+    private FrameLayout questionFrame;
     private Button send;
     private ObjectAnimator pulse;
     private FirebaseStudyTutorClient tutorClient;
@@ -66,6 +70,8 @@ public final class StudyOverlayBubbleService extends Service {
     private int resizeStartHeight;
     private float resizeDownX;
     private float resizeDownY;
+    private int questionStartHeight;
+    private float questionResizeDownY;
 
     public static void start(@NonNull Context context) {
         if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(context)) return;
@@ -136,34 +142,49 @@ public final class StudyOverlayBubbleService extends Service {
 
         LinearLayout body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);
-        body.setPadding(dp(15), dp(10), dp(15), dp(12));
+        body.setPadding(dp(12), dp(8), dp(12), dp(8));
         panel.addView(body, new FrameLayout.LayoutParams(-1, -1));
 
         LinearLayout header = new LinearLayout(this);
         header.setGravity(Gravity.CENTER_VERTICAL);
-        TextView title = text("✦ Study Saathi AI", 17, Color.rgb(25, 47, 91));
+        TextView title = text("✦ Study Saathi AI", 16, Color.rgb(25, 47, 91));
         title.setTypeface(title.getTypeface(), android.graphics.Typeface.BOLD);
-        header.addView(title, new LinearLayout.LayoutParams(0, dp(44), 1));
+        header.addView(title, new LinearLayout.LayoutParams(0, dp(38), 1));
         TextView minimize = headerAction("—");
         TextView close = headerAction("×");
         header.addView(minimize);
         header.addView(close);
         body.addView(header);
 
-        status = text("इस screen के बारे में पूछें • General Studies", 12,
+        status = text("इस screen के बारे में पूछें • General Studies", 11,
                 Color.rgb(83, 94, 117));
         body.addView(status, matchWrap());
 
         question = new OverlayQuestionEditText(this);
         question.setHint("अपना सवाल लिखें…");
-        question.setTextSize(16);
-        question.setMinLines(3);
+        question.setTextSize(14);
+        question.setMinLines(1);
         question.setMaxLines(5);
-        question.setPadding(dp(16), dp(12), dp(16), dp(12));
+        question.setGravity(Gravity.TOP | Gravity.START);
+        question.setPadding(dp(12), dp(9), dp(48), dp(9));
         question.setBackground(rounded(Color.WHITE, Color.rgb(96, 128, 205), 15));
-        LinearLayout.LayoutParams inputLp = matchWrap();
-        inputLp.topMargin = dp(12);
-        body.addView(question, inputLp);
+        question.setSingleLine(false);
+        question.setShowSoftInputOnFocus(true);
+        questionFrame = new FrameLayout(this);
+        questionFrame.addView(question, new FrameLayout.LayoutParams(-1, -1));
+        TextView microphone = text("🎙", 21, Color.rgb(72, 92, 128));
+        microphone.setGravity(Gravity.CENTER);
+        microphone.setContentDescription("Voice question");
+        questionFrame.addView(microphone,
+                new FrameLayout.LayoutParams(dp(44), dp(44), Gravity.END | Gravity.CENTER_VERTICAL));
+        TextView questionResize = text("⌟", 14, Color.rgb(50, 85, 170));
+        questionResize.setAlpha(.28f);
+        questionResize.setGravity(Gravity.CENTER);
+        questionFrame.addView(questionResize,
+                new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.START | Gravity.BOTTOM));
+        LinearLayout.LayoutParams inputLp = new LinearLayout.LayoutParams(-1, dp(64));
+        inputLp.topMargin = dp(7);
+        body.addView(questionFrame, inputLp);
 
         LinearLayout primaryActions = actionRow();
         Button photo = actionButton("📷 फोटो", Color.rgb(255, 249, 232),
@@ -171,7 +192,7 @@ public final class StudyOverlayBubbleService extends Service {
         send = new Button(this);
         send.setText("पूछें");
         send.setTextColor(Color.WHITE);
-        send.setTextSize(14);
+        send.setTextSize(12);
         send.setAllCaps(false);
         send.setBackground(rounded(Color.rgb(43, 91, 201), Color.rgb(43, 91, 201), 14));
         primaryActions.addView(photo, weightedButton());
@@ -232,6 +253,9 @@ public final class StudyOverlayBubbleService extends Service {
         minimize.setOnClickListener(v -> removePanel());
         close.setOnClickListener(v -> removePanel());
         title.setOnTouchListener(new PanelDragTouch());
+        question.setOnClickListener(v -> showKeyboard());
+        microphone.setOnClickListener(v -> launchVoiceInput());
+        questionResize.setOnTouchListener(this::resizeQuestionBox);
         send.setOnClickListener(v -> askQuestion());
         photo.setOnClickListener(v -> status.setText(
                 "Photo प्रश्न Study Saathi app के अंदर उपलब्ध है।"));
@@ -254,10 +278,9 @@ public final class StudyOverlayBubbleService extends Service {
 
         int width = getResources().getDisplayMetrics().widthPixels;
         int height = getResources().getDisplayMetrics().heightPixels;
-        panelParams = new WindowManager.LayoutParams(Math.min(dp(390), width - dp(24)),
-                Math.min(dp(560), height - dp(90)), overlayType(),
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                        | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+        panelParams = new WindowManager.LayoutParams(Math.min(dp(375), width - dp(24)),
+                Math.min(dp(520), height - dp(90)), overlayType(),
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                 PixelFormat.TRANSLUCENT);
         panelParams.gravity = Gravity.TOP | Gravity.START;
         panelParams.x = Math.max(dp(12), width - panelParams.width - dp(12));
@@ -285,8 +308,44 @@ public final class StudyOverlayBubbleService extends Service {
         windowManager.addView(panel, panelParams);
         panel.requestFocus();
         question.requestFocus();
-        question.postDelayed(() -> ((InputMethodManager) getSystemService(INPUT_METHOD_SERVICE))
-                .showSoftInput(question, InputMethodManager.SHOW_IMPLICIT), 180);
+        question.postDelayed(this::showKeyboard, 180);
+    }
+
+    private void showKeyboard() {
+        if (question == null) return;
+        question.setFocusableInTouchMode(true);
+        question.requestFocus();
+        ((InputMethodManager) getSystemService(INPUT_METHOD_SERVICE))
+                .showSoftInput(question, InputMethodManager.SHOW_IMPLICIT);
+    }
+
+    private void launchVoiceInput() {
+        try {
+            startActivity(new Intent(this, OverlayVoiceInputActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            status.setText("बोलिए…");
+        } catch (RuntimeException error) {
+            status.setText("Voice input अभी उपलब्ध नहीं है।");
+        }
+    }
+
+    private boolean resizeQuestionBox(View view, MotionEvent event) {
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            questionStartHeight = questionFrame.getHeight();
+            questionResizeDownY = event.getRawY();
+            return true;
+        }
+        if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+            int nextHeight = questionStartHeight
+                    + Math.round(event.getRawY() - questionResizeDownY);
+            nextHeight = Math.max(dp(52), Math.min(dp(150), nextHeight));
+            ViewGroup.LayoutParams params = questionFrame.getLayoutParams();
+            params.height = nextHeight;
+            questionFrame.setLayoutParams(params);
+            return true;
+        }
+        return event.getActionMasked() == MotionEvent.ACTION_UP
+                || event.getActionMasked() == MotionEvent.ACTION_CANCEL;
     }
 
     private void submitQuickPrompt(@NonNull String prompt) {
@@ -437,7 +496,7 @@ public final class StudyOverlayBubbleService extends Service {
             try { windowManager.removeView(dismissLayer); } catch (RuntimeException ignored) { }
         }
         dismissLayer = null;
-        panel = null; panelParams = null; transcript = null;
+        panel = null; panelParams = null; transcript = null; questionFrame = null;
         status = null; question = null; send = null;
     }
 
@@ -461,15 +520,15 @@ public final class StudyOverlayBubbleService extends Service {
         TextView view = text(label, 22, Color.rgb(42, 67, 122));
         view.setGravity(Gravity.CENTER);
         view.setBackground(rounded(Color.rgb(235, 241, 253), Color.rgb(200, 214, 240), 12));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(40), dp(40));
-        lp.leftMargin = dp(6); view.setLayoutParams(lp); return view;
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(34), dp(34));
+        lp.leftMargin = dp(5); view.setLayoutParams(lp); return view;
     }
 
     private LinearLayout actionRow() {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams params = matchWrap();
-        params.topMargin = dp(7);
+        params.topMargin = dp(4);
         row.setLayoutParams(params);
         return row;
     }
@@ -477,7 +536,7 @@ public final class StudyOverlayBubbleService extends Service {
     private Button actionButton(String label, int fill, int stroke) {
         Button button = new Button(this);
         button.setText(label);
-        button.setTextSize(12);
+        button.setTextSize(11);
         button.setTextColor(Color.rgb(40, 83, 157));
         button.setAllCaps(false);
         button.setBackground(rounded(fill, stroke, 22));
@@ -485,7 +544,7 @@ public final class StudyOverlayBubbleService extends Service {
     }
 
     private LinearLayout.LayoutParams weightedButton() {
-        return new LinearLayout.LayoutParams(0, dp(48), 1);
+        return new LinearLayout.LayoutParams(0, dp(40), 1);
     }
 
     private LinearLayout.LayoutParams matchWrap() {
@@ -523,6 +582,14 @@ public final class StudyOverlayBubbleService extends Service {
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACTION_TOGGLE.equals(intent.getAction()) && bubble != null) {
             togglePanel();
+        } else if (intent != null && ACTION_VOICE_RESULT.equals(intent.getAction())) {
+            String voiceText = intent.getStringExtra(EXTRA_VOICE_TEXT);
+            if (voiceText != null && !voiceText.trim().isEmpty()) {
+                if (panel == null) showPanel();
+                question.setText(voiceText.trim());
+                question.setSelection(question.length());
+                status.setText("Voice question तैयार है।");
+            }
         }
         return START_STICKY;
     }
