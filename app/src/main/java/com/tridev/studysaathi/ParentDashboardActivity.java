@@ -20,6 +20,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.tridev.studysaathi.adapter.ParentProfileSummaryAdapter;
 import com.tridev.studysaathi.data.ai.CitationCoverageHistoryStore;
+import com.tridev.studysaathi.data.ai.LowCoverageChapterRecommendationEngine;
 import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
 import com.tridev.studysaathi.data.local.entity.QuizAttemptEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
@@ -510,6 +511,22 @@ public class ParentDashboardActivity
                     .append(" • ").append(scope.getAttentionNeeded()).append(" attention");
         }
         binding.textParentCitationScopeInsights.setText(scopeText.toString());
+
+        List<LowCoverageChapterRecommendationEngine.Recommendation> recommendations =
+                LowCoverageChapterRecommendationEngine.recommend(
+                        citationCoverageHistoryStore.getTopScopeSummaries(60), 3);
+        if (recommendations.isEmpty()) {
+            binding.textParentCitationRecommendations.setText(
+                    "अभी कोई low-coverage chapter recommendation नहीं है।");
+            return;
+        }
+        StringBuilder recommendationText = new StringBuilder();
+        for (LowCoverageChapterRecommendationEngine.Recommendation recommendation
+                : recommendations) {
+            if (recommendationText.length() > 0) recommendationText.append("\n");
+            recommendationText.append("→ ").append(recommendation.buildParentMessage());
+        }
+        binding.textParentCitationRecommendations.setText(recommendationText.toString());
     }
 
     private void loadProfileProgress(

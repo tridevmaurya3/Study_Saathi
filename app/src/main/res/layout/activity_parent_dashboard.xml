@@ -345,6 +345,24 @@
                         android:textColor="@color/ss_text_primary"
                         android:textSize="13sp" />
 
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:text="Recommended Revision"
+                        android:textColor="@color/ss_text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/textParentCitationRecommendations"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="7dp"
+                        android:text="अभी कोई low-coverage chapter recommendation नहीं है।"
+                        android:textColor="@color/ss_text_secondary"
+                        android:textSize="13sp" />
+
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
