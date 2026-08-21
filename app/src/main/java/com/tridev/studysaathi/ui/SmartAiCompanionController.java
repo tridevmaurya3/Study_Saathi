@@ -64,6 +64,8 @@ import com.tridev.studysaathi.data.local.entity.SchoolBookChapterContentEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
+import com.tridev.studysaathi.data.learning.LearningStyleMemoryStore;
+import com.tridev.studysaathi.data.learning.LearningStylePreference;
 import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
 import com.tridev.studysaathi.data.repository.DoubtHistoryRepository;
 import com.tridev.studysaathi.data.repository.SchoolBookChapterContentRepository;
@@ -739,6 +741,9 @@ public final class SmartAiCompanionController {
                             activeProfile.getProfileId(), effectiveSubject, chapterTitle, question);
             StudentMisconceptionDetector.Detection misconception =
                     StudentMisconceptionDetector.inspect(effectiveSubject, question);
+            LearningStylePreference.Style learningStyle =
+                    new LearningStyleMemoryStore(activity).recordAndResolve(
+                            activeProfile.getProfileId(), question);
             FirebaseStudyTutorClient.TutorRequest request =
                     new FirebaseStudyTutorClient.TutorRequest(
                             activeProfile.getStudentName(),
@@ -751,7 +756,8 @@ public final class SmartAiCompanionController {
                             conversationStore.buildConversationContext(turns),
                             approvedChapterReference,
                             adaptiveLevel.getRequestValue(),
-                            misconception.getRequestContext()
+                            misconception.getRequestContext(),
+                            learningStyle.getRequestValue()
                     );
 
             tutorClient.askQuestionWithResult(

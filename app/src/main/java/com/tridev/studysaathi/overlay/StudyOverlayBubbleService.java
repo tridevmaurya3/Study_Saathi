@@ -42,6 +42,8 @@ import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
+import com.tridev.studysaathi.data.learning.LearningStyleMemoryStore;
+import com.tridev.studysaathi.data.learning.LearningStylePreference;
 import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 
@@ -548,6 +550,9 @@ public final class StudyOverlayBubbleService extends Service {
                                                 "General Studies", "General", prompt);
                         StudentMisconceptionDetector.Detection misconception =
                                 StudentMisconceptionDetector.inspect("General Studies", prompt);
+                        LearningStylePreference.Style learningStyle =
+                                new LearningStyleMemoryStore(StudyOverlayBubbleService.this)
+                                        .recordAndResolve(profile.getProfileId(), prompt);
                         status.setText(adaptiveLevel.getDisplayLabel()
                                 + " पर उत्तर तैयार किया जा रहा है…");
                         FirebaseStudyTutorClient.TutorRequest request =
@@ -556,7 +561,8 @@ public final class StudyOverlayBubbleService extends Service {
                                         profile.getStudentClass(), profile.getExplanationLanguage(),
                                         "General Studies", "", prompt,
                                         "", "", adaptiveLevel.getRequestValue(),
-                                        misconception.getRequestContext());
+                                        misconception.getRequestContext(),
+                                        learningStyle.getRequestValue());
                         tutorClient.askTextQuestionWithResult(request,
                                 new FirebaseStudyTutorClient.TutorResultCallback() {
                                     @Override public void onSuccess(@NonNull SmartTutorAnswerResult result) {

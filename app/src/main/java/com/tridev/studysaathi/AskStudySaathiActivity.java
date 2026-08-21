@@ -36,6 +36,8 @@ import com.tridev.studysaathi.data.ai.QuestionImageBitmapLoader;
 import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
+import com.tridev.studysaathi.data.learning.LearningStyleMemoryStore;
+import com.tridev.studysaathi.data.learning.LearningStylePreference;
 import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
 import com.tridev.studysaathi.data.catalog.DoubtAssistantEngine;
 import com.tridev.studysaathi.data.catalog.LessonCatalog;
@@ -3391,6 +3393,9 @@ public class AskStudySaathiActivity
                         question);
         StudentMisconceptionDetector.Detection misconception =
                 StudentMisconceptionDetector.inspect(selectedSubjectName, question);
+        LearningStylePreference.Style learningStyle =
+                new LearningStyleMemoryStore(this).recordAndResolve(
+                        activeStudentProfile.getProfileId(), question);
 
         FirebaseStudyTutorClient.TutorRequest tutorRequest =
                 new FirebaseStudyTutorClient.TutorRequest(
@@ -3404,7 +3409,8 @@ public class AskStudySaathiActivity
                         "",
                         "",
                         adaptiveLevel.getRequestValue(),
-                        misconception.getRequestContext()
+                        misconception.getRequestContext(),
+                        learningStyle.getRequestValue()
                 );
 
         if (questionImageUri == null) {
