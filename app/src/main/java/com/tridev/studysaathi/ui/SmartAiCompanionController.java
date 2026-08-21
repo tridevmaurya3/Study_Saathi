@@ -63,6 +63,7 @@ import com.tridev.studysaathi.data.local.entity.DoubtHistoryEntity;
 import com.tridev.studysaathi.data.local.entity.SchoolBookChapterContentEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
+import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
 import com.tridev.studysaathi.data.repository.DoubtHistoryRepository;
 import com.tridev.studysaathi.data.repository.SchoolBookChapterContentRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
@@ -732,6 +733,9 @@ public final class SmartAiCompanionController {
             String effectiveSubject = subjectName.isEmpty()
                     ? "General Studies"
                     : subjectName;
+            AdaptiveLearningLevelResolver.AdaptiveLevel adaptiveLevel =
+                    new AdaptiveLearningLevelResolver(activity).resolve(
+                            activeProfile.getProfileId(), effectiveSubject, chapterTitle, question);
             FirebaseStudyTutorClient.TutorRequest request =
                     new FirebaseStudyTutorClient.TutorRequest(
                             activeProfile.getStudentName(),
@@ -742,7 +746,8 @@ public final class SmartAiCompanionController {
                             chapterTitle,
                             question,
                             conversationStore.buildConversationContext(turns),
-                            approvedChapterReference
+                            approvedChapterReference,
+                            adaptiveLevel.getRequestValue()
                     );
 
             tutorClient.askQuestionWithResult(
@@ -762,7 +767,8 @@ public final class SmartAiCompanionController {
                             addSuccessfulTurn(
                                     question,
                                     result,
-                                    effectiveSubject
+                                    effectiveSubject,
+                                    adaptiveLevel
                             );
                         }
 
@@ -798,7 +804,8 @@ public final class SmartAiCompanionController {
                                 addSuccessfulTurn(
                                         question,
                                         localResult,
-                                        effectiveSubject
+                                        effectiveSubject,
+                                        adaptiveLevel
                                 );
                                 return;
                             }
@@ -814,14 +821,17 @@ public final class SmartAiCompanionController {
         private void addSuccessfulTurn(
                 @NonNull String question,
                 @NonNull SmartTutorAnswerResult result,
-                @NonNull String effectiveSubject
+                @NonNull String effectiveSubject,
+                @NonNull AdaptiveLearningLevelResolver.AdaptiveLevel adaptiveLevel
         ) {
             String answer = formatForStudentClass(
                     result.getRawAnswerText()
             );
             String source = result.getAnswerSource().getDisplayLabel()
                     + " • "
-                    + result.getConfidenceLevel().getDisplayLabel();
+                    + result.getConfidenceLevel().getDisplayLabel()
+                    + " • "
+                    + adaptiveLevel.getDisplayLabel();
             SmartCompanionConversationStore.Turn turn =
                     new SmartCompanionConversationStore.Turn(
                             question,

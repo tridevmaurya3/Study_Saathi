@@ -18,6 +18,7 @@ import com.google.firebase.ai.type.GenerateContentResponse;
 import com.google.firebase.ai.type.GenerationConfig;
 import com.google.firebase.ai.type.GenerativeBackend;
 import com.tridev.studysaathi.data.knowledge.OfflineKnowledgeRepository;
+import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
 
 import java.util.Locale;
 import java.util.concurrent.Executor;
@@ -1584,6 +1585,12 @@ public final class FirebaseStudyTutorClient {
                 request.getChapterTitle()
         );
 
+        AdaptiveLearningLevelResolver.AdaptiveLevel adaptiveLevel =
+                AdaptiveLearningLevelResolver.AdaptiveLevel.fromRequestValue(
+                        request.getAdaptiveLearningLevel());
+        appendPromptLine(prompt, "Adaptive teaching level",
+                adaptiveLevel.getRequestValue());
+
         appendApprovedChapterReference(
                 prompt,
                 request.getApprovedChapterReference()
@@ -1606,6 +1613,10 @@ public final class FirebaseStudyTutorClient {
         prompt.append(
                 "1. Explain strictly at the student's class level.\n"
         );
+
+        prompt.append("1A. ADAPTIVE LEVEL RULE: ")
+                .append(adaptiveLevel.getPromptInstruction())
+                .append("\n");
 
         prompt.append(
                 "2. First give a direct answer, then explain it step-by-step.\n"
@@ -2125,6 +2136,9 @@ public final class FirebaseStudyTutorClient {
         @NonNull
         private final String approvedChapterReference;
 
+        @NonNull
+        private final String adaptiveLearningLevel;
+
         public TutorRequest(
                 @Nullable String studentName,
                 @Nullable String educationBoard,
@@ -2143,7 +2157,8 @@ public final class FirebaseStudyTutorClient {
                     chapterTitle,
                     question,
                     "",
-                    ""
+                    "",
+                    "Standard"
             );
         }
 
@@ -2166,7 +2181,8 @@ public final class FirebaseStudyTutorClient {
                     chapterTitle,
                     question,
                     conversationContext,
-                    ""
+                    "",
+                    "Standard"
             );
         }
 
@@ -2180,6 +2196,23 @@ public final class FirebaseStudyTutorClient {
                 @Nullable String question,
                 @Nullable String conversationContext,
                 @Nullable String approvedChapterReference
+        ) {
+            this(studentName, educationBoard, studentClass, explanationLanguage,
+                    subjectName, chapterTitle, question, conversationContext,
+                    approvedChapterReference, "Standard");
+        }
+
+        public TutorRequest(
+                @Nullable String studentName,
+                @Nullable String educationBoard,
+                @Nullable String studentClass,
+                @Nullable String explanationLanguage,
+                @Nullable String subjectName,
+                @Nullable String chapterTitle,
+                @Nullable String question,
+                @Nullable String conversationContext,
+                @Nullable String approvedChapterReference,
+                @Nullable String adaptiveLearningLevel
         ) {
             this.studentName =
                     safeText(
@@ -2225,6 +2258,11 @@ public final class FirebaseStudyTutorClient {
                     safeText(
                             approvedChapterReference
                     );
+
+            this.adaptiveLearningLevel =
+                    safeText(adaptiveLearningLevel).isEmpty()
+                            ? "Standard"
+                            : safeText(adaptiveLearningLevel);
         }
 
         private boolean isValid() {
@@ -2276,6 +2314,11 @@ public final class FirebaseStudyTutorClient {
         @NonNull
         public String getApprovedChapterReference() {
             return approvedChapterReference;
+        }
+
+        @NonNull
+        public String getAdaptiveLearningLevel() {
+            return adaptiveLearningLevel;
         }
     }
 }

@@ -35,6 +35,7 @@ import com.tridev.studysaathi.data.ai.FirebaseStudyTutorClient;
 import com.tridev.studysaathi.data.ai.QuestionImageBitmapLoader;
 import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
+import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
 import com.tridev.studysaathi.data.catalog.DoubtAssistantEngine;
 import com.tridev.studysaathi.data.catalog.LessonCatalog;
 import com.tridev.studysaathi.data.local.entity.DoubtHistoryEntity;
@@ -3381,6 +3382,13 @@ public class AskStudySaathiActivity
                 imageSelected
         );
 
+        AdaptiveLearningLevelResolver.AdaptiveLevel adaptiveLevel =
+                new AdaptiveLearningLevelResolver(this).resolve(
+                        activeStudentProfile.getProfileId(),
+                        selectedSubjectName,
+                        getSelectedChapterTitle(),
+                        question);
+
         FirebaseStudyTutorClient.TutorRequest tutorRequest =
                 new FirebaseStudyTutorClient.TutorRequest(
                         activeStudentProfile.getStudentName(),
@@ -3389,7 +3397,10 @@ public class AskStudySaathiActivity
                         activeStudentProfile.getExplanationLanguage(),
                         selectedSubjectName,
                         getSelectedChapterTitle(),
-                        question
+                        question,
+                        "",
+                        "",
+                        adaptiveLevel.getRequestValue()
                 );
 
         if (questionImageUri == null) {
@@ -3543,7 +3554,7 @@ public class AskStudySaathiActivity
                         new StudentKnowledgeGraphStore(AskStudySaathiActivity.this)
                                 .recordAnswer(
                                         activeStudentProfile.getProfileId(),
-                                        selectedSchoolSubject.getBilingualDisplayName(),
+                                        selectedSubjectName,
                                         selectedChapter == null
                                                 ? "General"
                                                 : selectedChapter.getDisplayTitle(),
@@ -3553,7 +3564,8 @@ public class AskStudySaathiActivity
 
                         showCompletedAnswer(
                                 question,
-                                result.buildDisplayAnswerText()
+                                "🎯 " + adaptiveLevel.getDisplayLabel() + "\n\n"
+                                        + result.buildDisplayAnswerText()
                         );
 
                         if (originalImageAttached
@@ -3566,7 +3578,8 @@ public class AskStudySaathiActivity
 
                         saveDoubtHistory(
                                 question,
-                                result.buildDisplayAnswerText()
+                                "🎯 " + adaptiveLevel.getDisplayLabel() + "\n\n"
+                                        + result.buildDisplayAnswerText()
                         );
 
                         Snackbar.make(

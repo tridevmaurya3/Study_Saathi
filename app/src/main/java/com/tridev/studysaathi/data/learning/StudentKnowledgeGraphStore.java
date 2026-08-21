@@ -103,6 +103,30 @@ public final class StudentKnowledgeGraphStore {
     }
 
     @NonNull
+    public ContextReadiness getContextReadiness(long profileId,
+                                                @Nullable String subject,
+                                                @Nullable String chapter) {
+        synchronized (STORE_LOCK) {
+            String subjectKey = normalize(subject);
+            String chapterKey = normalize(chapter);
+            int readinessTotal = 0;
+            int matchedConcepts = 0;
+            int quizAttempts = 0;
+            for (KnowledgeNode node : readNodes()) {
+                if (node.profileId != profileId) continue;
+                if (!subjectKey.isEmpty() && !normalize(node.subject).equals(subjectKey)) continue;
+                if (!chapterKey.isEmpty() && !"general".equals(chapterKey)
+                        && !normalize(node.chapter).equals(chapterKey)) continue;
+                readinessTotal += node.getReadinessScore();
+                quizAttempts += node.quizAttempts;
+                matchedConcepts++;
+            }
+            return new ContextReadiness(matchedConcepts == 0
+                    ? 0 : readinessTotal / matchedConcepts, matchedConcepts, quizAttempts);
+        }
+    }
+
+    @NonNull
     private KnowledgeNode findOrCreate(@NonNull List<KnowledgeNode> nodes,
                                        long profileId,
                                        @Nullable String subject,
@@ -316,5 +340,21 @@ public final class StudentKnowledgeGraphStore {
         public int getPracticingCount() { return practicingCount; }
         public int getAverageConfidence() { return averageConfidence; }
         @NonNull public List<KnowledgeNode> getRecentNodes() { return recentNodes; }
+    }
+
+    public static final class ContextReadiness {
+        private final int readinessScore;
+        private final int conceptCount;
+        private final int quizAttempts;
+
+        ContextReadiness(int readinessScore, int conceptCount, int quizAttempts) {
+            this.readinessScore = Math.max(0, Math.min(100, readinessScore));
+            this.conceptCount = Math.max(0, conceptCount);
+            this.quizAttempts = Math.max(0, quizAttempts);
+        }
+
+        public int getReadinessScore() { return readinessScore; }
+        public int getConceptCount() { return conceptCount; }
+        public int getQuizAttempts() { return quizAttempts; }
     }
 }

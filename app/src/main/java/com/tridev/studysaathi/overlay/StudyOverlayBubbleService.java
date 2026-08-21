@@ -41,6 +41,7 @@ import com.tridev.studysaathi.data.ai.FirebaseStudyTutorClient;
 import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
+import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 
 import org.json.JSONArray;
@@ -539,11 +540,19 @@ public final class StudyOverlayBubbleService extends Service {
                             finishError("Active student profile उपलब्ध नहीं है।");
                             return;
                         }
+                        AdaptiveLearningLevelResolver.AdaptiveLevel adaptiveLevel =
+                                new AdaptiveLearningLevelResolver(
+                                        StudyOverlayBubbleService.this)
+                                        .resolve(profile.getProfileId(),
+                                                "General Studies", "General", prompt);
+                        status.setText(adaptiveLevel.getDisplayLabel()
+                                + " पर उत्तर तैयार किया जा रहा है…");
                         FirebaseStudyTutorClient.TutorRequest request =
                                 new FirebaseStudyTutorClient.TutorRequest(
                                         profile.getStudentName(), profile.getEducationBoard(),
                                         profile.getStudentClass(), profile.getExplanationLanguage(),
-                                        "General Studies", "", prompt);
+                                        "General Studies", "", prompt,
+                                        "", "", adaptiveLevel.getRequestValue());
                         tutorClient.askTextQuestionWithResult(request,
                                 new FirebaseStudyTutorClient.TutorResultCallback() {
                                     @Override public void onSuccess(@NonNull SmartTutorAnswerResult result) {
@@ -558,6 +567,7 @@ public final class StudyOverlayBubbleService extends Service {
                                                 + result.buildSourceBadgeText()
                                                 + " • "
                                                 + result.getConfidenceLevel().getDisplayLabel()
+                                                + " • " + adaptiveLevel.getDisplayLabel()
                                                 + "\n"
                                                 + result.getRawAnswerText(), null);
                                     }
