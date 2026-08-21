@@ -19,6 +19,7 @@ import com.google.firebase.ai.type.GenerationConfig;
 import com.google.firebase.ai.type.GenerativeBackend;
 import com.tridev.studysaathi.data.knowledge.OfflineKnowledgeRepository;
 import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
+import com.tridev.studysaathi.data.learning.SocraticTutorModeResolver;
 
 import java.util.Locale;
 import java.util.concurrent.Executor;
@@ -1598,6 +1599,15 @@ public final class FirebaseStudyTutorClient {
                     .append("If correction is needed, be specific, kind, and show the first incorrect step.\n");
         }
 
+        SocraticTutorModeResolver.Decision socraticMode =
+                SocraticTutorModeResolver.resolve(
+                        request.getQuestion(), safeConversationContext);
+        if (socraticMode.isGuided()) {
+            prompt.append("\nSOCRATIC TUTOR MODE\n")
+                    .append(socraticMode.getPromptInstruction())
+                    .append("\n");
+        }
+
         appendApprovedChapterReference(
                 prompt,
                 request.getApprovedChapterReference()
@@ -1625,9 +1635,9 @@ public final class FirebaseStudyTutorClient {
                 .append(adaptiveLevel.getPromptInstruction())
                 .append("\n");
 
-        prompt.append(
-                "2. First give a direct answer, then explain it step-by-step.\n"
-        );
+        prompt.append(socraticMode.isGuided()
+                ? "2. In Socratic mode, ask one guiding question or give one small hint; do not reveal the final answer yet.\n"
+                : "2. First give a direct answer, then explain it step-by-step.\n");
 
         prompt.append(
                 "3. Use simple words and short readable paragraphs.\n"
