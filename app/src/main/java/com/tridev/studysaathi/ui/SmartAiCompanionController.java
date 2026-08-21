@@ -64,6 +64,7 @@ import com.tridev.studysaathi.data.local.entity.SchoolBookChapterContentEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
+import com.tridev.studysaathi.data.learning.BookSemanticSearch;
 import com.tridev.studysaathi.data.learning.ExactBookPageCitationBuilder;
 import com.tridev.studysaathi.data.learning.LearningStyleMemoryStore;
 import com.tridev.studysaathi.data.learning.LearningStylePreference;
@@ -284,6 +285,9 @@ public final class SmartAiCompanionController {
         private final String chapterTitle;
         @NonNull
         private String approvedChapterReference = "";
+        @NonNull
+        private final List<ExactBookPageCitationBuilder.PageReference> approvedPageReferences =
+                new ArrayList<>();
 
         private boolean requestInProgress;
         private boolean closed;
@@ -660,8 +664,8 @@ public final class SmartAiCompanionController {
                                     for (SchoolBookChapterPageEntity page : pages) {
                                         references.add(toPageReference(page));
                                     }
-                                    mergeApprovedChapterReference(
-                                            ExactBookPageCitationBuilder.build(references), true);
+                                    approvedPageReferences.clear();
+                                    approvedPageReferences.addAll(references);
                                 }
 
                                 @Override
@@ -684,6 +688,16 @@ public final class SmartAiCompanionController {
             } else {
                 approvedChapterReference += "\n\n" + safeReference;
             }
+        }
+
+        @NonNull
+        private String buildApprovedReferenceForQuestion(@NonNull String question) {
+            List<ExactBookPageCitationBuilder.PageReference> relevantPages =
+                    BookSemanticSearch.findRelevantPages(question, approvedPageReferences, 3);
+            String exactPages = ExactBookPageCitationBuilder.build(relevantPages);
+            if (exactPages.isEmpty()) return approvedChapterReference;
+            if (approvedChapterReference.isEmpty()) return exactPages;
+            return exactPages + "\n\n" + approvedChapterReference;
         }
 
         @NonNull
@@ -814,7 +828,7 @@ public final class SmartAiCompanionController {
                             chapterTitle,
                             question,
                             conversationStore.buildConversationContext(turns),
-                            approvedChapterReference,
+                            buildApprovedReferenceForQuestion(question),
                             adaptiveLevel.getRequestValue(),
                             misconception.getRequestContext(),
                             learningStyle.getRequestValue()

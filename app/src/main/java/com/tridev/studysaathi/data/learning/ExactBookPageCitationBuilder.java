@@ -56,5 +56,19 @@ public final class ExactBookPageCitationBuilder {
             this.title = safe(title);
             this.content = safe(content);
         }
+
+        public int getPageNumber() {
+            return pageNumber;
+        }
+
+        @NonNull
+        public String getTitle() {
+            return title;
+        }
+
+        @NonNull
+        public String getContent() {
+            return content;
+        }
     }
 }
