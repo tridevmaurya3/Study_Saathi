@@ -9,19 +9,22 @@ import androidx.annotation.NonNull;
 import com.tridev.studysaathi.data.local.dao.QuizAttemptDao;
 import com.tridev.studysaathi.data.local.database.StudySaathiDatabase;
 import com.tridev.studysaathi.data.local.entity.QuizAttemptEntity;
+import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 
 import java.util.List;
 
 public class QuizAttemptRepository {
 
+    private final Context applicationContext;
     private final QuizAttemptDao quizAttemptDao;
     private final Handler mainThreadHandler;
 
     public QuizAttemptRepository(
             @NonNull Context context
     ) {
+        applicationContext = context.getApplicationContext();
         StudySaathiDatabase database =
-                StudySaathiDatabase.getInstance(context);
+                StudySaathiDatabase.getInstance(applicationContext);
 
         quizAttemptDao = database.quizAttemptDao();
 
@@ -40,6 +43,13 @@ public class QuizAttemptRepository {
                         quizAttemptDao.insertAttempt(
                                 quizAttempt
                         );
+
+                try {
+                    new StudentKnowledgeGraphStore(applicationContext)
+                            .recordAssessment(quizAttempt);
+                } catch (RuntimeException ignored) {
+                    // Knowledge graph telemetry must never block the saved quiz result.
+                }
 
                 mainThreadHandler.post(() ->
                         callback.onSuccess(attemptId)

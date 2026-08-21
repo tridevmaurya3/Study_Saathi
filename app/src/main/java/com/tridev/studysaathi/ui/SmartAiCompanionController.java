@@ -62,6 +62,7 @@ import com.tridev.studysaathi.data.catalog.DoubtAssistantEngine;
 import com.tridev.studysaathi.data.local.entity.DoubtHistoryEntity;
 import com.tridev.studysaathi.data.local.entity.SchoolBookChapterContentEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
+import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.repository.DoubtHistoryRepository;
 import com.tridev.studysaathi.data.repository.SchoolBookChapterContentRepository;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
@@ -831,6 +832,13 @@ public final class SmartAiCompanionController {
                     );
             turns.add(turn);
             conversationStore.append(profile.getProfileId(), turn);
+            new StudentKnowledgeGraphStore(activity).recordAnswer(
+                    profile.getProfileId(),
+                    effectiveSubject,
+                    chapterTitle,
+                    question,
+                    result
+            );
             renderTurn(turn);
             scrollToBottom();
             saveParentInsight(

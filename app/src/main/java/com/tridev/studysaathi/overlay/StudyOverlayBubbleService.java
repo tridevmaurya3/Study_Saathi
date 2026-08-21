@@ -40,6 +40,7 @@ import com.tridev.studysaathi.R;
 import com.tridev.studysaathi.data.ai.FirebaseStudyTutorClient;
 import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
+import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 
 import org.json.JSONArray;
@@ -546,6 +547,9 @@ public final class StudyOverlayBubbleService extends Service {
                         tutorClient.askTextQuestionWithResult(request,
                                 new FirebaseStudyTutorClient.TutorResultCallback() {
                                     @Override public void onSuccess(@NonNull SmartTutorAnswerResult result) {
+                                        new StudentKnowledgeGraphStore(StudyOverlayBubbleService.this)
+                                                .recordAnswer(profile.getProfileId(),
+                                                        "General Studies", "General", prompt, result);
                                         asking = false;
                                         if (panel == null) return;
                                         send.setEnabled(true);

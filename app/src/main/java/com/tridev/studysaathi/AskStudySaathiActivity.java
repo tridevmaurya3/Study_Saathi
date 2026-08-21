@@ -34,6 +34,7 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import com.tridev.studysaathi.data.ai.FirebaseStudyTutorClient;
 import com.tridev.studysaathi.data.ai.QuestionImageBitmapLoader;
 import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
+import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.catalog.DoubtAssistantEngine;
 import com.tridev.studysaathi.data.catalog.LessonCatalog;
 import com.tridev.studysaathi.data.local.entity.DoubtHistoryEntity;
@@ -3538,6 +3539,17 @@ public class AskStudySaathiActivity
                         );
 
                         finishSmartAiLoadingState();
+
+                        new StudentKnowledgeGraphStore(AskStudySaathiActivity.this)
+                                .recordAnswer(
+                                        activeStudentProfile.getProfileId(),
+                                        selectedSchoolSubject.getBilingualDisplayName(),
+                                        selectedChapter == null
+                                                ? "General"
+                                                : selectedChapter.getDisplayTitle(),
+                                        question,
+                                        result
+                                );
 
                         showCompletedAnswer(
                                 question,
