@@ -17,6 +17,7 @@ public class LowCoverageChapterRecommendationEngineTest {
                 LowCoverageChapterRecommendationEngine.recommend(scopes, 2);
         assertEquals("Fractions", result.get(0).getChapter());
         assertTrue(result.get(0).buildParentMessage().contains("revision"));
+        assertTrue(result.get(0).buildRevisionQuestion().contains("3 छोटे अभ्यास प्रश्न"));
     }
 
     @Test public void healthyChapterWithoutAttentionIsExcluded() {

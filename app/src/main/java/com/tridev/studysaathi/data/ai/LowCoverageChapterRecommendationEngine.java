@@ -64,5 +64,11 @@ public final class LowCoverageChapterRecommendationEngine {
             return subject + " — " + chapter + ": approved पुस्तक पृष्ठ के साथ revision कराएँ ("
                     + coveragePercent + "% grounded, " + attentionNeeded + " attention)।";
         }
+
+        @NonNull
+        public String buildRevisionQuestion() {
+            return "इस chapter की approved पुस्तक सामग्री के आधार पर आसान revision कराओ। "
+                    + "पहले मुख्य concepts दोहराओ, फिर 3 छोटे अभ्यास प्रश्न पूछो।";
+        }
     }
 }

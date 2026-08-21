@@ -74,6 +74,8 @@ public class ParentDashboardActivity
     private boolean profileActivationInProgress;
     private boolean parentAccessVerified;
     private boolean securityPromptInProgress;
+    private LowCoverageChapterRecommendationEngine.Recommendation
+            topCitationRecommendation;
 
     private ActivityResultLauncher<Intent>
             deviceCredentialLauncher;
@@ -351,6 +353,9 @@ public class ParentDashboardActivity
                 )
         );
 
+        binding.buttonOpenRecommendedRevision.setOnClickListener(view ->
+                openRecommendedRevision());
+
         binding.buttonParentSettingsGoals.setOnClickListener(view ->
                 openParentControl(SettingsActivity.class)
         );
@@ -500,6 +505,8 @@ public class ParentDashboardActivity
         if (scopes.isEmpty()) {
             binding.textParentCitationScopeInsights.setText(
                     "Subject और chapter breakdown अभी उपलब्ध नहीं है।");
+            topCitationRecommendation = null;
+            binding.buttonOpenRecommendedRevision.setEnabled(false);
             return;
         }
         StringBuilder scopeText = new StringBuilder();
@@ -518,8 +525,12 @@ public class ParentDashboardActivity
         if (recommendations.isEmpty()) {
             binding.textParentCitationRecommendations.setText(
                     "अभी कोई low-coverage chapter recommendation नहीं है।");
+            topCitationRecommendation = null;
+            binding.buttonOpenRecommendedRevision.setEnabled(false);
             return;
         }
+        topCitationRecommendation = recommendations.get(0);
+        binding.buttonOpenRecommendedRevision.setEnabled(true);
         StringBuilder recommendationText = new StringBuilder();
         for (LowCoverageChapterRecommendationEngine.Recommendation recommendation
                 : recommendations) {
@@ -527,6 +538,20 @@ public class ParentDashboardActivity
             recommendationText.append("→ ").append(recommendation.buildParentMessage());
         }
         binding.textParentCitationRecommendations.setText(recommendationText.toString());
+    }
+
+    private void openRecommendedRevision() {
+        LowCoverageChapterRecommendationEngine.Recommendation recommendation =
+                topCitationRecommendation;
+        if (recommendation == null) return;
+        Intent revisionIntent = new Intent(this, AskStudySaathiActivity.class);
+        revisionIntent.putExtra(AskStudySaathiActivity.EXTRA_PREFILL_SUBJECT,
+                recommendation.getSubject());
+        revisionIntent.putExtra(AskStudySaathiActivity.EXTRA_PREFILL_CHAPTER,
+                recommendation.getChapter());
+        revisionIntent.putExtra(AskStudySaathiActivity.EXTRA_PREFILL_QUESTION,
+                recommendation.buildRevisionQuestion());
+        startActivity(revisionIntent);
     }
 
     private void loadProfileProgress(
