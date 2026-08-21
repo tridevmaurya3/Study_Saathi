@@ -149,6 +149,9 @@ public final class FirebaseStudyTutorClient {
     private final OfflineKnowledgeRepository
             offlineKnowledgeRepository;
 
+    @NonNull
+    private final CitationCoverageHistoryStore citationCoverageHistoryStore;
+
     public FirebaseStudyTutorClient(
             @NonNull Context context
     ) {
@@ -179,6 +182,9 @@ public final class FirebaseStudyTutorClient {
                 new OfflineKnowledgeRepository(
                         applicationContext
                 );
+
+        citationCoverageHistoryStore =
+                new CitationCoverageHistoryStore(applicationContext);
     }
 
     /**
@@ -932,6 +938,7 @@ public final class FirebaseStudyTutorClient {
                 BookAnswerGroundingValidator.validate(
                         baseAnswerResult.getRawAnswerText(),
                         request.getApprovedChapterReference());
+        citationCoverageHistoryStore.record(grounding);
 
         if (grounding.hasUnsupportedCitation()) {
             SmartTutorAnswerResult blockedResult = SmartTutorAnswerResult.fromLocalFallback(

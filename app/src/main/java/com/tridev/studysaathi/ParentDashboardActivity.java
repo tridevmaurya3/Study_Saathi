@@ -19,6 +19,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.tridev.studysaathi.adapter.ParentProfileSummaryAdapter;
+import com.tridev.studysaathi.data.ai.CitationCoverageHistoryStore;
 import com.tridev.studysaathi.data.local.entity.LessonProgressEntity;
 import com.tridev.studysaathi.data.local.entity.QuizAttemptEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
@@ -56,6 +57,7 @@ public class ParentDashboardActivity
     private StudentProfileRepository studentProfileRepository;
     private LessonProgressRepository lessonProgressRepository;
     private QuizAttemptRepository quizAttemptRepository;
+    private CitationCoverageHistoryStore citationCoverageHistoryStore;
 
     private SharedPreferences goalPreferences;
 
@@ -110,6 +112,9 @@ public class ParentDashboardActivity
 
         quizAttemptRepository =
                 new QuizAttemptRepository(this);
+
+        citationCoverageHistoryStore =
+                new CitationCoverageHistoryStore(this);
 
         goalPreferences =
                 getSharedPreferences(
@@ -400,6 +405,7 @@ public class ParentDashboardActivity
     }
 
     private void loadParentDashboard() {
+        renderCitationCoverageInsights();
         int currentGeneration =
                 ++loadGeneration;
 
@@ -472,6 +478,21 @@ public class ParentDashboardActivity
                     }
                 }
         );
+    }
+
+    private void renderCitationCoverageInsights() {
+        CitationCoverageHistoryStore.Summary summary =
+                citationCoverageHistoryStore.getSummary();
+        binding.textParentCitationCoverage.setText(summary.getCoveragePercent() + "%");
+        binding.textParentCitationReviewed.setText(String.valueOf(summary.getReviewed()));
+        binding.textParentCitationAttention.setText(
+                String.valueOf(summary.getAttentionNeeded()));
+        binding.textParentCitationInsight.setText(summary.getReviewed() == 0
+                ? "Approved book citation वाले answers आने पर यहाँ insight दिखाई जाएगी।"
+                : summary.getAttentionNeeded() == 0
+                ? "सभी reviewed answers approved book evidence से grounded रहे।"
+                : summary.getMissing() + " answers में citation missing था और "
+                + summary.getBlocked() + " unsupported citations block किए गए।");
     }
 
     private void loadProfileProgress(
