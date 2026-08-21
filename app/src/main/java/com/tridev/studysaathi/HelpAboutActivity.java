@@ -2,7 +2,10 @@ package com.tridev.studysaathi;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.ViewGroup;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -29,6 +32,7 @@ public final class HelpAboutActivity extends AppCompatActivity {
     private String mode = MODE_STUDENT;
     private String language = LANGUAGE_BILINGUAL;
     private String profileContext = "";
+    private String helpSearchQuery = "";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -43,6 +47,14 @@ public final class HelpAboutActivity extends AppCompatActivity {
                 getOnBackPressedDispatcher().onBackPressed()
         );
         binding.textHelpVersion.setText("Version " + BuildConfig.VERSION_NAME);
+        binding.editHelpSearch.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence text, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence text, int start, int before, int count) {
+                helpSearchQuery = text == null ? "" : text.toString().trim();
+                renderGuide();
+            }
+            @Override public void afterTextChanged(Editable editable) { }
+        });
         binding.toggleHelpLanguage.addOnButtonCheckedListener(
                 (group, checkedId, isChecked) -> {
                     if (!isChecked) {
@@ -114,12 +126,19 @@ public final class HelpAboutActivity extends AppCompatActivity {
         binding.textHelpIntro.setText(parent ? parentHeading() : studentHeading());
         binding.textHelpProfileContext.setText(profileContext);
         binding.textHelpSafety.setText(parent ? parentSafety() : studentSafety());
+        binding.editHelpSearch.setHint(searchHint());
 
         binding.containerHelpSteps.removeAllViews();
         String[][] steps = parent ? parentSteps() : studentSteps();
+        int visibleCount = 0;
         for (int index = 0; index < steps.length; index++) {
-            addStepCard(index + 1, steps[index][0], steps[index][1]);
+            if (matchesSearch(steps[index][0], steps[index][1])) {
+                addStepCard(index + 1, steps[index][0], steps[index][1]);
+                visibleCount++;
+            }
         }
+        binding.textHelpNoResults.setVisibility(visibleCount == 0 ? View.VISIBLE : View.GONE);
+        binding.textHelpNoResults.setText(noResultsText());
     }
 
     private void addStepCard(int number, @NonNull String title, @NonNull String detail) {
@@ -216,6 +235,25 @@ public final class HelpAboutActivity extends AppCompatActivity {
             return parent ? "Secure Parent Mode Guide" : "Student Learning Guide";
         }
         return parent ? "अभिभावक गाइड • Parent Guide" : "विद्यार्थी गाइड • Student Guide";
+    }
+
+    private String searchHint() {
+        if (LANGUAGE_HINDI.equals(language)) return "फीचर खोजें—जैसे AI, backup, revision";
+        if (LANGUAGE_ENGLISH.equals(language)) return "Search features—AI, backup, revision…";
+        return "फीचर खोजें • Search features";
+    }
+
+    private String noResultsText() {
+        if (LANGUAGE_HINDI.equals(language)) return "इस खोज से कोई help step नहीं मिला। दूसरा शब्द लिखें।";
+        if (LANGUAGE_ENGLISH.equals(language)) return "No help step matches this search. Try another word.";
+        return "कोई step नहीं मिला • No matching help step";
+    }
+
+    private boolean matchesSearch(@NonNull String title, @NonNull String detail) {
+        if (helpSearchQuery.isEmpty()) return true;
+        String query = helpSearchQuery.toLowerCase(java.util.Locale.ROOT);
+        return title.toLowerCase(java.util.Locale.ROOT).contains(query)
+                || detail.toLowerCase(java.util.Locale.ROOT).contains(query);
     }
 
     private String[][] studentSteps() {
