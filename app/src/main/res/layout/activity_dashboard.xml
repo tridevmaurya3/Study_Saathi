@@ -559,6 +559,82 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
+                    android:fontFamily="sans-serif-rounded"
+                    android:text="Advanced Quick Tools"
+                    android:textColor="@color/ss_text_primary"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="Swipe करें और किसी भी smart tool को एक tap में खोलें।"
+                    android:textColor="@color/ss_text_secondary"
+                    android:textSize="12sp" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:clipToPadding="false"
+                    android:fillViewport="false"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingEnd="8dp">
+
+                        <com.google.android.material.button.MaterialButton android:id="@+id/buttonQuickRevision"
+                            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:text="↻ Revision" android:textAllCaps="false"
+                            app:backgroundTint="@color/ss_yellow_soft" app:strokeColor="@color/ss_yellow_border" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/buttonQuickMockExam"
+                            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:text="◷ Mock Exam"
+                            android:textAllCaps="false" app:backgroundTint="@color/ss_red_soft" app:strokeColor="@color/ss_red_border" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/buttonQuickFlashcards"
+                            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:text="▤ Flashcards"
+                            android:textAllCaps="false" app:backgroundTint="@color/ss_blue_soft" app:strokeColor="@color/ss_blue_border" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/buttonQuickMistakes"
+                            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:text="! Mistakes"
+                            android:textAllCaps="false" app:backgroundTint="@color/ss_red_soft" app:strokeColor="@color/ss_red_border" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/buttonQuickWhiteboard"
+                            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:text="✎ Whiteboard"
+                            android:textAllCaps="false" app:backgroundTint="@color/ss_green_soft" app:strokeColor="@color/ss_green_border" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/buttonQuickReminders"
+                            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:text="◷ Reminders"
+                            android:textAllCaps="false" app:backgroundTint="@color/ss_yellow_soft" app:strokeColor="@color/ss_yellow_border" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/buttonQuickOffline"
+                            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:text="⇩ Offline"
+                            android:textAllCaps="false" app:backgroundTint="@color/ss_teal_soft" app:strokeColor="@color/ss_teal_border" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/buttonQuickTour"
+                            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:text="ⓘ App Tour"
+                            android:textAllCaps="false" app:backgroundTint="@color/ss_purple_soft" app:strokeColor="@color/ss_purple_border" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/buttonQuickAchievements"
+                            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:text="★ Rewards"
+                            android:textAllCaps="false" app:backgroundTint="@color/ss_blue_soft" app:strokeColor="@color/ss_blue_border" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/buttonQuickParentReport"
+                            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:text="▥ Parent Report"
+                            android:textAllCaps="false" app:backgroundTint="@color/ss_green_soft" app:strokeColor="@color/ss_green_border" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
                     android:fontFamily="sans-serif-medium"
                     android:gravity="center"
                     android:text="@string/dashboard_parent_note"

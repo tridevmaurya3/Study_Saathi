@@ -105,6 +105,30 @@ public class DashboardActivity extends AppCompatActivity {
                 showStudyToolsBottomSheet()
         );
 
+        binding.buttonQuickRevision.setOnClickListener(view ->
+                startActivity(new Intent(this, RevisionActivity.class)));
+        binding.buttonQuickMockExam.setOnClickListener(view ->
+                openTutorPrefill("मेरे current subject और chapter का timed mock test लो। पहले marks और समय बताओ, answers अभी मत दिखाओ।"));
+        binding.buttonQuickFlashcards.setOnClickListener(view ->
+                openTutorPrefill("मेरे current chapter के concise flashcards Front | Back format में बनाओ।"));
+        binding.buttonQuickMistakes.setOnClickListener(view ->
+                startActivity(new Intent(this, MistakeNotebookActivity.class)));
+        binding.buttonQuickWhiteboard.setOnClickListener(view ->
+                startActivity(new Intent(this, WhiteboardActivity.class)));
+        binding.buttonQuickReminders.setOnClickListener(view ->
+                startActivity(new Intent(this, ReminderSettingsActivity.class)));
+        binding.buttonQuickOffline.setOnClickListener(view ->
+                startActivity(new Intent(this, SubjectsActivity.class)));
+        binding.buttonQuickTour.setOnClickListener(view -> {
+            Intent help = new Intent(this, HelpAboutActivity.class);
+            help.putExtra(HelpAboutActivity.EXTRA_MODE, HelpAboutActivity.MODE_STUDENT);
+            startActivity(help);
+        });
+        binding.buttonQuickAchievements.setOnClickListener(view ->
+                startActivity(new Intent(this, LearningProgressActivity.class)));
+        binding.buttonQuickParentReport.setOnClickListener(view ->
+                startActivity(new Intent(this, ParentDashboardActivity.class)));
+
         /*
          * Dashboard का profile icon/card अब सीधे Settings & Profiles
          * screen खोलेगा।
@@ -123,6 +147,12 @@ public class DashboardActivity extends AppCompatActivity {
 
         setupProfileDrawerActions();
         setupStudyMenuActions();
+    }
+
+    private void openTutorPrefill(@NonNull String prompt) {
+        Intent intent = new Intent(this, AskStudySaathiActivity.class);
+        intent.putExtra(AskStudySaathiActivity.EXTRA_PREFILL_QUESTION, prompt);
+        startActivity(intent);
     }
 
     private void setupStudyMenuActions() {
