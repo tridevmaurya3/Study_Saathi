@@ -19,6 +19,7 @@ import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 import com.tridev.studysaathi.databinding.ActivityPracticeBinding;
 import com.tridev.studysaathi.model.PracticeQuestion;
 import com.tridev.studysaathi.model.QuizReviewItem;
+import com.tridev.studysaathi.data.learning.MistakeNotebookStore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -457,6 +458,10 @@ public class PracticeActivity extends AppCompatActivity {
             wrongQuestionsFromLastAttempt.add(
                     question
             );
+            new MistakeNotebookStore(this).record(
+                    subjectName, chapterTitle, getQuestionText(question),
+                    languageMode == LanguageMode.ENGLISH
+                            ? question.getEnglishExplanation() : question.getHindiExplanation());
         }
 
         addQuestionReview(

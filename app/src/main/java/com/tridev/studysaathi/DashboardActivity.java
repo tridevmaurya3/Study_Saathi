@@ -179,6 +179,13 @@ public class DashboardActivity extends AppCompatActivity {
                         )
                 );
 
+        binding.studyMenuDrawerPanel.buttonMenuLearningLab
+                .setOnClickListener(view ->
+                        closeStudyMenuAndOpen(
+                                LearningLabActivity.class
+                        )
+                );
+
         binding.studyMenuDrawerPanel.buttonMenuChapterNotes
                 .setOnClickListener(view ->
                         closeStudyMenuAndOpen(

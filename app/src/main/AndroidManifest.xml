@@ -151,6 +151,18 @@
             android:exported="false" />
 
         <activity
+            android:name=".LearningLabActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".WhiteboardActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MistakeNotebookActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".BackupRestoreActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

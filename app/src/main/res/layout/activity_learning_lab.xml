@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/bg_app_soft_mix" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="20dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center_vertical" android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton android:id="@+id/buttonBack"
+                style="@style/Widget.Material3.Button.TextButton" android:layout_width="48dp"
+                android:layout_height="48dp" android:minWidth="0dp" android:text="←" android:textSize="26sp" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_marginStart="10dp" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Smart Learning Lab" android:textColor="@color/ss_text_primary"
+                    android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="All advanced study tools in one place" android:textColor="@color/ss_text_secondary" android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/ss_purple_soft" app:cardCornerRadius="24dp"
+            app:cardElevation="0dp" app:strokeColor="@color/ss_purple_border" app:strokeWidth="1dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:padding="18dp" android:text="आज का लक्ष्य चुनें—revise, practise, create या progress review करें।"
+                android:textColor="@color/ss_text_primary" android:textSize="15sp" android:textStyle="bold" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="18dp" android:text="REVISION &amp; ASSESSMENT"
+            android:textColor="@color/ss_text_muted" android:textSize="11sp" android:textStyle="bold" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonLabRevision"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" android:text="↻  Unified Revision Center" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_yellow_soft" app:strokeColor="@color/ss_yellow_border" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonLabMockExam"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:text="◷  Interactive Mock Exam" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_red_soft" app:strokeColor="@color/ss_red_border" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonLabFlashcards"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:text="▤  Smart Flashcards" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_blue_soft" app:strokeColor="@color/ss_blue_border" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonLabMistakes"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:text="!  Mistake Review &amp; Re-test" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_red_soft" app:strokeColor="@color/ss_red_border" />
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="18dp" android:text="CREATE &amp; LEARN"
+            android:textColor="@color/ss_text_muted" android:textSize="11sp" android:textStyle="bold" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonLabWhiteboard"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" android:text="✎  Interactive Whiteboard" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_green_soft" app:strokeColor="@color/ss_green_border" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonLabOffline"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:text="⇩  Offline Books &amp; Learning Packs" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_teal_soft" app:strokeColor="@color/ss_teal_border" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonLabOnboarding"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:text="ⓘ  Guided App Tour &amp; Help" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_purple_soft" app:strokeColor="@color/ss_purple_border" />
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="18dp" android:text="ROUTINE &amp; PROGRESS"
+            android:textColor="@color/ss_text_muted" android:textSize="11sp" android:textStyle="bold" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonLabReminders"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" android:text="◷  Smart Study Notifications" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_yellow_soft" app:strokeColor="@color/ss_yellow_border" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonLabAchievements"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:text="★  Achievements &amp; Streak Rewards" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_blue_soft" app:strokeColor="@color/ss_blue_border" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonLabParentReport"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" android:text="▥  Secure Parent Weekly Report" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_green_soft" app:strokeColor="@color/ss_green_border" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

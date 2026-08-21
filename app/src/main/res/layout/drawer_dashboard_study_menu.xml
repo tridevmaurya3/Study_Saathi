@@ -45,6 +45,12 @@
             android:layout_marginTop="4dp" android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical" android:text="◆   Ask Study Saathi AI"
             android:textAllCaps="false" app:backgroundTint="@color/ss_purple_soft" app:strokeColor="@color/ss_purple_border" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonMenuLearningLab"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp" android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical" android:text="✦   Smart Learning Lab"
+            android:textAllCaps="false" app:backgroundTint="@color/ss_teal_soft" app:strokeColor="@color/ss_teal_border" />
 
         <TextView style="@style/TextAppearance.StudySaathi.Body" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:layout_marginStart="20dp"

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/bg_app_soft_mix" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="20dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center_vertical" android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton android:id="@+id/buttonBack"
+                style="@style/Widget.Material3.Button.TextButton" android:layout_width="48dp"
+                android:layout_height="48dp" android:minWidth="0dp" android:text="←" android:textSize="26sp" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Mistake Notebook" android:textColor="@color/ss_text_primary"
+                    android:textSize="23sp" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="गलत प्रश्नों को समझें और दोबारा अभ्यास करें"
+                    android:textColor="@color/ss_text_secondary" android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonClearMistakes"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="12dp"
+            android:text="Clear Mistake Notebook" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_red_soft" app:strokeColor="@color/ss_red_border" />
+        <TextView android:id="@+id/textMistakeEmpty" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="24dp" android:gravity="center"
+            android:padding="22dp" android:text="अभी कोई saved mistake नहीं है।\nPractice quiz में गलत उत्तर यहाँ अपने-आप जुड़ेंगे।"
+            android:textColor="@color/ss_text_secondary" android:textSize="14sp" />
+        <LinearLayout android:id="@+id/containerMistakes" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="vertical" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
