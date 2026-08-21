@@ -184,15 +184,23 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonDrawerCloud"
-            style="@style/Widget.StudySaathi.Button.Primary"
+            style="@style/Widget.StudySaathi.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="7dp"
             android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical"
-            android:text="☁   Cloud Account &amp; Encrypted Sync"
-            android:textAllCaps="false" />
+            android:maxLines="1"
+            android:text="☁   Cloud Account &amp; Secure Sync"
+            android:textAllCaps="false"
+            android:textSize="12sp"
+            app:autoSizeMaxTextSize="12sp"
+            app:autoSizeMinTextSize="10sp"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform"
+            app:backgroundTint="@color/ss_blue_soft"
+            app:strokeColor="@color/ss_blue_border" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonDrawerHelp"
