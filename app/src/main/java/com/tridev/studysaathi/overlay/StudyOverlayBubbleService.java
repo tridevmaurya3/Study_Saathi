@@ -42,6 +42,14 @@ import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 /** Floating Study AI that stays above the current app without opening Dashboard. */
 public final class StudyOverlayBubbleService extends Service {
     private static final String CHANNEL = "study_ai_overlay";
@@ -50,12 +58,21 @@ public final class StudyOverlayBubbleService extends Service {
     static final String EXTRA_VOICE_TEXT = "overlay_voice_text";
     private static final String PREFS = "study_ai_overlay_preferences";
     private static final String KEY_ALPHA = "bubble_alpha";
+    private static final String KEY_PANEL_WIDTH = "panel_width";
+    private static final String KEY_PANEL_HEIGHT = "panel_height";
+    private static final String KEY_PANEL_X = "panel_x";
+    private static final String KEY_PANEL_Y = "panel_y";
+    private static final String KEY_CHATS = "overlay_chats";
+    private static final String KEY_ACTIVE_CHAT = "active_overlay_chat";
 
     private WindowManager windowManager;
     private TextView bubble;
     private WindowManager.LayoutParams bubbleParams;
     private FrameLayout panel;
     private View dismissLayer;
+    private View historyScrim;
+    private LinearLayout historyDrawer;
+    private LinearLayout historyList;
     private WindowManager.LayoutParams panelParams;
     private TextView transcript;
     private TextView status;
@@ -72,6 +89,8 @@ public final class StudyOverlayBubbleService extends Service {
     private float resizeDownY;
     private int questionStartHeight;
     private float questionResizeDownY;
+    private final List<OverlayChat> chats = new ArrayList<>();
+    private String activeChatId = "";
 
     public static void start(@NonNull Context context) {
         if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(context)) return;
@@ -101,6 +120,7 @@ public final class StudyOverlayBubbleService extends Service {
             return;
         }
         tutorClient = new FirebaseStudyTutorClient(this);
+        loadChats();
         showBubble();
     }
 
@@ -137,7 +157,8 @@ public final class StudyOverlayBubbleService extends Service {
 
     private void showPanel() {
         panel = new FrameLayout(this);
-        panel.setBackgroundResource(R.drawable.bg_app_soft_mix);
+        panel.setBackground(pastelPanelBackground());
+        panel.setClipToOutline(true);
         panel.setElevation(dp(16));
 
         LinearLayout body = new LinearLayout(this);
@@ -147,6 +168,8 @@ public final class StudyOverlayBubbleService extends Service {
 
         LinearLayout header = new LinearLayout(this);
         header.setGravity(Gravity.CENTER_VERTICAL);
+        TextView history = headerAction("☰");
+        header.addView(history);
         TextView title = text("✦ Study Saathi AI", 16, Color.rgb(25, 47, 91));
         title.setTypeface(title.getTypeface(), android.graphics.Typeface.BOLD);
         header.addView(title, new LinearLayout.LayoutParams(0, dp(38), 1));
@@ -224,8 +247,7 @@ public final class StudyOverlayBubbleService extends Service {
         body.addView(quickTwo);
 
         ScrollView scroll = new ScrollView(this);
-        transcript = text("नमस्ते! इस screen या अपने विषय का कोई भी सवाल पूछें। "
-                        + "पुराने सवाल और जवाब यहीं सुरक्षित रहेंगे।",
+        transcript = text(currentChat().content,
                 14, Color.rgb(67, 78, 104));
         transcript.setGravity(Gravity.CENTER_HORIZONTAL);
         transcript.setPadding(dp(14), dp(14), dp(14), dp(14));
@@ -250,6 +272,9 @@ public final class StudyOverlayBubbleService extends Service {
         addCornerHint("⌞", Gravity.START | Gravity.BOTTOM);
         addCornerHint("⌟", Gravity.END | Gravity.BOTTOM);
 
+        installHistoryDrawer();
+
+        history.setOnClickListener(v -> showHistoryDrawer());
         minimize.setOnClickListener(v -> removePanel());
         close.setOnClickListener(v -> removePanel());
         title.setOnTouchListener(new PanelDragTouch());
@@ -278,13 +303,21 @@ public final class StudyOverlayBubbleService extends Service {
 
         int width = getResources().getDisplayMetrics().widthPixels;
         int height = getResources().getDisplayMetrics().heightPixels;
-        panelParams = new WindowManager.LayoutParams(Math.min(dp(375), width - dp(24)),
-                Math.min(dp(520), height - dp(90)), overlayType(),
+        int savedWidth = getSharedPreferences(PREFS, MODE_PRIVATE)
+                .getInt(KEY_PANEL_WIDTH, dp(375));
+        int savedHeight = getSharedPreferences(PREFS, MODE_PRIVATE)
+                .getInt(KEY_PANEL_HEIGHT, dp(520));
+        panelParams = new WindowManager.LayoutParams(
+                Math.max(dp(285), Math.min(width - dp(16), savedWidth)),
+                Math.max(dp(360), Math.min(height - dp(50), savedHeight)), overlayType(),
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                 PixelFormat.TRANSLUCENT);
         panelParams.gravity = Gravity.TOP | Gravity.START;
-        panelParams.x = Math.max(dp(12), width - panelParams.width - dp(12));
-        panelParams.y = dp(70);
+        int defaultX = Math.max(dp(12), width - panelParams.width - dp(12));
+        panelParams.x = Math.max(0, Math.min(width - panelParams.width,
+                getSharedPreferences(PREFS, MODE_PRIVATE).getInt(KEY_PANEL_X, defaultX)));
+        panelParams.y = Math.max(dp(24), Math.min(height - dp(80),
+                getSharedPreferences(PREFS, MODE_PRIVATE).getInt(KEY_PANEL_Y, dp(70))));
         panelParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE;
         dismissLayer = new View(this);
         dismissLayer.setBackgroundColor(Color.argb(35, 11, 22, 51));
@@ -300,6 +333,11 @@ public final class StudyOverlayBubbleService extends Service {
         panel.setOnKeyListener((view, keyCode, event) -> {
             if (keyCode == android.view.KeyEvent.KEYCODE_BACK
                     && event.getAction() == android.view.KeyEvent.ACTION_UP) {
+                if (historyDrawer != null
+                        && historyDrawer.getVisibility() == View.VISIBLE) {
+                    hideHistoryDrawer();
+                    return true;
+                }
                 removePanel();
                 return true;
             }
@@ -309,6 +347,98 @@ public final class StudyOverlayBubbleService extends Service {
         panel.requestFocus();
         question.requestFocus();
         question.postDelayed(this::showKeyboard, 180);
+    }
+
+    private void installHistoryDrawer() {
+        historyScrim = new View(this);
+        historyScrim.setBackgroundColor(Color.argb(45, 12, 25, 52));
+        historyScrim.setVisibility(View.GONE);
+        historyScrim.setOnClickListener(v -> hideHistoryDrawer());
+        panel.addView(historyScrim, new FrameLayout.LayoutParams(-1, -1));
+
+        historyDrawer = new LinearLayout(this);
+        historyDrawer.setOrientation(LinearLayout.VERTICAL);
+        historyDrawer.setPadding(dp(12), dp(12), dp(12), dp(12));
+        historyDrawer.setBackground(rounded(Color.rgb(250, 252, 255),
+                Color.rgb(186, 205, 238), 22));
+        historyDrawer.setElevation(dp(22));
+        historyDrawer.setVisibility(View.GONE);
+
+        TextView drawerTitle = text("Chat History", 16, Color.rgb(28, 54, 105));
+        drawerTitle.setTypeface(drawerTitle.getTypeface(), android.graphics.Typeface.BOLD);
+        historyDrawer.addView(drawerTitle, matchWrap());
+        Button newChat = actionButton("＋ नई चैट", Color.rgb(232, 241, 255),
+                Color.rgb(70, 111, 197));
+        LinearLayout.LayoutParams newChatParams = new LinearLayout.LayoutParams(-1, dp(42));
+        newChatParams.topMargin = dp(8);
+        historyDrawer.addView(newChat, newChatParams);
+        newChat.setOnClickListener(v -> startNewChat());
+
+        ScrollView historyScroll = new ScrollView(this);
+        historyList = new LinearLayout(this);
+        historyList.setOrientation(LinearLayout.VERTICAL);
+        historyScroll.addView(historyList);
+        LinearLayout.LayoutParams historyParams = new LinearLayout.LayoutParams(-1, 0, 1);
+        historyParams.topMargin = dp(8);
+        historyDrawer.addView(historyScroll, historyParams);
+
+        FrameLayout.LayoutParams drawerParams = new FrameLayout.LayoutParams(
+                Math.min(dp(300), getResources().getDisplayMetrics().widthPixels - dp(70)),
+                -1,
+                Gravity.START);
+        panel.addView(historyDrawer, drawerParams);
+        refreshHistoryList();
+    }
+
+    private void showHistoryDrawer() {
+        refreshHistoryList();
+        historyScrim.setVisibility(View.VISIBLE);
+        historyDrawer.setVisibility(View.VISIBLE);
+        historyDrawer.setTranslationX(-historyDrawer.getWidth());
+        historyDrawer.animate().translationX(0).setDuration(180).start();
+    }
+
+    private void hideHistoryDrawer() {
+        if (historyDrawer == null) return;
+        historyDrawer.setVisibility(View.GONE);
+        historyScrim.setVisibility(View.GONE);
+    }
+
+    private void refreshHistoryList() {
+        if (historyList == null) return;
+        historyList.removeAllViews();
+        for (OverlayChat chat : chats) {
+            TextView item = text(chat.title, 13, Color.rgb(48, 65, 99));
+            item.setMaxLines(2);
+            item.setPadding(dp(10), dp(10), dp(10), dp(10));
+            item.setBackground(rounded(chat.id.equals(activeChatId)
+                            ? Color.rgb(232, 241, 255) : Color.WHITE,
+                    Color.rgb(213, 224, 244), 13));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+            params.bottomMargin = dp(6);
+            historyList.addView(item, params);
+            item.setOnClickListener(v -> openChat(chat.id));
+        }
+    }
+
+    private void startNewChat() {
+        OverlayChat chat = new OverlayChat(UUID.randomUUID().toString(),
+                "नई चैट", welcomeMessage());
+        chats.add(0, chat);
+        activeChatId = chat.id;
+        saveChats();
+        transcript.setText(chat.content);
+        hideHistoryDrawer();
+        question.setText("");
+        showKeyboard();
+    }
+
+    private void openChat(@NonNull String chatId) {
+        activeChatId = chatId;
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                .putString(KEY_ACTIVE_CHAT, activeChatId).apply();
+        transcript.setText(currentChat().content);
+        hideHistoryDrawer();
     }
 
     private void showKeyboard() {
@@ -387,6 +517,7 @@ public final class StudyOverlayBubbleService extends Service {
                 || event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
             boolean handled = resizeCorner != 0;
             resizeCorner = 0;
+            if (handled && panelParams != null) savePanelBounds();
             return handled;
         }
         return resizeCorner != 0;
@@ -398,7 +529,7 @@ public final class StudyOverlayBubbleService extends Service {
         asking = true;
         send.setEnabled(false);
         status.setText("उत्तर तैयार किया जा रहा है…");
-        transcript.append("\n\nआप: " + prompt);
+        appendToActiveChat("\n\nआप: " + prompt, prompt);
         question.setText("");
         new StudentProfileRepository(this).getActiveProfile(
                 new StudentProfileRepository.SingleProfileCallback() {
@@ -419,7 +550,8 @@ public final class StudyOverlayBubbleService extends Service {
                                         if (panel == null) return;
                                         send.setEnabled(true);
                                         status.setText("उत्तर तैयार है");
-                                        transcript.append("\n\nStudy Saathi: " + result.getRawAnswerText());
+                                        appendToActiveChat("\n\nStudy Saathi: "
+                                                + result.getRawAnswerText(), null);
                                     }
                                     @Override public void onError(@NonNull Throwable error) {
                                         finishError("अभी उत्तर नहीं मिल पाया। Internet जाँचकर दोबारा प्रयास करें।");
@@ -484,7 +616,11 @@ public final class StudyOverlayBubbleService extends Service {
                 panelParams.y = Math.max(dp(24), startY + Math.round(event.getRawY() - downY));
                 windowManager.updateViewLayout(panel, panelParams); return true;
             }
-            return event.getActionMasked() == MotionEvent.ACTION_UP;
+            if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+                savePanelBounds();
+                return true;
+            }
+            return false;
         }
     }
 
@@ -508,6 +644,102 @@ public final class StudyOverlayBubbleService extends Service {
 
     private float savedAlpha() {
         return getSharedPreferences(PREFS, MODE_PRIVATE).getFloat(KEY_ALPHA, .78f);
+    }
+
+    private GradientDrawable pastelPanelBackground() {
+        GradientDrawable drawable = new GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                new int[]{
+                        Color.rgb(255, 247, 248),
+                        Color.rgb(244, 251, 247),
+                        Color.rgb(241, 247, 255)
+                });
+        drawable.setCornerRadius(dp(26));
+        drawable.setStroke(dp(1), Color.rgb(173, 198, 235));
+        return drawable;
+    }
+
+    private void savePanelBounds() {
+        if (panelParams == null) return;
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                .putInt(KEY_PANEL_WIDTH, panelParams.width)
+                .putInt(KEY_PANEL_HEIGHT, panelParams.height)
+                .putInt(KEY_PANEL_X, panelParams.x)
+                .putInt(KEY_PANEL_Y, panelParams.y)
+                .apply();
+    }
+
+    private String welcomeMessage() {
+        return "नमस्ते! इस screen या अपने विषय का कोई भी सवाल पूछें। "
+                + "पुराने सवाल और जवाब यहीं सुरक्षित रहेंगे।";
+    }
+
+    @NonNull
+    private OverlayChat currentChat() {
+        for (OverlayChat chat : chats) {
+            if (chat.id.equals(activeChatId)) return chat;
+        }
+        if (!chats.isEmpty()) {
+            activeChatId = chats.get(0).id;
+            return chats.get(0);
+        }
+        OverlayChat chat = new OverlayChat(UUID.randomUUID().toString(),
+                "नई चैट", welcomeMessage());
+        chats.add(0, chat);
+        activeChatId = chat.id;
+        saveChats();
+        return chat;
+    }
+
+    private void appendToActiveChat(@NonNull String text, @Nullable String firstQuestion) {
+        OverlayChat chat = currentChat();
+        chat.content += text;
+        if (firstQuestion != null && "नई चैट".equals(chat.title)) {
+            String clean = firstQuestion.trim().replace('\n', ' ');
+            chat.title = clean.length() > 38 ? clean.substring(0, 38) + "…" : clean;
+        }
+        if (transcript != null) transcript.setText(chat.content);
+        saveChats();
+    }
+
+    private void loadChats() {
+        chats.clear();
+        String raw = getSharedPreferences(PREFS, MODE_PRIVATE).getString(KEY_CHATS, "");
+        activeChatId = getSharedPreferences(PREFS, MODE_PRIVATE)
+                .getString(KEY_ACTIVE_CHAT, "");
+        if (raw != null && !raw.isEmpty()) {
+            try {
+                JSONArray array = new JSONArray(raw);
+                for (int index = 0; index < array.length(); index++) {
+                    JSONObject item = array.getJSONObject(index);
+                    chats.add(new OverlayChat(item.optString("id"),
+                            item.optString("title", "पुरानी चैट"),
+                            item.optString("content", welcomeMessage())));
+                }
+            } catch (JSONException ignored) {
+                chats.clear();
+            }
+        }
+        currentChat();
+    }
+
+    private void saveChats() {
+        JSONArray array = new JSONArray();
+        int limit = Math.min(30, chats.size());
+        for (int index = 0; index < limit; index++) {
+            OverlayChat chat = chats.get(index);
+            JSONObject item = new JSONObject();
+            try {
+                item.put("id", chat.id);
+                item.put("title", chat.title);
+                item.put("content", chat.content);
+                array.put(item);
+            } catch (JSONException ignored) { }
+        }
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                .putString(KEY_CHATS, array.toString())
+                .putString(KEY_ACTIVE_CHAT, activeChatId)
+                .apply();
     }
 
     private TextView text(String value, int size, int color) {
@@ -616,6 +848,18 @@ public final class StudyOverlayBubbleService extends Service {
                 return true;
             }
             return super.onKeyPreIme(keyCode, event);
+        }
+    }
+
+    private static final class OverlayChat {
+        @NonNull private final String id;
+        @NonNull private String title;
+        @NonNull private String content;
+
+        OverlayChat(@NonNull String id, @NonNull String title, @NonNull String content) {
+            this.id = id.isEmpty() ? UUID.randomUUID().toString() : id;
+            this.title = title;
+            this.content = content;
         }
     }
 }
