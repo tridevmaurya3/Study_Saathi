@@ -64,11 +64,14 @@ import com.tridev.studysaathi.data.local.entity.SchoolBookChapterContentEntity;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
 import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
+import com.tridev.studysaathi.data.learning.ExactBookPageCitationBuilder;
 import com.tridev.studysaathi.data.learning.LearningStyleMemoryStore;
 import com.tridev.studysaathi.data.learning.LearningStylePreference;
 import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
 import com.tridev.studysaathi.data.repository.DoubtHistoryRepository;
 import com.tridev.studysaathi.data.repository.SchoolBookChapterContentRepository;
+import com.tridev.studysaathi.data.repository.SchoolBookChapterPageRepository;
+import com.tridev.studysaathi.data.local.entity.SchoolBookChapterPageEntity;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 import com.tridev.studysaathi.mapper.SchoolBookChapterContentLessonMapper;
 import com.tridev.studysaathi.model.LessonContent;
@@ -624,8 +627,8 @@ public final class SmartAiCompanionController {
                                                 content
                                 ) {
                                     if (!closed && content != null) {
-                                        approvedChapterReference =
-                                                buildChapterReference(content);
+                                        mergeApprovedChapterReference(
+                                                buildChapterReference(content), false);
                                         approvedLessonContent =
                                                 SchoolBookChapterContentLessonMapper
                                                         .toLessonContent(
@@ -643,6 +646,63 @@ public final class SmartAiCompanionController {
                                 }
                             }
                     );
+
+            new SchoolBookChapterPageRepository(activity)
+                    .getApprovedPagesForChapter(
+                            chapterRowId,
+                            new SchoolBookChapterPageRepository.PagesCallback() {
+                                @Override
+                                public void onSuccess(
+                                        @NonNull List<SchoolBookChapterPageEntity> pages) {
+                                    if (closed || pages.isEmpty()) return;
+                                    List<ExactBookPageCitationBuilder.PageReference> references =
+                                            new ArrayList<>();
+                                    for (SchoolBookChapterPageEntity page : pages) {
+                                        references.add(toPageReference(page));
+                                    }
+                                    mergeApprovedChapterReference(
+                                            ExactBookPageCitationBuilder.build(references), true);
+                                }
+
+                                @Override
+                                public void onError(@NonNull Exception exception) {
+                                    // Exact citation remains unavailable; never synthesize a page number.
+                                }
+                            }
+                    );
+        }
+
+        private void mergeApprovedChapterReference(@NonNull String reference,
+                                                   boolean prioritize) {
+            String safeReference = safe(reference);
+            if (safeReference.isEmpty()) return;
+            if (approvedChapterReference.isEmpty()) {
+                approvedChapterReference = safeReference;
+            } else if (prioritize) {
+                approvedChapterReference = safeReference + "\n\n"
+                        + approvedChapterReference;
+            } else {
+                approvedChapterReference += "\n\n" + safeReference;
+            }
+        }
+
+        @NonNull
+        private ExactBookPageCitationBuilder.PageReference toPageReference(
+                @NonNull SchoolBookChapterPageEntity page) {
+            StringBuilder content = new StringBuilder();
+            appendReference(content, page.getIntroductionHindi());
+            appendReference(content, page.getIntroductionEnglish());
+            appendReference(content, page.getExplanationHindi());
+            appendReference(content, page.getExplanationEnglish());
+            appendReference(content, page.getKeyPointsHindi());
+            appendReference(content, page.getKeyPointsEnglish());
+            appendReference(content, page.getExamplesHindi());
+            appendReference(content, page.getExamplesEnglish());
+            appendReference(content, page.getSummaryHindi());
+            appendReference(content, page.getSummaryEnglish());
+            return new ExactBookPageCitationBuilder.PageReference(
+                    page.getSourceDocumentPageNumber(), page.getPageTitle(),
+                    content.toString());
         }
 
         private void toggleCard() {

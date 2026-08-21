@@ -1760,6 +1760,15 @@ public final class FirebaseStudyTutorClient {
         );
 
         prompt.append(
+                "28A. EXACT PAGE CITATION: Only [[VERIFIED_BOOK_PAGE page=N]] markers may be used "
+                        + "as exact book-page evidence. When an answer or hint uses marked content, cite it "
+                        + "as 📖 पुस्तक पृष्ठ N. Cite only page numbers present in those markers. Never infer "
+                        + "a page from chapter order, a chapter range, an image, or conversation text. If the "
+                        + "student asks for an exact page and no verified marker is available, clearly say that "
+                        + "the exact page is unavailable instead of guessing.\n"
+        );
+
+        prompt.append(
                 "29. Follow the selected Education Board or school pattern. "
                         + "Do not silently substitute CBSE content for a State Board, CISCE, NIOS "
                         + "or another selected pattern.\n"
