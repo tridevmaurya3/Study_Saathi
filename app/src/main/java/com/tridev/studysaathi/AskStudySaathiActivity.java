@@ -3417,6 +3417,8 @@ public class AskStudySaathiActivity
             sendSmartAiRequest(
                     question,
                     tutorRequest,
+                    adaptiveLevel,
+                    misconception,
                     requestGeneration,
                     null
             );
@@ -3427,6 +3429,8 @@ public class AskStudySaathiActivity
         prepareQuestionImageAndSendRequest(
                 question,
                 tutorRequest,
+                adaptiveLevel,
+                misconception,
                 requestGeneration,
                 questionImageUri
         );
@@ -3435,6 +3439,8 @@ public class AskStudySaathiActivity
     private void prepareQuestionImageAndSendRequest(
             @NonNull String question,
             @NonNull FirebaseStudyTutorClient.TutorRequest tutorRequest,
+            @NonNull AdaptiveLearningLevelResolver.AdaptiveLevel adaptiveLevel,
+            @NonNull StudentMisconceptionDetector.Detection misconception,
             int requestGeneration,
             @NonNull Uri questionImageUri
     ) {
@@ -3480,6 +3486,8 @@ public class AskStudySaathiActivity
                         sendSmartAiRequest(
                                 question,
                                 tutorRequest,
+                                adaptiveLevel,
+                                misconception,
                                 requestGeneration,
                                 bitmap
                         );
@@ -3519,6 +3527,8 @@ public class AskStudySaathiActivity
                         sendSmartAiRequest(
                                 question,
                                 tutorRequest,
+                                adaptiveLevel,
+                                misconception,
                                 requestGeneration,
                                 null
                         );
@@ -3530,6 +3540,8 @@ public class AskStudySaathiActivity
     private void sendSmartAiRequest(
             @NonNull String question,
             @NonNull FirebaseStudyTutorClient.TutorRequest tutorRequest,
+            @NonNull AdaptiveLearningLevelResolver.AdaptiveLevel adaptiveLevel,
+            @NonNull StudentMisconceptionDetector.Detection misconception,
             int requestGeneration,
             @Nullable Bitmap questionBitmap
     ) {
