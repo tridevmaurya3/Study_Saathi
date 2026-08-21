@@ -2,6 +2,7 @@ package com.tridev.studysaathi.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -32,6 +33,16 @@ public final class StudyWhiteboardView extends View {
     public void setEraser(boolean enabled) { eraser = enabled; }
     public void undo() { if (!strokes.isEmpty()) { strokes.remove(strokes.size() - 1); invalidate(); } }
     public void clearBoard() { strokes.clear(); activePath = null; invalidate(); }
+    public boolean isBlank() { return strokes.isEmpty(); }
+
+    public Bitmap createBitmap() {
+        int safeWidth = Math.max(1, getWidth());
+        int safeHeight = Math.max(1, getHeight());
+        Bitmap bitmap = Bitmap.createBitmap(safeWidth, safeHeight, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        draw(canvas);
+        return bitmap;
+    }
 
     @Override protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);

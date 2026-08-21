@@ -33,6 +33,41 @@
             style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="0dp"
             android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_weight="1" android:minWidth="0dp" android:text="Clear" android:textAllCaps="false" />
     </LinearLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:hint="Detected question • Edit before solving">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editDetectedQuestion" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:inputType="textMultiLine"
+            android:maxLines="3" android:minLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="5dp" android:gravity="center_vertical" android:orientation="horizontal">
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progressWhiteboardRecognition" android:layout_width="28dp"
+            android:layout_height="28dp" android:visibility="gone" app:indicatorSize="28dp"
+            app:trackThickness="3dp" />
+        <TextView android:id="@+id/textRecognitionStatus" android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_weight="1"
+            android:text="Write a question, then tap Recognize." android:textColor="@color/ss_text_secondary" android:textSize="11sp" />
+    </LinearLayout>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="5dp" android:orientation="horizontal">
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonRecognize"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_weight="1" android:minWidth="0dp"
+            android:text="Recognize" android:textAllCaps="false"
+            app:backgroundTint="@color/ss_blue_soft" app:strokeColor="@color/ss_blue_border" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonSolve"
+            style="@style/Widget.StudySaathi.Button.Primary" android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:layout_weight="1"
+            android:minWidth="0dp" android:text="Solve with AI" android:textAllCaps="false" />
+    </LinearLayout>
+
     <com.google.android.material.card.MaterialCardView android:layout_width="match_parent"
         android:layout_height="0dp" android:layout_marginTop="10dp" android:layout_weight="1"
         app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeColor="@color/ss_blue_border" app:strokeWidth="1dp">

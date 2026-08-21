@@ -1,3291 +1,865 @@
-package com.tridev.studysaathi;
-
-import android.app.Activity;
-import android.content.ActivityNotFoundException;
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
-import android.speech.RecognizerIntent;
-import android.util.Log;
-import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
-
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.textfield.TextInputLayout;
-import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.text.TextRecognition;
-import com.google.mlkit.vision.text.TextRecognizer;
-import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
-import com.tridev.studysaathi.data.ai.FirebaseStudyTutorClient;
-import com.tridev.studysaathi.data.ai.QuestionImageBitmapLoader;
-import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
-import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
-import com.tridev.studysaathi.data.learning.AdaptiveLearningLevelResolver;
-import com.tridev.studysaathi.data.learning.LearningStyleMemoryStore;
-import com.tridev.studysaathi.data.learning.LearningStylePreference;
-import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
-import com.tridev.studysaathi.data.ai.RecommendedRevisionProgressStore;
-import com.tridev.studysaathi.data.catalog.DoubtAssistantEngine;
-import com.tridev.studysaathi.data.catalog.LessonCatalog;
-import com.tridev.studysaathi.data.local.entity.DoubtHistoryEntity;
-import com.tridev.studysaathi.data.local.entity.SchoolBookChapterEntity;
-import com.tridev.studysaathi.data.local.entity.SchoolSubjectEntity;
-import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
-import com.tridev.studysaathi.data.repository.ChildSchoolBookChapterRepository;
-import com.tridev.studysaathi.data.repository.DoubtHistoryRepository;
-import com.tridev.studysaathi.data.repository.SchoolSubjectRepository;
-import com.tridev.studysaathi.data.repository.StudentProfileRepository;
-import com.tridev.studysaathi.databinding.ActivityAskStudySaathiBinding;
-import com.tridev.studysaathi.model.LessonContent;
-import com.tridev.studysaathi.ui.SmartAiCompanionController;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-public class AskStudySaathiActivity
-        extends AppCompatActivity {
-
-    public static final String EXTRA_PREFILL_SUBJECT =
-            "extra_prefill_subject";
-
-    public static final String EXTRA_PREFILL_CHAPTER =
-            "extra_prefill_chapter";
-
-    public static final String EXTRA_PREFILL_QUESTION =
-            "extra_prefill_question";
-
-    public static final String EXTRA_RECOMMENDED_REVISION =
-            "extra_recommended_revision";
-
-    private static final String LOG_TAG =
-            "AskStudySaathi";
-
-    private static final String OPTIONAL_CHAPTER_LABEL =
-            "Chapter ‡§®‡§π‡•Ä‡§Ç ‡§ö‡•Å‡§®‡§æ ‚Äî Optional";
-
-    private static final String GENERAL_QUESTION_CHAPTER_TITLE =
-            "General Question";
-
-    private static final String STATE_SELECTED_QUESTION_IMAGE_URI =
-            "state_selected_question_image_uri";
-
-    private static final String STATE_SELECTED_QUESTION_IMAGE_PATH =
-            "state_selected_question_image_path";
-
-    private static final String STATE_PENDING_CAMERA_IMAGE_URI =
-            "state_pending_camera_image_uri";
-
-    private static final String STATE_PENDING_CAMERA_IMAGE_PATH =
-            "state_pending_camera_image_path";
-
-    private static final String STATE_LAST_IMAGE_OCR_TEXT =
-            "state_last_image_ocr_text";
-
-    private static final String QUESTION_IMAGE_DIRECTORY =
-            "book_cover_cache/question_images";
-
-    private static final int MAXIMUM_PREVIEW_IMAGE_SIZE =
-            1400;
-
-    private ActivityAskStudySaathiBinding binding;
-
-    private StudentProfileRepository studentProfileRepository;
-
-    private DoubtHistoryRepository doubtHistoryRepository;
-
-    private SchoolSubjectRepository schoolSubjectRepository;
-
-    private ChildSchoolBookChapterRepository
-            childSchoolBookChapterRepository;
-
-    private FirebaseStudyTutorClient firebaseStudyTutorClient;
-
-    private QuestionImageBitmapLoader questionImageBitmapLoader;
-
-    private ActivityResultLauncher<Intent>
-            voiceQuestionLauncher;
-
-    private ActivityResultLauncher<String[]>
-            questionGalleryLauncher;
-
-    private ActivityResultLauncher<Uri>
-            questionCameraLauncher;
-
-    @Nullable
-    private StudentProfileEntity activeStudentProfile;
-
-    @Nullable
-    private SchoolSubjectEntity selectedSchoolSubject;
-
-    @Nullable
-    private SchoolBookChapterEntity selectedChapter;
-
-    @Nullable
-    private Uri selectedQuestionImageUri;
-
-    @Nullable
-    private String selectedQuestionImagePrivatePath;
-
-    @Nullable
-    private Uri pendingCameraImageUri;
-
-    @Nullable
-    private String pendingCameraImagePath;
-
-    @Nullable
-    private TextRecognizer questionLatinRecognizer;
-
-    @Nullable
-    private TextRecognizer questionDevanagariRecognizer;
-
-    @NonNull
-    private final List<SchoolSubjectEntity> schoolSubjects =
-            new ArrayList<>();
-
-    @NonNull
-    private final List<String> subjectDisplayNames =
-            new ArrayList<>();
-
-    @NonNull
-    private final List<SchoolBookChapterEntity> chapterItems =
-            new ArrayList<>();
-
-    private String selectedSubjectName =
-            "";
-
-    private String prefillSubjectName =
-            "";
-
-    private String prefillChapterTitle =
-            "";
-
-    private String prefillQuestion =
-            "";
-
-    private String requestedInputMode =
-            "";
-
-    private boolean recommendedRevisionSession;
-    private boolean recommendedRevisionCompletionRecorded;
-
-    private String lastQuestionImageOcrText =
-            "";
-
-    private long latestChapterRequestSubjectRowId =
-            0L;
-
-    private int questionImageOcrGeneration;
-
-    private int aiAnswerRequestGeneration;
-
-    private boolean prefilledQuestionApplied;
-    private boolean requestedInputModeApplied;
-
-    private boolean questionImageOcrInProgress;
-
-    private boolean restartImageOcrAfterSubjectLoad;
-
-    private boolean aiAnswerRequestInProgress;
-    private boolean completedTurnArchived;
-
-    @NonNull
-    private String lastCompletedQuestion =
-            "";
-
-    @Nullable
-    private CharSequence lastCompletedAnswer;
-
-    @Override
-    protected void onCreate(
-            @Nullable Bundle savedInstanceState
-    ) {
-        super.onCreate(
-                savedInstanceState
-        );
-
-        binding =
-                ActivityAskStudySaathiBinding.inflate(
-                        getLayoutInflater()
-                );
-
-        setContentView(
-                binding.getRoot()
-        );
-
-        studentProfileRepository =
-                new StudentProfileRepository(
-                        this
-                );
-
-        doubtHistoryRepository =
-                new DoubtHistoryRepository(
-                        this
-                );
-
-        schoolSubjectRepository =
-                new SchoolSubjectRepository(
-                        this
-                );
-
-        childSchoolBookChapterRepository =
-                new ChildSchoolBookChapterRepository(
-                        this
-                );
-
-        firebaseStudyTutorClient =
-                new FirebaseStudyTutorClient(
-                        this
-                );
-
-        questionImageBitmapLoader =
-                new QuestionImageBitmapLoader(
-                        this
-                );
-
-        registerVoiceQuestionLauncher();
-        registerQuestionImageLaunchers();
-        readPrefillArguments();
-        prepareInitialScreenState();
-        setupVoiceQuestionInput();
-        setupClickListeners();
-        restoreQuestionImageState(
-                savedInstanceState
-        );
-        loadActiveStudentProfile();
-    }
-
-    private void registerVoiceQuestionLauncher() {
-        voiceQuestionLauncher =
-                registerForActivityResult(
-                        new ActivityResultContracts
-                                .StartActivityForResult(),
-                        result -> {
-                            if (!isActivityAvailable()) {
-                                return;
-                            }
-
-                            if (result.getResultCode()
-                                    != Activity.RESULT_OK) {
-
-                                binding.inputQuestion
-                                        .setHelperText(
-                                                null
-                                        );
-
-                                return;
-                            }
-
-                            Intent resultData =
-                                    result.getData();
-
-                            if (resultData == null) {
-                                showVoiceResultMissing();
-                                return;
-                            }
-
-                            ArrayList<String> speechResults =
-                                    resultData
-                                            .getStringArrayListExtra(
-                                                    RecognizerIntent
-                                                            .EXTRA_RESULTS
-                                            );
-
-                            String spokenQuestion =
-                                    getFirstValidSpeechResult(
-                                            speechResults
-                                    );
-
-                            if (spokenQuestion.isEmpty()) {
-                                showVoiceResultMissing();
-                                return;
-                            }
-
-                            applySpokenQuestion(
-                                    spokenQuestion
-                            );
-                        }
-                );
-    }
-
-    private void registerQuestionImageLaunchers() {
-        questionGalleryLauncher =
-                registerForActivityResult(
-                        new ActivityResultContracts.OpenDocument(),
-                        this::handleSelectedGalleryQuestionImage
-                );
-
-        questionCameraLauncher =
-                registerForActivityResult(
-                        new ActivityResultContracts.TakePicture(),
-                        this::handleCameraQuestionImageResult
-                );
-    }
-
-    private void setupVoiceQuestionInput() {
-        binding.inputQuestion.setEndIconMode(
-                TextInputLayout.END_ICON_CUSTOM
-        );
-
-        binding.inputQuestion.setEndIconDrawable(
-                android.R.drawable.ic_btn_speak_now
-        );
-
-        binding.inputQuestion.setEndIconContentDescription(
-                "‡§¨‡•ã‡§≤‡§ï‡§∞ ‡§∏‡§µ‡§æ‡§≤ ‡§™‡•Ç‡§õ‡•á‡§Ç"
-        );
-
-        binding.inputQuestion.setEndIconOnClickListener(
-                view -> startVoiceQuestionInput()
-        );
-
-        binding.inputQuestion.setEndIconVisible(
-                false
-        );
-    }
-
-    private void startVoiceQuestionInput() {
-        if (aiAnswerRequestInProgress) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§™‡§π‡§≤‡•á ‡§µ‡§∞‡•ç‡§§‡§Æ‡§æ‡§® Smart AI answer ‡§™‡•Ç‡§∞‡§æ ‡§π‡•ã‡§®‡•á ‡§¶‡•á‡§Ç‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        if (activeStudentProfile == null) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§™‡§π‡§≤‡•á Student Profile ‡§ö‡•Å‡§®‡•á‡§Ç‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        if (selectedSchoolSubject == null
-                || selectedSubjectName.isEmpty()) {
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§™‡§π‡§≤‡•á ‡§Ö‡§™‡§®‡§æ Subject ‡§ö‡•Å‡§®‡•á‡§Ç‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        hideKeyboard();
-
-        Intent speechIntent =
-                new Intent(
-                        RecognizerIntent
-                                .ACTION_RECOGNIZE_SPEECH
-                );
-
-        speechIntent.putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-        );
-
-        speechIntent.putExtra(
-                RecognizerIntent.EXTRA_PROMPT,
-                selectedSubjectName
-                        + " ‡§ï‡§æ ‡§∏‡§µ‡§æ‡§≤ ‡§¨‡•ã‡§≤‡•á‡§Ç"
-        );
-
-        speechIntent.putExtra(
-                RecognizerIntent.EXTRA_MAX_RESULTS,
-                5
-        );
-
-        speechIntent.putExtra(
-                RecognizerIntent.EXTRA_PARTIAL_RESULTS,
-                false
-        );
-
-        String languageTag =
-                resolveVoiceLanguageTag();
-
-        if (!languageTag.isEmpty()) {
-            speechIntent.putExtra(
-                    RecognizerIntent.EXTRA_LANGUAGE,
-                    languageTag
-            );
-
-            speechIntent.putExtra(
-                    RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
-                    languageTag
-            );
-        }
-
-        binding.inputQuestion.setError(
-                null
-        );
-
-        binding.inputQuestion.setHelperText(
-                "‡§Ö‡§™‡§®‡§æ ‡§∏‡§µ‡§æ‡§≤ ‡§∏‡§æ‡§´ ‡§î‡§∞ ‡§ß‡•Ä‡§∞‡•á ‡§¨‡•ã‡§≤‡•á‡§Ç‡•§"
-        );
-
-        try {
-            voiceQuestionLauncher.launch(
-                    speechIntent
-            );
-
-        } catch (ActivityNotFoundException exception) {
-            binding.inputQuestion.setHelperText(
-                    null
-            );
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§á‡§∏ ‡§´‡•ã‡§® ‡§Æ‡•á‡§Ç Voice Recognition ‡§∏‡•á‡§µ‡§æ ‡§â‡§™‡§≤‡§¨‡•ç‡§ß ‡§®‡§π‡•Ä‡§Ç ‡§π‡•à‡•§",
-                    Snackbar.LENGTH_LONG
-            ).show();
-
-        } catch (RuntimeException exception) {
-            binding.inputQuestion.setHelperText(
-                    null
-            );
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Voice input ‡§∂‡•Å‡§∞‡•Ç ‡§®‡§π‡•Ä‡§Ç ‡§π‡•ã ‡§∏‡§ï‡§æ‡•§",
-                    Snackbar.LENGTH_LONG
-            ).show();
-        }
-    }
-
-    @NonNull
-    private String resolveVoiceLanguageTag() {
-        QuestionLanguageMode languageMode =
-                resolveQuestionLanguageMode();
-
-        if (languageMode
-                == QuestionLanguageMode.LATIN_PREFERRED) {
-
-            return "en-IN";
-        }
-
-        return "hi-IN";
-    }
-
-    @NonNull
-    private String getFirstValidSpeechResult(
-            @Nullable List<String> speechResults
-    ) {
-        if (speechResults == null
-                || speechResults.isEmpty()) {
-
-            return "";
-        }
-
-        for (String speechResult :
-                speechResults) {
-
-            String safeResult =
-                    safeText(
-                            speechResult
-                    );
-
-            if (!safeResult.isEmpty()) {
-                return safeResult;
-            }
-        }
-
-        return "";
-    }
-
-    private void applySpokenQuestion(
-            @NonNull String spokenQuestion
-    ) {
-        String currentQuestion =
-                getCurrentQuestionText();
-
-        String finalQuestion;
-
-        if (currentQuestion.isEmpty()) {
-            finalQuestion =
-                    spokenQuestion;
-
-        } else {
-            finalQuestion =
-                    currentQuestion
-                            + "\n"
-                            + spokenQuestion;
-        }
-
-        setQuestionText(
-                finalQuestion
-        );
-
-        binding.inputQuestion.setError(
-                null
-        );
-
-        binding.inputQuestion.setHelperText(
-                "Voice ‡§∏‡•á ‡§Ü‡§Ø‡§æ ‡§∏‡§µ‡§æ‡§≤ ‡§ú‡§æ‡§Å‡§ö‡•á‡§Ç‡•§ ‡§ú‡§∞‡•Ç‡§∞‡§§ ‡§π‡•ã ‡§§‡•ã Text ‡§∏‡•Å‡§ß‡§æ‡§∞‡§ï‡§∞ Ask ‡§¶‡§¨‡§æ‡§è‡§Å‡•§"
-        );
-
-        Snackbar.make(
-                binding.getRoot(),
-                "‡§Ü‡§™‡§ï‡§æ ‡§¨‡•ã‡§≤‡§æ ‡§π‡•Å‡§Ü ‡§∏‡§µ‡§æ‡§≤ ‡§≤‡§ø‡§ñ ‡§¶‡§ø‡§Ø‡§æ ‡§ó‡§Ø‡§æ ‡§π‡•à‡•§",
-                Snackbar.LENGTH_SHORT
-        ).show();
-    }
-
-    private void showVoiceResultMissing() {
-        binding.inputQuestion.setHelperText(
-                null
-        );
-
-        Snackbar.make(
-                binding.getRoot(),
-                "‡§Ü‡§µ‡§æ‡§ú ‡§∏‡•ç‡§™‡§∑‡•ç‡§ü ‡§®‡§π‡•Ä‡§Ç ‡§Æ‡§ø‡§≤‡•Ä‡•§ ‡§¶‡•ã‡§¨‡§æ‡§∞‡§æ ‡§¨‡•ã‡§≤‡•á‡§Ç ‡§Ø‡§æ Text ‡§≤‡§ø‡§ñ‡•á‡§Ç‡•§",
-                Snackbar.LENGTH_LONG
-        ).show();
-    }
-
-    private void readPrefillArguments() {
-        prefillSubjectName =
-                getSafeExtra(
-                        EXTRA_PREFILL_SUBJECT
-                );
-
-        prefillChapterTitle =
-                getSafeExtra(
-                        EXTRA_PREFILL_CHAPTER
-                );
-
-        prefillQuestion =
-                getSafeExtra(
-                        EXTRA_PREFILL_QUESTION
-                );
-
-        requestedInputMode =
-                getSafeExtra(
-                        SmartAiCompanionController.EXTRA_OPEN_INPUT_MODE
-                );
-        recommendedRevisionSession = getIntent().getBooleanExtra(
-                EXTRA_RECOMMENDED_REVISION, false);
-    }
-
-    @NonNull
-    private String getSafeExtra(
-            @NonNull String key
-    ) {
-        String value =
-                getIntent()
-                        .getStringExtra(
-                                key
-                        );
-
-        return safeText(
-                value
-        );
-    }
-
-    private void prepareInitialScreenState() {
-        binding.dropdownAskSubject.setEnabled(
-                false
-        );
-
-        binding.dropdownAskChapter.setEnabled(
-                false
-        );
-
-        binding.editQuestion.setEnabled(
-                false
-        );
-
-        binding.buttonAskSaathi.setEnabled(
-                false
-        );
-
-        binding.buttonDoubtHistory.setEnabled(
-                false
-        );
-
-        binding.buttonDoubtHistory.setVisibility(
-                View.GONE
-        );
-
-        binding.buttonQuickExplain.setEnabled(
-                false
-        );
-
-        binding.buttonQuickKeyPoints.setEnabled(
-                false
-        );
-
-        binding.buttonQuickExample.setEnabled(
-                false
-        );
-
-        binding.buttonQuickPractice.setEnabled(
-                false
-        );
-
-        binding.buttonQuestionCamera.setEnabled(
-                false
-        );
-
-        binding.buttonQuestionGallery.setEnabled(
-                false
-        );
-
-        binding.buttonRemoveQuestionImage.setEnabled(
-                false
-        );
-
-        binding.buttonOpenLesson.setVisibility(
-                View.GONE
-        );
-
-        binding.cardAnswer.setVisibility(
-                View.GONE
-        );
-
-        binding.cardQuestionImagePreview.setVisibility(
-                View.GONE
-        );
-
-        binding.progressQuestionImageOcr.setVisibility(
-                View.GONE
-        );
-
-        binding.inputQuestion.setEndIconVisible(
-                false
-        );
-
-        setOptionalChapterDropdown(
-                new ArrayList<>(),
-                ""
-        );
-    }
-
-    private void setupClickListeners() {
-        binding.buttonBack.setOnClickListener(view ->
-                getOnBackPressedDispatcher()
-                        .onBackPressed()
-        );
-
-        binding.buttonDoubtHistory.setOnClickListener(view ->
-                openDoubtHistory()
-        );
-
-        binding.buttonQuestionCamera.setOnClickListener(view ->
-                openQuestionCamera()
-        );
-
-        binding.buttonQuestionGallery.setOnClickListener(view ->
-                openQuestionGallery()
-        );
-
-        binding.buttonRemoveQuestionImage.setOnClickListener(view ->
-                removeSelectedQuestionImage()
-        );
-
-        binding.buttonAskSaathi.setOnClickListener(view ->
-                submitQuestion(
-                        getCurrentQuestionText()
-                )
-        );
-
-        binding.buttonSendFollowUp.setOnClickListener(view ->
-                submitFollowUpQuestion()
-        );
-
-        binding.editFollowUpQuestion
-                .setOnEditorActionListener(
-                        (textView, actionId, event) -> {
-                            if (actionId
-                                    != EditorInfo.IME_ACTION_SEND) {
-
-                                return false;
-                            }
-
-                            submitFollowUpQuestion();
-                            return true;
-                        }
-                );
-
-        binding.buttonQuickExplain.setOnClickListener(view ->
-                submitQuickQuestion(
-                        getString(
-                                R.string.quick_question_explain
-                        )
-                )
-        );
-
-        binding.buttonQuickKeyPoints.setOnClickListener(view ->
-                submitQuickQuestion(
-                        getString(
-                                R.string.quick_question_key_points
-                        )
-                )
-        );
-
-        binding.buttonQuickExample.setOnClickListener(view ->
-                submitQuickQuestion(
-                        getString(
-                                R.string.quick_question_example
-                        )
-                )
-        );
-
-        binding.buttonQuickPractice.setOnClickListener(view ->
-                submitQuickQuestion(
-                        getString(
-                                R.string.quick_question_practice
-                        )
-                )
-        );
-
-        binding.buttonOpenLesson.setOnClickListener(view ->
-                openSelectedLesson()
-        );
-    }
-
-    private void openQuestionCamera() {
-        if (!isQuestionImageInputAvailable()) {
-            return;
-        }
-
-        hideKeyboard();
-
-        try {
-            File imageFile =
-                    createQuestionCameraFile();
-
-            pendingCameraImagePath =
-                    imageFile.getAbsolutePath();
-
-            pendingCameraImageUri =
-                    FileProvider.getUriForFile(
-                            this,
-                            getPackageName()
-                                    + ".fileprovider",
-                            imageFile
-                    );
-
-            questionCameraLauncher.launch(
-                    pendingCameraImageUri
-            );
-
-        } catch (IOException exception) {
-            clearPendingCameraImage(
-                    true
-            );
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Camera photo ‡§ï‡•á ‡§≤‡§ø‡§è temporary file ‡§®‡§π‡•Ä‡§Ç ‡§¨‡§® ‡§∏‡§ï‡•Ä‡•§",
-                    Snackbar.LENGTH_LONG
-            ).show();
-
-        } catch (IllegalArgumentException exception) {
-            clearPendingCameraImage(
-                    true
-            );
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Camera photo provider ‡§§‡•à‡§Ø‡§æ‡§∞ ‡§®‡§π‡•Ä‡§Ç ‡§π‡•ã ‡§∏‡§ï‡§æ‡•§",
-                    Snackbar.LENGTH_LONG
-            ).show();
-
-        } catch (ActivityNotFoundException exception) {
-            clearPendingCameraImage(
-                    true
-            );
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§á‡§∏ device ‡§Æ‡•á‡§Ç Camera app ‡§â‡§™‡§≤‡§¨‡•ç‡§ß ‡§®‡§π‡•Ä‡§Ç ‡§π‡•à‡•§",
-                    Snackbar.LENGTH_LONG
-            ).show();
-
-        } catch (RuntimeException exception) {
-            clearPendingCameraImage(
-                    true
-            );
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Camera ‡§∂‡•Å‡§∞‡•Ç ‡§®‡§π‡•Ä‡§Ç ‡§π‡•ã ‡§∏‡§ï‡§æ‡•§",
-                    Snackbar.LENGTH_LONG
-            ).show();
-        }
-    }
-
-    private void openQuestionGallery() {
-        if (!isQuestionImageInputAvailable()) {
-            return;
-        }
-
-        hideKeyboard();
-
-        try {
-            questionGalleryLauncher.launch(
-                    new String[]{
-                            "image/*"
-                    }
-            );
-
-        } catch (ActivityNotFoundException exception) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Gallery ‡§Ø‡§æ file picker ‡§â‡§™‡§≤‡§¨‡•ç‡§ß ‡§®‡§π‡•Ä‡§Ç ‡§π‡•à‡•§",
-                    Snackbar.LENGTH_LONG
-            ).show();
-
-        } catch (RuntimeException exception) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Gallery ‡§®‡§π‡•Ä‡§Ç ‡§ñ‡•Å‡§≤ ‡§∏‡§ï‡•Ä‡•§",
-                    Snackbar.LENGTH_LONG
-            ).show();
-        }
-    }
-
-    private boolean isQuestionImageInputAvailable() {
-        if (aiAnswerRequestInProgress) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§™‡§π‡§≤‡•á ‡§µ‡§∞‡•ç‡§§‡§Æ‡§æ‡§® Smart AI answer ‡§™‡•Ç‡§∞‡§æ ‡§π‡•ã‡§®‡•á ‡§¶‡•á‡§Ç‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return false;
-        }
-
-        if (activeStudentProfile == null) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§™‡§π‡§≤‡•á Student Profile ‡§ö‡•Å‡§®‡•á‡§Ç‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return false;
-        }
-
-        if (selectedSchoolSubject == null
-                || selectedSubjectName.isEmpty()) {
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§™‡§π‡§≤‡•á ‡§Ö‡§™‡§®‡§æ Subject ‡§ö‡•Å‡§®‡•á‡§Ç‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return false;
-        }
-
-        if (questionImageOcrInProgress) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§™‡§π‡§≤‡•Ä ‡§´‡•ã‡§ü‡•ã ‡§Ö‡§≠‡•Ä ‡§™‡§¢‡§º‡•Ä ‡§ú‡§æ ‡§∞‡§π‡•Ä ‡§π‡•à‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return false;
-        }
-
-        return true;
-    }
-
-    @NonNull
-    private File createQuestionCameraFile()
-            throws IOException {
-
-        File imageDirectory =
-                new File(
-                        getCacheDir(),
-                        QUESTION_IMAGE_DIRECTORY
-                );
-
-        if (!imageDirectory.exists()
-                && !imageDirectory.mkdirs()) {
-
-            throw new IOException(
-                    "Question image directory could not be created."
-            );
-        }
-
-        return File.createTempFile(
-                "question_",
-                ".jpg",
-                imageDirectory
-        );
-    }
-
-    private void handleCameraQuestionImageResult(
-            boolean captured
-    ) {
-        if (!isActivityAvailable()) {
-            return;
-        }
-
-        if (!captured
-                || pendingCameraImageUri == null) {
-
-            clearPendingCameraImage(
-                    true
-            );
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Camera photo ‡§®‡§π‡•Ä‡§Ç ‡§≤‡•Ä ‡§ó‡§à‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        questionImageBitmapLoader.cancelCurrentLoad();
-
-        removeOldInternalQuestionImage();
-
-        selectedQuestionImageUri =
-                pendingCameraImageUri;
-
-        selectedQuestionImagePrivatePath =
-                safeText(
-                        pendingCameraImagePath
-                );
-
-        pendingCameraImageUri =
-                null;
-
-        pendingCameraImagePath =
-                null;
-
-        displaySelectedQuestionImage();
-
-        startQuestionImageOcr(
-                selectedQuestionImageUri
-        );
-    }
-
-    private void handleSelectedGalleryQuestionImage(
-            @Nullable Uri imageUri
-    ) {
-        if (!isActivityAvailable()) {
-            return;
-        }
-
-        if (imageUri == null) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Gallery ‡§∏‡•á ‡§ï‡•ã‡§à ‡§´‡•ã‡§ü‡•ã ‡§®‡§π‡•Ä‡§Ç ‡§ö‡•Å‡§®‡•Ä ‡§ó‡§à‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        try {
-            getContentResolver()
-                    .takePersistableUriPermission(
-                            imageUri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    );
-
-        } catch (SecurityException ignored) {
-            // Current activity session ‡§Æ‡•á‡§Ç URI ‡§â‡§™‡§Ø‡•ã‡§ó ‡§π‡•ã ‡§∏‡§ï‡§§‡•Ä ‡§π‡•à‡•§
-        }
-
-        questionImageBitmapLoader.cancelCurrentLoad();
-
-        removeOldInternalQuestionImage();
-
-        selectedQuestionImageUri =
-                imageUri;
-
-        selectedQuestionImagePrivatePath =
-                null;
-
-        displaySelectedQuestionImage();
-
-        startQuestionImageOcr(
-                imageUri
-        );
-    }
-
-    private void displaySelectedQuestionImage() {
-        if (selectedQuestionImageUri == null) {
-            binding.cardQuestionImagePreview.setVisibility(
-                    View.GONE
-            );
-
-            binding.imageQuestionPreview.setImageDrawable(
-                    null
-            );
-
-            return;
-        }
-
-        binding.cardQuestionImagePreview.setVisibility(
-                View.VISIBLE
-        );
-
-        binding.buttonRemoveQuestionImage.setEnabled(
-                !questionImageOcrInProgress
-                        && !aiAnswerRequestInProgress
-        );
-
-        binding.textQuestionImageStatus.setText(
-                "‡§´‡•ã‡§ü‡•ã ‡§§‡•à‡§Ø‡§æ‡§∞ ‡§π‡•à‡•§ ‡§∏‡§µ‡§æ‡§≤ ‡§™‡§¢‡§º‡§®‡§æ ‡§∂‡•Å‡§∞‡•Ç ‡§ï‡§ø‡§Ø‡§æ ‡§ú‡§æ ‡§∞‡§π‡§æ ‡§π‡•à‡•§"
-        );
-
-        Bitmap previewBitmap =
-                decodePreviewBitmap(
-                        selectedQuestionImageUri
-                );
-
-        binding.imageQuestionPreview.setImageDrawable(
-                null
-        );
-
-        if (previewBitmap != null) {
-            binding.imageQuestionPreview.setImageBitmap(
-                    previewBitmap
-            );
-
-        } else {
-            binding.imageQuestionPreview.setImageURI(
-                    selectedQuestionImageUri
-            );
-        }
-
-        binding.askSaathiScrollView.post(() ->
-                binding.askSaathiScrollView.smoothScrollTo(
-                        0,
-                        binding.cardQuestionImagePreview
-                                .getBottom()
-                )
-        );
-    }
-
-    @Nullable
-    private Bitmap decodePreviewBitmap(
-            @NonNull Uri imageUri
-    ) {
-        BitmapFactory.Options boundsOptions =
-                new BitmapFactory.Options();
-
-        boundsOptions.inJustDecodeBounds =
-                true;
-
-        try (ParcelFileDescriptor descriptor =
-                     getContentResolver()
-                             .openFileDescriptor(
-                                     imageUri,
-                                     "r"
-                             )) {
-
-            if (descriptor == null) {
-                return null;
-            }
-
-            BitmapFactory.decodeFileDescriptor(
-                    descriptor.getFileDescriptor(),
-                    null,
-                    boundsOptions
-            );
-
-        } catch (IOException
-                 | RuntimeException exception) {
-
-            return null;
-        }
-
-        if (boundsOptions.outWidth <= 0
-                || boundsOptions.outHeight <= 0) {
-
-            return null;
-        }
-
-        int sampleSize =
-                calculatePreviewSampleSize(
-                        boundsOptions.outWidth,
-                        boundsOptions.outHeight
-                );
-
-        BitmapFactory.Options bitmapOptions =
-                new BitmapFactory.Options();
-
-        bitmapOptions.inSampleSize =
-                sampleSize;
-
-        bitmapOptions.inPreferredConfig =
-                Bitmap.Config.RGB_565;
-
-        try (ParcelFileDescriptor descriptor =
-                     getContentResolver()
-                             .openFileDescriptor(
-                                     imageUri,
-                                     "r"
-                             )) {
-
-            if (descriptor == null) {
-                return null;
-            }
-
-            return BitmapFactory.decodeFileDescriptor(
-                    descriptor.getFileDescriptor(),
-                    null,
-                    bitmapOptions
-            );
-
-        } catch (IOException
-                 | RuntimeException exception) {
-
-            return null;
-        }
-    }
-
-    private int calculatePreviewSampleSize(
-            int imageWidth,
-            int imageHeight
-    ) {
-        int sampleSize =
-                1;
-
-        while ((imageWidth / sampleSize)
-                > MAXIMUM_PREVIEW_IMAGE_SIZE
-                || (imageHeight / sampleSize)
-                > MAXIMUM_PREVIEW_IMAGE_SIZE) {
-
-            sampleSize *=
-                    2;
-        }
-
-        return Math.max(
-                1,
-                sampleSize
-        );
-    }
-
-    private void startQuestionImageOcr(
-            @NonNull Uri imageUri
-    ) {
-        if (selectedSchoolSubject == null) {
-            restartImageOcrAfterSubjectLoad =
-                    true;
-
-            return;
-        }
-
-        questionImageOcrGeneration++;
-
-        int operationGeneration =
-                questionImageOcrGeneration;
-
-        closeQuestionTextRecognizers();
-
-        setQuestionImageOcrState(
-                true
-        );
-
-        final InputImage inputImage;
-
-        try {
-            inputImage =
-                    InputImage.fromFilePath(
-                            this,
-                            imageUri
-                    );
-
-        } catch (IOException
-                 | RuntimeException exception) {
-
-            finishQuestionImageOcrWithError(
-                    operationGeneration,
-                    "‡§´‡•ã‡§ü‡•ã ‡§™‡§¢‡§º‡§®‡•á ‡§Ø‡•ã‡§ó‡•ç‡§Ø format ‡§Æ‡•á‡§Ç ‡§®‡§π‡•Ä‡§Ç ‡§π‡•à‡•§"
-            );
-
-            return;
-        }
-
-        questionLatinRecognizer =
-                TextRecognition.getClient(
-                        TextRecognizerOptions.DEFAULT_OPTIONS
-                );
-
-        questionDevanagariRecognizer =
-                TextRecognition.getClient(
-                        new DevanagariTextRecognizerOptions
-                                .Builder()
-                                .build()
-                );
-
-        recognizeLatinQuestionText(
-                inputImage,
-                operationGeneration
-        );
-    }
-
-    private void recognizeLatinQuestionText(
-            @NonNull InputImage inputImage,
-            int operationGeneration
-    ) {
-        TextRecognizer recognizer =
-                questionLatinRecognizer;
-
-        if (recognizer == null) {
-            recognizeDevanagariQuestionText(
-                    inputImage,
-                    "",
-                    new IllegalStateException(
-                            "Latin recognizer unavailable."
-                    ),
-                    operationGeneration
-            );
-
-            return;
-        }
-
-        recognizer.process(
-                        inputImage
-                )
-                .addOnSuccessListener(text ->
-                        recognizeDevanagariQuestionText(
-                                inputImage,
-                                safeText(
-                                        text == null
-                                                ? null
-                                                : text.getText()
-                                ),
-                                null,
-                                operationGeneration
-                        )
-                )
-                .addOnFailureListener(exception ->
-                        recognizeDevanagariQuestionText(
-                                inputImage,
-                                "",
-                                exception,
-                                operationGeneration
-                        )
-                );
-    }
-
-    private void recognizeDevanagariQuestionText(
-            @NonNull InputImage inputImage,
-            @NonNull String latinText,
-            @Nullable Exception latinFailure,
-            int operationGeneration
-    ) {
-        if (!isCurrentQuestionImageOcr(
-                operationGeneration
-        )) {
-            return;
-        }
-
-        TextRecognizer recognizer =
-                questionDevanagariRecognizer;
-
-        if (recognizer == null) {
-            if (!latinText.isEmpty()) {
-                completeQuestionImageOcr(
-                        latinText,
-                        "",
-                        operationGeneration
-                );
-
-            } else {
-                finishQuestionImageOcrWithError(
-                        operationGeneration,
-                        "Question OCR engine ‡§â‡§™‡§≤‡§¨‡•ç‡§ß ‡§®‡§π‡•Ä‡§Ç ‡§π‡•à‡•§"
-                );
-            }
-
-            return;
-        }
-
-        recognizer.process(
-                        inputImage
-                )
-                .addOnSuccessListener(text -> {
-                    String devanagariText =
-                            safeText(
-                                    text == null
-                                            ? null
-                                            : text.getText()
-                            );
-
-                    completeQuestionImageOcr(
-                            latinText,
-                            devanagariText,
-                            operationGeneration
-                    );
-                })
-                .addOnFailureListener(exception -> {
-                    if (!latinText.isEmpty()) {
-                        completeQuestionImageOcr(
-                                latinText,
-                                "",
-                                operationGeneration
-                        );
-
-                        return;
-                    }
-
-                    String errorMessage =
-                            latinFailure == null
-                                    ? "‡§´‡•ã‡§ü‡•ã ‡§Æ‡•á‡§Ç ‡§™‡§¢‡§º‡§®‡•á ‡§Ø‡•ã‡§ó‡•ç‡§Ø ‡§∏‡§µ‡§æ‡§≤ ‡§®‡§π‡•Ä‡§Ç ‡§Æ‡§ø‡§≤‡§æ‡•§"
-                                    : "Latin ‡§î‡§∞ Devanagari ‡§¶‡•ã‡§®‡•ã‡§Ç OCR text ‡§®‡§π‡•Ä‡§Ç ‡§™‡§¢‡§º ‡§∏‡§ï‡•á‡•§";
-
-                    finishQuestionImageOcrWithError(
-                            operationGeneration,
-                            errorMessage
-                    );
-                });
-    }
-
-    private void completeQuestionImageOcr(
-            @NonNull String latinText,
-            @NonNull String devanagariText,
-            int operationGeneration
-    ) {
-        if (!isCurrentQuestionImageOcr(
-                operationGeneration
-        )) {
-            return;
-        }
-
-        QuestionOcrSelection selection =
-                selectBestQuestionOcrText(
-                        latinText,
-                        devanagariText
-                );
-
-        closeQuestionTextRecognizers();
-
-        questionImageOcrInProgress =
-                false;
-
-        updateQuestionImageButtonsEnabledState();
-
-        binding.progressQuestionImageOcr.setVisibility(
-                View.GONE
-        );
-
-        if (selection.getSelectedText()
-                .isEmpty()) {
-
-            binding.textQuestionImageStatus.setText(
-                    "‡§´‡•ã‡§ü‡•ã ‡§Æ‡§ø‡§≤ ‡§ó‡§à, ‡§≤‡•á‡§ï‡§ø‡§® ‡§∏‡§µ‡§æ‡§≤ ‡§∏‡§æ‡§´ ‡§®‡§π‡•Ä‡§Ç ‡§™‡§¢‡§º‡§æ ‡§ú‡§æ ‡§∏‡§ï‡§æ‡•§ "
-                            + "‡§´‡•ã‡§ü‡•ã crop ‡§ï‡§∞‡§ï‡•á ‡§¶‡•ã‡§¨‡§æ‡§∞‡§æ ‡§≤‡•á‡§Ç ‡§Ø‡§æ ‡§∏‡§µ‡§æ‡§≤ manually ‡§≤‡§ø‡§ñ‡•á‡§Ç‡•§"
-            );
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§´‡•ã‡§ü‡•ã ‡§Æ‡•á‡§Ç ‡§™‡§¢‡§º‡§®‡•á ‡§Ø‡•ã‡§ó‡•ç‡§Ø ‡§∏‡§µ‡§æ‡§≤ ‡§®‡§π‡•Ä‡§Ç ‡§Æ‡§ø‡§≤‡§æ‡•§",
-                    Snackbar.LENGTH_LONG
-            ).show();
-
-            return;
-        }
-
-        /*
-         * Full-page OCR is retained only as private image context. It must
-         * never replace or append to the child's targeted typed question.
-         */
-        lastQuestionImageOcrText =
-                safeText(selection.getSelectedText());
-
-        binding.textQuestionImageStatus.setText(
-                selection.createStatusMessage()
-        );
-
-        binding.inputQuestion.setError(
-                null
-        );
-
-        binding.inputQuestion.setHelperText(
-                "‡§Ö‡§¨ ‡§ï‡•á‡§µ‡§≤ ‡§≤‡§ï‡•ç‡§∑‡•ç‡§Ø ‡§≤‡§ø‡§ñ‡•á‡§Ç, ‡§ú‡•à‡§∏‡•á: ‡§∏‡§µ‡§æ‡§≤ ‡§®‡§Ç. 3 ‡§π‡§≤ ‡§ï‡§∞‡•ã‡•§ ‡§™‡•Ç‡§∞‡§æ page text ‡§Ø‡§π‡§æ‡§Å ‡§®‡§π‡•Ä‡§Ç ‡§ú‡•ã‡§°‡§º‡§æ ‡§ú‡§æ‡§è‡§ó‡§æ‡•§"
-        );
-
-        Snackbar.make(
-                binding.getRoot(),
-                "Photo ‡§§‡•à‡§Ø‡§æ‡§∞ ‡§π‡•à‡•§ ‡§ï‡•á‡§µ‡§≤ ‡§ú‡§ø‡§∏ question ‡§ï‡§æ answer ‡§ö‡§æ‡§π‡§ø‡§è ‡§µ‡§π ‡§≤‡§ø‡§ñ‡•á‡§Ç‡•§",
-                Snackbar.LENGTH_SHORT
-        ).show();
-    }
-
-    private void finishQuestionImageOcrWithError(
-            int operationGeneration,
-            @NonNull String errorMessage
-    ) {
-        if (!isCurrentQuestionImageOcr(
-                operationGeneration
-        )) {
-            return;
-        }
-
-        closeQuestionTextRecognizers();
-
-        questionImageOcrInProgress =
-                false;
-
-        updateQuestionImageButtonsEnabledState();
-
-        binding.progressQuestionImageOcr.setVisibility(
-                View.GONE
-        );
-
-        binding.textQuestionImageStatus.setText(
-                errorMessage
-                        + " ‡§∏‡§æ‡§´ photo ‡§≤‡•á‡§Ç ‡§Ø‡§æ ‡§∏‡§µ‡§æ‡§≤ manually ‡§≤‡§ø‡§ñ‡•á‡§Ç‡•§"
-        );
-
-        Snackbar.make(
-                binding.getRoot(),
-                errorMessage,
-                Snackbar.LENGTH_LONG
-        ).show();
-    }
-
-    private boolean isCurrentQuestionImageOcr(
-            int operationGeneration
-    ) {
-        return isActivityAvailable()
-                && questionImageOcrInProgress
-                && operationGeneration
-                == questionImageOcrGeneration;
-    }
-
-    private void setQuestionImageOcrState(
-            boolean processing
-    ) {
-        questionImageOcrInProgress =
-                processing;
-
-        binding.progressQuestionImageOcr.setVisibility(
-                processing
-                        ? View.VISIBLE
-                        : View.GONE
-        );
-
-        if (processing) {
-            binding.textQuestionImageStatus.setText(
-                    createQuestionImageProcessingMessage()
-            );
-        }
-
-        updateQuestionImageButtonsEnabledState();
-    }
-
-    @NonNull
-    private String createQuestionImageProcessingMessage() {
-        QuestionLanguageMode languageMode =
-                resolveQuestionLanguageMode();
-
-        switch (languageMode) {
-            case DEVANAGARI_SANSKRIT:
-                return "‡§∏‡§Ç‡§∏‡•ç‡§ï‡•É‡§§ ‡§∏‡§µ‡§æ‡§≤ ‡§ï‡•ã Devanagari OCR ‡§∏‡•á ‡§™‡§¢‡§º‡§æ ‡§ú‡§æ ‡§∞‡§π‡§æ ‡§π‡•à‡•§";
-
-            case DEVANAGARI_HINDI:
-                return "‡§π‡§ø‡§®‡•ç‡§¶‡•Ä ‡§∏‡§µ‡§æ‡§≤ ‡§ï‡•ã Devanagari OCR ‡§∏‡•á ‡§™‡§¢‡§º‡§æ ‡§ú‡§æ ‡§∞‡§π‡§æ ‡§π‡•à‡•§";
-
-            case LATIN_PREFERRED:
-                return "English text ‡§ï‡•ã ‡§™‡§¢‡§º‡§æ ‡§ú‡§æ ‡§∞‡§π‡§æ ‡§π‡•à‡•§";
-
-            case MIXED:
-            default:
-                return "‡§´‡•ã‡§ü‡•ã ‡§∏‡•á ‡§∏‡§µ‡§æ‡§≤ ‡§™‡§¢‡§º‡§æ ‡§ú‡§æ ‡§∞‡§π‡§æ ‡§π‡•à‡•§";
-        }
-    }
-
-    private void updateQuestionImageButtonsEnabledState() {
-        boolean controlsAvailable =
-                activeStudentProfile != null
-                        && selectedSchoolSubject != null
-                        && !aiAnswerRequestInProgress;
-
-        binding.buttonQuestionCamera.setEnabled(
-                controlsAvailable
-                        && !questionImageOcrInProgress
-        );
-
-        binding.buttonQuestionGallery.setEnabled(
-                controlsAvailable
-                        && !questionImageOcrInProgress
-        );
-
-        binding.buttonRemoveQuestionImage.setEnabled(
-                selectedQuestionImageUri != null
-                        && !questionImageOcrInProgress
-                        && !aiAnswerRequestInProgress
-        );
-    }
-
-    @NonNull
-    private QuestionOcrSelection selectBestQuestionOcrText(
-            @NonNull String rawLatinText,
-            @NonNull String rawDevanagariText
-    ) {
-        QuestionLanguageMode languageMode =
-                resolveQuestionLanguageMode();
-
-        String latinText =
-                filterTextForLatinScript(
-                        rawLatinText
-                );
-
-        String devanagariText =
-                filterTextForDevanagariScript(
-                        rawDevanagariText
-                );
-
-        String selectedText;
-
-        String sourceLabel;
-
-        boolean fallbackUsed =
-                false;
-
-        switch (languageMode) {
-            case DEVANAGARI_SANSKRIT:
-                if (!devanagariText.isEmpty()) {
-                    selectedText =
-                            devanagariText;
-
-                    sourceLabel =
-                            "Sanskrit Devanagari OCR";
-
-                } else {
-                    selectedText =
-                            latinText;
-
-                    sourceLabel =
-                            "Latin fallback";
-
-                    fallbackUsed =
-                            true;
-                }
-
-                break;
-
-            case DEVANAGARI_HINDI:
-                if (!devanagariText.isEmpty()) {
-                    selectedText =
-                            devanagariText;
-
-                    sourceLabel =
-                            "Hindi Devanagari OCR";
-
-                } else {
-                    selectedText =
-                            latinText;
-
-                    sourceLabel =
-                            "Latin fallback";
-
-                    fallbackUsed =
-                            true;
-                }
-
-                break;
-
-            case LATIN_PREFERRED:
-                if (!latinText.isEmpty()) {
-                    selectedText =
-                            latinText;
-
-                    sourceLabel =
-                            "English OCR";
-
-                } else {
-                    selectedText =
-                            devanagariText;
-
-                    sourceLabel =
-                            "Devanagari fallback";
-
-                    fallbackUsed =
-                            true;
-                }
-
-                break;
-
-            case MIXED:
-            default:
-                selectedText =
-                        mergeMixedQuestionText(
-                                latinText,
-                                devanagariText
-                        );
-
-                sourceLabel =
-                        "Mixed-language OCR";
-
-                break;
-        }
-
-        int qualityEstimate =
-                estimateQuestionOcrQuality(
-                        selectedText,
-                        languageMode
-                );
-
-        boolean manualReviewRequired =
-                fallbackUsed
-                        || qualityEstimate < 78
-                        || languageMode
-                        == QuestionLanguageMode
-                        .DEVANAGARI_SANSKRIT;
-
-        return new QuestionOcrSelection(
-                selectedText,
-                sourceLabel,
-                qualityEstimate,
-                manualReviewRequired,
-                fallbackUsed,
-                languageMode
-        );
-    }
-
-    @NonNull
-    private QuestionLanguageMode resolveQuestionLanguageMode() {
-        String subjectText =
-                normalizeText(
-                        selectedSubjectName
-                                + " "
-                                + (
-                                selectedSchoolSubject == null
-                                        ? ""
-                                        : selectedSchoolSubject
-                                        .getSubjectNameHindi()
-                        )
-                );
-
-        if (subjectText.contains(
-                "sanskrit"
-        )
-                || subjectText.contains(
-                "‡§∏‡§Ç‡§∏‡•ç‡§ï‡•É‡§§"
-        )) {
-
-            return QuestionLanguageMode
-                    .DEVANAGARI_SANSKRIT;
-        }
-
-        if (subjectText.contains(
-                "hindi"
-        )
-                || subjectText.contains(
-                "‡§π‡§ø‡§Ç‡§¶‡•Ä"
-        )
-                || subjectText.contains(
-                "‡§π‡§ø‡§®‡•ç‡§¶‡•Ä"
-        )) {
-
-            return QuestionLanguageMode
-                    .DEVANAGARI_HINDI;
-        }
-
-        if (subjectText.contains(
-                "english"
-        )
-                || subjectText.contains(
-                "‡§Ö‡§Ç‡§ó‡•ç‡§∞‡•á‡§ú"
-        )) {
-
-            return QuestionLanguageMode
-                    .LATIN_PREFERRED;
-        }
-
-        if (activeStudentProfile != null) {
-            String explanationLanguage =
-                    normalizeText(
-                            activeStudentProfile
-                                    .getExplanationLanguage()
-                    );
-
-            if (explanationLanguage.contains(
-                    "english"
-            )
-                    && !explanationLanguage.contains(
-                    "hindi"
-            )
-                    && !explanationLanguage.contains(
-                    "‡§π‡§ø‡§Ç‡§¶‡•Ä"
-            )
-                    && !explanationLanguage.contains(
-                    "bilingual"
-            )) {
-
-                return QuestionLanguageMode
-                        .LATIN_PREFERRED;
-            }
-        }
-
-        return QuestionLanguageMode.MIXED;
-    }
-
-    @NonNull
-    private String filterTextForDevanagariScript(
-            @Nullable String text
-    ) {
-        String safeValue =
-                safeText(
-                        text
-                );
-
-        if (safeValue.isEmpty()) {
-            return "";
-        }
-
-        StringBuilder result =
-                new StringBuilder();
-
-        String[] lines =
-                safeValue.split(
-                        "\\R"
-                );
-
-        for (String rawLine :
-                lines) {
-
-            String line =
-                    normalizeOcrLine(
-                            rawLine
-                    );
-
-            if (line.isEmpty()) {
-                continue;
-            }
-
-            int devanagariCharacters =
-                    countDevanagariCharacters(
-                            line
-                    );
-
-            int latinCharacters =
-                    countLatinCharacters(
-                            line
-                    );
-
-            boolean numericOrMathematicalLine =
-                    containsNumberOrMathSymbol(
-                            line
-                    );
-
-            boolean keepLine =
-                    devanagariCharacters > 0
-                            || (
-                            latinCharacters == 0
-                                    && numericOrMathematicalLine
-                    );
-
-            if (!keepLine) {
-                continue;
-            }
-
-            appendUniqueLine(
-                    result,
-                    line
-            );
-        }
-
-        return result.toString()
-                .trim();
-    }
-
-    @NonNull
-    private String filterTextForLatinScript(
-            @Nullable String text
-    ) {
-        String safeValue =
-                safeText(
-                        text
-                );
-
-        if (safeValue.isEmpty()) {
-            return "";
-        }
-
-        StringBuilder result =
-                new StringBuilder();
-
-        String[] lines =
-                safeValue.split(
-                        "\\R"
-                );
-
-        for (String rawLine :
-                lines) {
-
-            String line =
-                    normalizeOcrLine(
-                            rawLine
-                    );
-
-            if (line.isEmpty()) {
-                continue;
-            }
-
-            int latinCharacters =
-                    countLatinCharacters(
-                            line
-                    );
-
-            int devanagariCharacters =
-                    countDevanagariCharacters(
-                            line
-                    );
-
-            boolean numericOrMathematicalLine =
-                    containsNumberOrMathSymbol(
-                            line
-                    );
-
-            boolean keepLine =
-                    latinCharacters > 0
-                            || (
-                            devanagariCharacters == 0
-                                    && numericOrMathematicalLine
-                    );
-
-            if (!keepLine) {
-                continue;
-            }
-
-            appendUniqueLine(
-                    result,
-                    line
-            );
-        }
-
-        return result.toString()
-                .trim();
-    }
-
-    @NonNull
-    private String mergeMixedQuestionText(
-            @NonNull String latinText,
-            @NonNull String devanagariText
-    ) {
-        Map<String, String> uniqueLines =
-                new LinkedHashMap<>();
-
-        addTextLinesToMap(
-                uniqueLines,
-                latinText
-        );
-
-        addTextLinesToMap(
-                uniqueLines,
-                devanagariText
-        );
-
-        StringBuilder result =
-                new StringBuilder();
-
-        for (String line :
-                uniqueLines.values()) {
-
-            if (result.length() > 0) {
-                result.append(
-                        '\n'
-                );
-            }
-
-            result.append(
-                    line
-            );
-        }
-
-        return result.toString()
-                .trim();
-    }
-
-    private void addTextLinesToMap(
-            @NonNull Map<String, String> target,
-            @NonNull String text
-    ) {
-        if (text.isEmpty()) {
-            return;
-        }
-
-        String[] lines =
-                text.split(
-                        "\\R"
-                );
-
-        for (String rawLine :
-                lines) {
-
-            String line =
-                    normalizeOcrLine(
-                            rawLine
-                    );
-
-            if (line.isEmpty()) {
-                continue;
-            }
-
-            String key =
-                    createOcrComparisonKey(
-                            line
-                    );
-
-            if (key.isEmpty()
-                    || target.containsKey(
-                    key
-            )) {
-
-                continue;
-            }
-
-            target.put(
-                    key,
-                    line
-            );
-        }
-    }
-
-    private void appendUniqueLine(
-            @NonNull StringBuilder builder,
-            @NonNull String line
-    ) {
-        String comparisonLine =
-                createOcrComparisonKey(
-                        line
-                );
-
-        if (!comparisonLine.isEmpty()) {
-            String[] existingLines =
-                    builder.toString()
-                            .split(
-                                    "\\R"
-                            );
-
-            for (String existingLine :
-                    existingLines) {
-
-                if (comparisonLine.equals(
-                        createOcrComparisonKey(
-                                existingLine
-                        )
-                )) {
-                    return;
-                }
-            }
-        }
-
-        if (builder.length() > 0) {
-            builder.append(
-                    '\n'
-            );
-        }
-
-        builder.append(
-                line
-        );
-    }
-
-    @NonNull
-    private String normalizeOcrLine(
-            @Nullable String line
-    ) {
-        return safeText(
-                line
-        )
-                .replaceAll(
-                        "[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]",
-                        " "
-                )
-                .replaceAll(
-                        "[ \\t]+",
-                        " "
-                )
-                .trim();
-    }
-
-    @NonNull
-    private String createOcrComparisonKey(
-            @Nullable String value
-    ) {
-        return safeText(
-                value
-        )
-                .toLowerCase(
-                        Locale.ROOT
-                )
-                .replaceAll(
-                        "[^\\p{L}\\p{N}]+",
-                        ""
-                )
-                .trim();
-    }
-
-    private int estimateQuestionOcrQuality(
-            @NonNull String selectedText,
-            @NonNull QuestionLanguageMode languageMode
-    ) {
-        String safeValue =
-                safeText(
-                        selectedText
-                );
-
-        if (safeValue.isEmpty()) {
-            return 0;
-        }
-
-        int totalLetters =
-                countLetterCharacters(
-                        safeValue
-                );
-
-        int devanagariCharacters =
-                countDevanagariCharacters(
-                        safeValue
-                );
-
-        int latinCharacters =
-                countLatinCharacters(
-                        safeValue
-                );
-
-        int meaningfulCharacters =
-                countMeaningfulCharacters(
-                        safeValue
-                );
-
-        int lineCount =
-                Math.max(
-                        1,
-                        safeValue.split(
-                                "\\R"
-                        ).length
-                );
-
-        int score =
-                25;
-
-        score +=
-                Math.min(
-                        25,
-                        meaningfulCharacters / 3
-                );
-
-        score +=
-                Math.min(
-                        10,
-                        lineCount * 2
-                );
-
-        if (totalLetters > 0) {
-            switch (languageMode) {
-                case DEVANAGARI_SANSKRIT:
-                case DEVANAGARI_HINDI:
-                    score +=
-                            Math.round(
-                                    35f
-                                            * devanagariCharacters
-                                            / totalLetters
-                            );
-                    break;
-
-                case LATIN_PREFERRED:
-                    score +=
-                            Math.round(
-                                    35f
-                                            * latinCharacters
-                                            / totalLetters
-                            );
-                    break;
-
-                case MIXED:
-                default:
-                    score +=
-                            Math.min(
-                                    35,
-                                    (
-                                            devanagariCharacters
-                                                    + latinCharacters
-                                    )
-                                            * 35
-                                            / totalLetters
-                            );
-                    break;
-            }
-        }
-
-        if (meaningfulCharacters < 5) {
-            score -=
-                    25;
-        }
-
-        if (languageMode
-                == QuestionLanguageMode.DEVANAGARI_SANSKRIT
-                && devanagariCharacters < 3) {
-
-            score -=
-                    30;
-        }
-
-        return Math.max(
-                0,
-                Math.min(
-                        100,
-                        score
-                )
-        );
-    }
-
-    private int countDevanagariCharacters(
-            @NonNull String value
-    ) {
-        int count =
-                0;
-
-        for (int index = 0;
-             index < value.length();
-             index++) {
-
-            char character =
-                    value.charAt(
-                            index
-                    );
-
-            if ((character >= '\u0900'
-                    && character <= '\u097F')
-                    || (character >= '\uA8E0'
-                    && character <= '\uA8FF')) {
-
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    private int countLatinCharacters(
-            @NonNull String value
-    ) {
-        int count =
-                0;
-
-        for (int index = 0;
-             index < value.length();
-             index++) {
-
-            char character =
-                    value.charAt(
-                            index
-                    );
-
-            if ((character >= 'A'
-                    && character <= 'Z')
-                    || (character >= 'a'
-                    && character <= 'z')) {
-
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    private int countLetterCharacters(
-            @NonNull String value
-    ) {
-        int count =
-                0;
-
-        for (int index = 0;
-             index < value.length();
-             index++) {
-
-            if (Character.isLetter(
-                    value.charAt(
-                            index
-                    )
-            )) {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    private int countMeaningfulCharacters(
-            @NonNull String value
-    ) {
-        int count =
-                0;
-
-        for (int index = 0;
-             index < value.length();
-             index++) {
-
-            char character =
-                    value.charAt(
-                            index
-                    );
-
-            if (Character.isLetterOrDigit(
-                    character
-            )
-                    || isMathSymbol(
-                    character
-            )) {
-
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    private boolean containsNumberOrMathSymbol(
-            @NonNull String value
-    ) {
-        for (int index = 0;
-             index < value.length();
-             index++) {
-
-            char character =
-                    value.charAt(
-                            index
-                    );
-
-            if (Character.isDigit(
-                    character
-            )
-                    || isMathSymbol(
-                    character
-            )) {
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean isMathSymbol(
-            char character
-    ) {
-        return character == '+'
-                || character == '-'
-                || character == '='
-                || character == '√ó'
-                || character == '√∑'
-                || character == '/'
-                || character == '%'
-                || character == '<'
-                || character == '>'
-                || character == '‚àö'
-                || character == '^'
-                || character == 'œÄ'
-                || character == '¬∞';
-    }
-
-    private void applyQuestionImageOcrText(
-            @NonNull String recognizedQuestion
-    ) {
-        lastQuestionImageOcrText =
-                safeText(recognizedQuestion);
-    }
-
-    private void removeSelectedQuestionImage() {
-        if (aiAnswerRequestInProgress) {
-            return;
-        }
-
-        questionImageBitmapLoader.cancelCurrentLoad();
-
-        questionImageOcrGeneration++;
-
-        closeQuestionTextRecognizers();
-
-        questionImageOcrInProgress =
-                false;
-
-        binding.progressQuestionImageOcr.setVisibility(
-                View.GONE
-        );
-
-        removeOldInternalQuestionImage();
-
-        selectedQuestionImageUri =
-                null;
-
-        selectedQuestionImagePrivatePath =
-                null;
-
-        lastQuestionImageOcrText =
-                "";
-
-        binding.imageQuestionPreview.setImageDrawable(
-                null
-        );
-
-        binding.cardQuestionImagePreview.setVisibility(
-                View.GONE
-        );
-
-        binding.textQuestionImageStatus.setText(
-                "‡§´‡•ã‡§ü‡•ã ‡§ö‡•Å‡§®‡•Ä ‡§ó‡§à ‡§π‡•à‡•§ ‡§ï‡•á‡§µ‡§≤ question number ‡§Ø‡§æ ‡§≤‡§ï‡•ç‡§∑‡•ç‡§Ø ‡§≤‡§ø‡§ñ‡•á‡§Ç; ‡§™‡•Ç‡§∞‡§æ page text copy ‡§®‡§π‡•Ä‡§Ç ‡§π‡•ã‡§ó‡§æ‡•§"
-        );
-
-        updateQuestionImageButtonsEnabledState();
-
-        Snackbar.make(
-                binding.getRoot(),
-                "Question photo ‡§π‡§ü‡§æ ‡§¶‡•Ä ‡§ó‡§à ‡§π‡•à‡•§ ‡§Ü‡§™‡§ï‡§æ typed ‡§∏‡§µ‡§æ‡§≤ ‡§∏‡•Å‡§∞‡§ï‡•ç‡§∑‡§ø‡§§ ‡§π‡•à‡•§",
-                Snackbar.LENGTH_SHORT
-        ).show();
-    }
-
-    private void removeOldInternalQuestionImage() {
-        String imagePath =
-                safeText(
-                        selectedQuestionImagePrivatePath
-                );
-
-        if (imagePath.isEmpty()) {
-            return;
-        }
-
-        File imageFile =
-                new File(
-                        imagePath
-                );
-
-        if (imageFile.isFile()) {
-            //noinspection ResultOfMethodCallIgnored
-            imageFile.delete();
-        }
-    }
-
-    private void clearPendingCameraImage(
-            boolean deleteFile
-    ) {
-        if (deleteFile) {
-            String path =
-                    safeText(
-                            pendingCameraImagePath
-                    );
-
-            if (!path.isEmpty()) {
-                File imageFile =
-                        new File(
-                                path
-                        );
-
-                if (imageFile.isFile()) {
-                    //noinspection ResultOfMethodCallIgnored
-                    imageFile.delete();
-                }
-            }
-        }
-
-        pendingCameraImageUri =
-                null;
-
-        pendingCameraImagePath =
-                null;
-    }
-
-    private void restoreQuestionImageState(
-            @Nullable Bundle savedInstanceState
-    ) {
-        if (savedInstanceState == null) {
-            return;
-        }
-
-        String selectedUriText =
-                safeText(
-                        savedInstanceState.getString(
-                                STATE_SELECTED_QUESTION_IMAGE_URI
-                        )
-                );
-
-        if (!selectedUriText.isEmpty()) {
-            selectedQuestionImageUri =
-                    Uri.parse(
-                            selectedUriText
-                    );
-
-            selectedQuestionImagePrivatePath =
-                    safeText(
-                            savedInstanceState.getString(
-                                    STATE_SELECTED_QUESTION_IMAGE_PATH
-                            )
-                    );
-
-            lastQuestionImageOcrText =
-                    safeText(
-                            savedInstanceState.getString(
-                                    STATE_LAST_IMAGE_OCR_TEXT
-                            )
-                    );
-
-            displaySelectedQuestionImage();
-
-            binding.textQuestionImageStatus.setText(
-                    "Question photo ‡§µ‡§æ‡§™‡§∏ load ‡§π‡•ã ‡§ó‡§à ‡§π‡•à‡•§ Subject load ‡§π‡•ã‡§®‡•á ‡§ï‡•á ‡§¨‡§æ‡§¶ OCR ‡§¶‡•ã‡§¨‡§æ‡§∞‡§æ ‡§ö‡§≤‡•á‡§ó‡§æ‡•§"
-            );
-
-            restartImageOcrAfterSubjectLoad =
-                    true;
-        }
-
-        String pendingUriText =
-                safeText(
-                        savedInstanceState.getString(
-                                STATE_PENDING_CAMERA_IMAGE_URI
-                        )
-                );
-
-        if (!pendingUriText.isEmpty()) {
-            pendingCameraImageUri =
-                    Uri.parse(
-                            pendingUriText
-                    );
-        }
-
-        pendingCameraImagePath =
-                safeText(
-                        savedInstanceState.getString(
-                                STATE_PENDING_CAMERA_IMAGE_PATH
-                        )
-                );
-    }
-
-    @Override
-    protected void onSaveInstanceState(
-            @NonNull Bundle outState
-    ) {
-        super.onSaveInstanceState(
-                outState
-        );
-
-        if (selectedQuestionImageUri != null) {
-            outState.putString(
-                    STATE_SELECTED_QUESTION_IMAGE_URI,
-                    selectedQuestionImageUri.toString()
-            );
-        }
-
-        outState.putString(
-                STATE_SELECTED_QUESTION_IMAGE_PATH,
-                safeText(
-                        selectedQuestionImagePrivatePath
-                )
-        );
-
-        if (pendingCameraImageUri != null) {
-            outState.putString(
-                    STATE_PENDING_CAMERA_IMAGE_URI,
-                    pendingCameraImageUri.toString()
-            );
-        }
-
-        outState.putString(
-                STATE_PENDING_CAMERA_IMAGE_PATH,
-                safeText(
-                        pendingCameraImagePath
-                )
-        );
-
-        outState.putString(
-                STATE_LAST_IMAGE_OCR_TEXT,
-                lastQuestionImageOcrText
-        );
-    }
-
-    private void loadActiveStudentProfile() {
-        showLoadingState(
-                true
-        );
-
-        studentProfileRepository.getActiveProfile(
-                new StudentProfileRepository
-                        .SingleProfileCallback() {
-
-                    @Override
-                    public void onSuccess(
-                            @Nullable StudentProfileEntity studentProfile
-                    ) {
-                        if (!isActivityAvailable()) {
-                            return;
-                        }
-
-                        if (studentProfile == null) {
-                            showLoadingState(
-                                    false
-                            );
-
-                            showNoProfileState();
-                            return;
-                        }
-
-                        activeStudentProfile =
-                                studentProfile;
-
-                        showStudentProfile(
-                                studentProfile
-                        );
-
-                        loadActualSchoolSubjects(
-                                studentProfile
-                        );
-                    }
-
-                    @Override
-                    public void onError(
-                            @NonNull Exception exception
-                    ) {
-                        if (!isActivityAvailable()) {
-                            return;
-                        }
-
-                        showLoadingState(
-                                false
-                        );
-
-                        showNoProfileState();
-
-                        Snackbar.make(
-                                binding.getRoot(),
-                                R.string.ask_saathi_profile_load_failed,
-                                Snackbar.LENGTH_LONG
-                        ).show();
-                    }
-                }
-        );
-    }
-
-    private void showStudentProfile(
-            @NonNull StudentProfileEntity studentProfile
-    ) {
-        binding.textAskStudent.setText(
-                getString(
-                        R.string.ask_saathi_student_format,
-                        studentProfile.getStudentName(),
-                        studentProfile.getEducationBoard(),
-                        studentProfile.getStudentClass(),
-                        studentProfile.getExplanationLanguage()
-                )
-        );
-    }
-
-    private void loadActualSchoolSubjects(
-            @NonNull StudentProfileEntity studentProfile
-    ) {
-        schoolSubjectRepository.getSubjectsForProfile(
-                studentProfile.getProfileId(),
-                true,
-                new SchoolSubjectRepository.SubjectsCallback() {
-
-                    @Override
-                    public void onSuccess(
-                            @NonNull List<SchoolSubjectEntity>
-                                    loadedSubjects
-                    ) {
-                        if (!isActivityAvailable()) {
-                            return;
-                        }
-
-                        showLoadingState(
-                                false
-                        );
-
-                        populateActualSchoolSubjects(
-                                loadedSubjects
-                        );
-                    }
-
-                    @Override
-                    public void onError(
-                            @NonNull Exception exception
-                    ) {
-                        if (!isActivityAvailable()) {
-                            return;
-                        }
-
-                        showLoadingState(
-                                false
-                        );
-
-                        showNoSubjectsState();
-
-                        Snackbar.make(
-                                binding.getRoot(),
-                                "School subjects load ‡§®‡§π‡•Ä‡§Ç ‡§π‡•ã ‡§∏‡§ï‡•á‡•§",
-                                Snackbar.LENGTH_LONG
-                        ).show();
-                    }
-                }
-        );
-    }
-
-    private void populateActualSchoolSubjects(
-            @NonNull List<SchoolSubjectEntity> loadedSubjects
-    ) {
-        schoolSubjects.clear();
-        subjectDisplayNames.clear();
-
-        for (SchoolSubjectEntity schoolSubject :
-                loadedSubjects) {
-
-            if (schoolSubject == null
-                    || !schoolSubject.isEnabled()) {
-
-                continue;
-            }
-
-            String primarySubjectName =
-                    getPrimarySubjectName(
-                            schoolSubject
-                    );
-
-            if (primarySubjectName.isEmpty()) {
-                continue;
-            }
-
-            schoolSubjects.add(
-                    schoolSubject
-            );
-
-            subjectDisplayNames.add(
-                    getSubjectDisplayName(
-                            schoolSubject
-                    )
-            );
-        }
-
-        ArrayAdapter<String> subjectAdapter =
-                new ArrayAdapter<>(
-                        this,
-                        android.R.layout.simple_list_item_1,
-                        subjectDisplayNames
-                );
-
-        binding.dropdownAskSubject.setAdapter(
-                subjectAdapter
-        );
-
-        binding.dropdownAskSubject.setOnItemClickListener(
-                (parent, view, position, id) -> {
-                    if (position < 0
-                            || position >= schoolSubjects.size()
-                            || aiAnswerRequestInProgress) {
-
-                        return;
-                    }
-
-                    selectSubject(
-                            schoolSubjects.get(
-                                    position
-                            ),
-                            ""
-                    );
-                }
-        );
-
-        if (schoolSubjects.isEmpty()) {
-            showNoSubjectsState();
-            return;
-        }
-
-        enableQuestionControls();
-
-        SchoolSubjectEntity prefilledSubject =
-                findMatchingSubject(
-                        prefillSubjectName
-                );
-
-        if (prefilledSubject == null) {
-            prefilledSubject =
-                    schoolSubjects.get(
-                            0
-                    );
-        }
-
-        selectSubject(
-                prefilledSubject,
-                prefillChapterTitle
-        );
-
-        applyPrefilledQuestion();
-    }
-
-    private void selectSubject(
-            @NonNull SchoolSubjectEntity schoolSubject,
-            @NonNull String preferredChapterTitle
-    ) {
-        selectedSchoolSubject =
-                schoolSubject;
-
-        selectedSubjectName =
-                getPrimarySubjectName(
-                        schoolSubject
-                );
-
-        binding.dropdownAskSubject.setText(
-                getSubjectDisplayName(
-                        schoolSubject
-                ),
-                false
-        );
-
-        binding.inputQuestion.setError(
-                null
-        );
-
-        binding.inputQuestion.setHelperText(
-                null
-        );
-
-        clearPreviousAnswer();
-
-        loadOptionalChapters(
-                schoolSubject,
-                preferredChapterTitle
-        );
-
-        updateQuestionImageButtonsEnabledState();
-
-        if (selectedQuestionImageUri != null
-                && (
-                restartImageOcrAfterSubjectLoad
-                        || !questionImageOcrInProgress
-        )) {
-
-            restartImageOcrAfterSubjectLoad =
-                    false;
-
-            startQuestionImageOcr(
-                    selectedQuestionImageUri
-            );
-        }
-    }
-
-    private void loadOptionalChapters(
-            @NonNull SchoolSubjectEntity schoolSubject,
-            @NonNull String preferredChapterTitle
-    ) {
-        selectedChapter =
-                null;
-
-        chapterItems.clear();
-
-        latestChapterRequestSubjectRowId =
-                schoolSubject.getSubjectRowId();
-
-        setOptionalChapterDropdown(
-                new ArrayList<>(),
-                ""
-        );
-
-        childSchoolBookChapterRepository
-                .getChildChaptersForSubject(
-                        schoolSubject.getSubjectRowId(),
-                        new ChildSchoolBookChapterRepository
-                                .ChildChaptersCallback() {
-
-                            @Override
-                            public void onSuccess(
-                                    @NonNull ChildSchoolBookChapterRepository
-                                            .ChildChapterResult result
-                            ) {
-                                if (!isActivityAvailable()) {
-                                    return;
-                                }
-
-                                if (!isCurrentChapterRequest(
-                                        result.getSubjectRowId()
-                                )) {
-                                    return;
-                                }
-
-                                List<SchoolBookChapterEntity>
-                                        availableChapters =
-                                        result.isAvailable()
-                                                ? result.getChapters()
-                                                : new ArrayList<>();
-
-                                setOptionalChapterDropdown(
-                                        availableChapters,
-                                        preferredChapterTitle
-                                );
-                            }
-
-                            @Override
-                            public void onError(
-                                    @NonNull Exception exception
-                            ) {
-                                if (!isActivityAvailable()) {
-                                    return;
-                                }
-
-                                if (!isCurrentChapterRequest(
-                                        schoolSubject
-                                                .getSubjectRowId()
-                                )) {
-                                    return;
-                                }
-
-                                setOptionalChapterDropdown(
-                                        new ArrayList<>(),
-                                        ""
-                                );
-                            }
-                        }
-                );
-    }
-
-    private boolean isCurrentChapterRequest(
-            long subjectRowId
-    ) {
-        return selectedSchoolSubject != null
-                && selectedSchoolSubject.getSubjectRowId()
-                == subjectRowId
-                && latestChapterRequestSubjectRowId
-                == subjectRowId;
-    }
-
-    private void setOptionalChapterDropdown(
-            @NonNull List<SchoolBookChapterEntity> availableChapters,
-            @NonNull String preferredChapterTitle
-    ) {
-        chapterItems.clear();
-
-        for (SchoolBookChapterEntity chapter :
-                availableChapters) {
-
-            if (chapter == null
-                    || !chapter.isReadyForChildMode()) {
-
-                continue;
-            }
-
-            chapterItems.add(
-                    chapter
-            );
-        }
-
-        List<String> chapterDisplayNames =
-                new ArrayList<>();
-
-        chapterDisplayNames.add(
-                OPTIONAL_CHAPTER_LABEL
-        );
-
-        for (SchoolBookChapterEntity chapter :
-                chapterItems) {
-
-            chapterDisplayNames.add(
-                    createChapterDisplayName(
-                            chapter
-                    )
-            );
-        }
-
-        ArrayAdapter<String> chapterAdapter =
-                new ArrayAdapter<>(
-                        this,
-                        android.R.layout.simple_list_item_1,
-                        chapterDisplayNames
-                );
-
-        binding.dropdownAskChapter.setAdapter(
-                chapterAdapter
-        );
-
-        binding.dropdownAskChapter.setEnabled(
-                selectedSchoolSubject != null
-                        && !aiAnswerRequestInProgress
-        );
-
-        binding.dropdownAskChapter.setOnItemClickListener(
-                (parent, view, position, id) -> {
-                    if (aiAnswerRequestInProgress) {
-                        return;
-                    }
-
-                    if (position <= 0) {
-                        selectedChapter =
-                                null;
-
-                        binding.dropdownAskChapter.setText(
-                                OPTIONAL_CHAPTER_LABEL,
-                                false
-                        );
-
-                        clearPreviousAnswer();
-                        return;
-                    }
-
-                    int chapterIndex =
-                            position - 1;
-
-                    if (chapterIndex < 0
-                            || chapterIndex >= chapterItems.size()) {
-
-                        return;
-                    }
-
-                    selectedChapter =
-                            chapterItems.get(
-                                    chapterIndex
-                            );
-
-                    binding.dropdownAskChapter.setText(
-                            createChapterDisplayName(
-                                    selectedChapter
-                            ),
-                            false
-                    );
-
-                    clearPreviousAnswer();
-                }
-        );
-
-        SchoolBookChapterEntity preferredChapter =
-                findMatchingChapter(
-                        preferredChapterTitle
-                );
-
-        if (preferredChapter == null) {
-            selectedChapter =
-                    null;
-
-            binding.dropdownAskChapter.setText(
-                    OPTIONAL_CHAPTER_LABEL,
-                    false
-            );
-
-        } else {
-            selectedChapter =
-                    preferredChapter;
-
-            binding.dropdownAskChapter.setText(
-                    createChapterDisplayName(
-                            preferredChapter
-                    ),
-                    false
-            );
-        }
-    }
-
-    @Nullable
-    private SchoolSubjectEntity findMatchingSubject(
-            @Nullable String preferredSubjectName
-    ) {
-        String normalizedPreferred =
-                normalizeText(
-                        preferredSubjectName
-                );
-
-        if (normalizedPreferred.isEmpty()) {
-            return null;
-        }
-
-        for (SchoolSubjectEntity schoolSubject :
-                schoolSubjects) {
-
-            String englishName =
-                    normalizeText(
-                            schoolSubject
-                                    .getSubjectNameEnglish()
-                    );
-
-            String hindiName =
-                    normalizeText(
-                            schoolSubject
-                                    .getSubjectNameHindi()
-                    );
-
-            String bilingualName =
-                    normalizeText(
-                            schoolSubject
-                                    .getBilingualDisplayName()
-                    );
-
-            if (normalizedPreferred.equals(
-                    englishName
-            )
-                    || normalizedPreferred.equals(
-                    hindiName
-            )
-                    || normalizedPreferred.equals(
-                    bilingualName
-            )) {
-
-                return schoolSubject;
-            }
-        }
-
-        return null;
-    }
-
-    @Nullable
-    private SchoolBookChapterEntity findMatchingChapter(
-            @Nullable String preferredChapterTitle
-    ) {
-        String normalizedPreferred =
-                normalizeText(
-                        preferredChapterTitle
-                );
-
-        if (normalizedPreferred.isEmpty()) {
-            return null;
-        }
-
-        for (SchoolBookChapterEntity chapter :
-                chapterItems) {
-
-            if (normalizedPreferred.equals(
-                    normalizeText(
-                            chapter.getDisplayTitle()
-                    )
-            )
-                    || normalizedPreferred.equals(
-                    normalizeText(
-                            chapter.getChapterTitleEnglish()
-                    )
-            )
-                    || normalizedPreferred.equals(
-                    normalizeText(
-                            chapter.getChapterTitleHindi()
-                    )
-            )) {
-
-                return chapter;
-            }
-        }
-
-        return null;
-    }
-
-    @NonNull
-    private String getPrimarySubjectName(
-            @NonNull SchoolSubjectEntity schoolSubject
-    ) {
-        String englishName =
-                safeText(
-                        schoolSubject
-                                .getSubjectNameEnglish()
-                );
-
-        if (!englishName.isEmpty()) {
-            return englishName;
-        }
-
-        return safeText(
-                schoolSubject
-                        .getSubjectNameHindi()
-        );
-    }
-
-    @NonNull
-    private String getSubjectDisplayName(
-            @NonNull SchoolSubjectEntity schoolSubject
-    ) {
-        String bilingualName =
-                safeText(
-                        schoolSubject
-                                .getBilingualDisplayName()
-                );
-
-        if (!bilingualName.isEmpty()) {
-            return bilingualName;
-        }
-
-        return getPrimarySubjectName(
-                schoolSubject
-        );
-    }
-
-    @NonNull
-    private String createChapterDisplayName(
-            @NonNull SchoolBookChapterEntity chapter
-    ) {
-        String chapterLabel =
-                safeText(
-                        chapter.getChapterLabel()
-                );
-
-        String chapterTitle =
-                safeText(
-                        chapter.getDisplayTitle()
-                );
-
-        if (chapterLabel.isEmpty()) {
-            return chapterTitle;
-        }
-
-        if (chapterTitle.isEmpty()) {
-            return chapterLabel;
-        }
-
-        return chapterLabel
-                + " ‚Äî "
-                + chapterTitle;
-    }
-
-    private void applyPrefilledQuestion() {
-        if (prefilledQuestionApplied) {
-            applyRequestedInputMode();
-            return;
-        }
-
-        if (prefillQuestion.isEmpty()) {
-            prefilledQuestionApplied =
-                    true;
-
-            applyRequestedInputMode();
-            return;
-        }
-
-        setQuestionText(
-                prefillQuestion
-        );
-
-        Snackbar.make(
-                binding.getRoot(),
-                R.string.history_question_restored,
-                Snackbar.LENGTH_SHORT
-        ).show();
-
-        prefilledQuestionApplied =
-                true;
-
-        prefillSubjectName =
-                "";
-
-        prefillChapterTitle =
-                "";
-
-        prefillQuestion =
-                "";
-
-        applyRequestedInputMode();
-    }
-
-    /**
-     * Global AI companion ‡§∏‡•á ‡§ö‡•Å‡§®‡§æ ‡§ó‡§Ø‡§æ voice/photo ‡§∞‡§æ‡§∏‡•ç‡§§‡§æ ‡§ï‡•á‡§µ‡§≤ ‡§§‡§¨ ‡§ñ‡•ã‡§≤‡•á‡§Ç ‡§ú‡§¨
-     * active profile ‡§î‡§∞ subject controls ‡§™‡•Ç‡§∞‡•Ä ‡§§‡§∞‡§π ‡§§‡•à‡§Ø‡§æ‡§∞ ‡§π‡•ã ‡§ö‡•Å‡§ï‡•á ‡§π‡•ã‡§Ç‡•§
-     */
-    private void applyRequestedInputMode() {
-        if (requestedInputModeApplied
-                || requestedInputMode.isEmpty()) {
-            return;
-        }
-
-        requestedInputModeApplied = true;
-        String inputMode = requestedInputMode;
-        requestedInputMode = "";
-
-        binding.getRoot().post(() -> {
-            if (!isActivityAvailable()
-                    || activeStudentProfile == null
-                    || selectedSchoolSubject == null) {
-                return;
-            }
-
-            if (SmartAiCompanionController.INPUT_MODE_VOICE.equals(
-                    inputMode
-            )) {
-                startVoiceQuestionInput();
-                return;
-            }
-
-            if (SmartAiCompanionController.INPUT_MODE_PHOTO.equals(
-                    inputMode
-            )) {
-                openQuestionCamera();
-            }
-        });
-    }
-
-    private void submitQuickQuestion(
-            @NonNull String question
-    ) {
-        if (aiAnswerRequestInProgress) {
-            return;
-        }
-
-        setQuestionText(
-                question
-        );
-
-        submitQuestion(
-                question
-        );
-    }
-
-    private void submitQuestion(
-            @NonNull String question
-    ) {
-        if (aiAnswerRequestInProgress) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "Smart AI ‡§Ö‡§≠‡•Ä ‡§™‡§ø‡§õ‡§≤‡•á ‡§∏‡§µ‡§æ‡§≤ ‡§ï‡§æ ‡§ú‡§µ‡§æ‡§¨ ‡§§‡•à‡§Ø‡§æ‡§∞ ‡§ï‡§∞ ‡§∞‡§π‡•Ä ‡§π‡•à‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        if (activeStudentProfile == null) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    R.string.ask_saathi_profile_required,
-                    Snackbar.LENGTH_LONG
-            ).show();
-
-            return;
-        }
-
-        if (selectedSchoolSubject == null
-                || selectedSubjectName.isEmpty()) {
-
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§™‡§π‡§≤‡•á ‡§Ö‡§™‡§®‡§æ Subject ‡§ö‡•Å‡§®‡•á‡§Ç‡•§",
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
-
-        if (questionImageOcrInProgress) {
-            Snackbar.make(
-                    binding.getRoot(),
-                    "‡§´‡•ã‡§ü‡•ã ‡§∏‡•á ‡§∏‡§µ‡§æ‡§≤ ‡§Ö‡§≠‡•Ä ‡§™‡§¢‡§º‡§æ ‡§ú‡§æ ‡§∞‡§π‡§æ ‡§π‡•à‡•§ ‡§•‡•ã‡§°‡§º‡•Ä ‡§¶‡•á‡§∞ ‡§∞‡•Å‡§ï‡•á‡§Ç‡•§",
+Y™Áäx-ÆÈ‹j◊ù¢Îi∫⁄+äßj[hëÈ‹¢ÈÌ„û¸Â:-jZ.∂õ≠ñ)ﬁ≥W6∂vR6ˆ“ÁG&ñFWbÁ7GVGó6FÜì∞†¶ñ◊˜'BÊG&ˆñBÊ‰7FófóGì∞¶ñ◊˜'BÊG&ˆñBÊ6ˆÁFVÁB‰7FófóGîÊ˜Df˜VÊDWÜ6WFñˆ„∞¶ñ◊˜'BÊG&ˆñBÊ6ˆÁFVÁB‰6ˆÁFWáC∞¶ñ◊˜'BÊG&ˆñBÊ6ˆÁFVÁB‰ñÁFVÁC∞¶ñ◊˜'BÊG&ˆñBÊw&Üñ72‰&óF÷∞¶ñ◊˜'BÊG&ˆñBÊw&Üñ72‰&óF÷f7F˜'ì∞¶ñ◊˜'BÊG&ˆñBÊÊWBÂW&ì∞¶ñ◊˜'BÊG&ˆñBÊ˜2‰'VÊF∆S∞¶ñ◊˜'BÊG&ˆñBÊ˜2Â&6Vƒfñ∆TFW67&óF˜#∞¶ñ◊˜'BÊG&ˆñBÁ7VV6ÇÂ&V6ˆvÊó¶W$ñÁFVÁC∞¶ñ◊˜'BÊG&ˆñBÁWFñ¬‰∆ˆs∞¶ñ◊˜'BÊG&ˆñBÁfñWrÂfñWs∞¶ñ◊˜'BÊG&ˆñBÁfñWrÊñÁWF÷WFÜˆB‰VFóF˜$ñÊfÛ∞¶ñ◊˜'BÊG&ˆñBÁfñWrÊñÁWF÷WFÜˆB‰ñÁWD÷WFÜˆD÷ÊvW#∞¶ñ◊˜'BÊG&ˆñBÁvñFvWB‰'&îFFW#∞¶ñ◊˜'BÊG&ˆñBÁvñFvWBÂFWáEfñWs∞†¶ñ◊˜'BÊG&ˆñGÇÊ7FófóGíÁ&W7V«B‰7FófóGï&W7V«D∆VÊ6ÜW#∞¶ñ◊˜'BÊG&ˆñGÇÊ7FófóGíÁ&W7V«BÊ6ˆÁG&7B‰7FófóGï&W7V«D6ˆÁG&7G3∞¶ñ◊˜'BÊG&ˆñGÇÊÊÊ˜FFñˆ‚‰Êˆ‰ÁV∆√∞¶ñ◊˜'BÊG&ˆñGÇÊÊÊ˜FFñˆ‚‰ÁV∆∆&∆S∞¶ñ◊˜'BÊG&ˆñGÇÊ6ˆ◊BÊ‰6ˆ◊D7FófóGì∞¶ñ◊˜'BÊG&ˆñGÇÊ6˜&RÊ6ˆÁFVÁB‰fñ∆U&˜fñFW#∞†¶ñ◊˜'B6ˆ“Êvˆˆv∆RÊÊG&ˆñBÊ÷FW&ñ¬Á6Ê6∂&"Â6Ê6∂&#∞¶ñ◊˜'B6ˆ“Êvˆˆv∆RÊÊG&ˆñBÊ÷FW&ñ¬ÁFWáFfñV∆BÂFWáDñÁWD∆ñ˜WC∞¶ñ◊˜'B6ˆ“Êvˆˆv∆RÊ÷∆∂óBÁfó6ñˆ‚Ê6ˆ÷÷ˆ‚‰ñÁWDñ÷vS∞¶ñ◊˜'B6ˆ“Êvˆˆv∆RÊ÷∆∂óBÁfó6ñˆ‚ÁFWáBÂFWáE&V6ˆvÊóFñˆ„∞¶ñ◊˜'B6ˆ“Êvˆˆv∆RÊ÷∆∂óBÁfó6ñˆ‚ÁFWáBÂFWáE&V6ˆvÊó¶W#∞¶ñ◊˜'B6ˆ“Êvˆˆv∆RÊ÷∆∂óBÁfó6ñˆ‚ÁFWáBÊFWfÊv&í‰FWfÊv&ïFWáE&V6ˆvÊó¶W$˜FñˆÁ3∞¶ñ◊˜'B6ˆ“Êvˆˆv∆RÊ÷∆∂óBÁfó6ñˆ‚ÁFWáBÊ∆Fñ‚ÂFWáE&V6ˆvÊó¶W$˜FñˆÁ3∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊí‰fó&V&6U7GVGïGWF˜$6∆ñVÁC∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊíÂVW7Fñˆ‰ñ÷vT&óF÷∆ˆFW#∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊíÂ6÷'EGWF˜$Á7vW%&W7V«C∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ∆V&ÊñÊrÂ7GVFVÁD∂Ê˜v∆VFvTw&Ö7F˜&S∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ∆V&ÊñÊr‰FFófT∆V&ÊñÊt∆WfV≈&W6ˆ«fW#∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ∆V&ÊñÊr‰∆V&ÊñÊu7Gñ∆T÷V÷˜'ï7F˜&S∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ∆V&ÊñÊr‰∆V&ÊñÊu7Gñ∆U&VfW&VÊ6S∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ∆V&ÊñÊrÂ7GVFVÁD÷ó66ˆÊ6WFñˆ‰FWFV7F˜#∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊíÂ&V6ˆ÷÷VÊFVE&Wfó6ñˆÂ&ˆw&W757F˜&S∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ6F∆ˆr‰F˜V'D76ó7FÁDVÊvñÊS∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ6F∆ˆr‰∆W76ˆ‰6F∆ˆs∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ∆ˆ6¬ÊVÁFóGí‰F˜V'DÜó7F˜'îVÁFóGì∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ∆ˆ6¬ÊVÁFóGíÂ66Üˆˆƒ&ˆˆ¥6ÜFW$VÁFóGì∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ∆ˆ6¬ÊVÁFóGíÂ66Üˆˆ≈7V&¶V7DVÁFóGì∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÊ∆ˆ6¬ÊVÁFóGíÂ7GVFVÁE&ˆfñ∆TVÁFóGì∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÁ&W˜6óF˜'í‰6Üñ∆E66Üˆˆƒ&ˆˆ¥6ÜFW%&W˜6óF˜'ì∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÁ&W˜6óF˜'í‰F˜V'DÜó7F˜'ï&W˜6óF˜'ì∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÁ&W˜6óF˜'íÂ66Üˆˆ≈7V&¶V7E&W˜6óF˜'ì∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFFÁ&W˜6óF˜'íÂ7GVFVÁE&ˆfñ∆U&W˜6óF˜'ì∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊFF&ñÊFñÊr‰7FófóGî6µ7GVGï6FÜî&ñÊFñÊs∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÊ÷ˆFV¬‰∆W76ˆ‰6ˆÁFVÁC∞¶ñ◊˜'B6ˆ“ÁG&ñFWbÁ7GVGó6FÜíÁVíÂ6÷'Dî6ˆ◊Êñˆ‰6ˆÁG&ˆ∆∆W#∞†¶ñ◊˜'B¶fÊñÚ‰fñ∆S∞¶ñ◊˜'B¶fÊñÚ‰îÙWÜ6WFñˆ„∞¶ñ◊˜'B¶fÁWFñ¬‰'&î∆ó7C∞¶ñ◊˜'B¶fÁWFñ¬‰∆ñÊ∂VDÜ6Ñ÷∞¶ñ◊˜'B¶fÁWFñ¬‰∆ó7C∞¶ñ◊˜'B¶fÁWFñ¬‰∆ˆ6∆S∞¶ñ◊˜'B¶fÁWFñ¬‰÷∞†ßV&∆ñ26∆726µ7GVGï6FÜî7FófóGê¢WáFVÊG26ˆ◊D7FófóGí∞†¢V&∆ñ27FFñ2fñÊ¬7G&ñÊrUÖE$ı$Tdîƒ≈ı5T$§T5B–¢&WáG&˜&Vfñ∆≈˜7V&¶V7B#∞†¢V&∆ñ27FFñ2fñÊ¬7G&ñÊrUÖE$ı$Tdîƒ≈Ù4ÑDU"–¢&WáG&˜&Vfñ∆≈ˆ6ÜFW"#∞†¢V&∆ñ27FFñ2fñÊ¬7G&ñÊrUÖE$ı$Tdîƒ≈ıTU5DîÙ‚–¢&WáG&˜&Vfñ∆≈˜VW7Fñˆ‚#∞†¢V&∆ñ27FFñ2fñÊ¬7G&ñÊrUÖE$ı$T4Ù‘‘T‰DTEı$Udï4îÙ‚–¢&WáG&˜&V6ˆ÷÷VÊFVE˜&Wfó6ñˆ‚#∞†¢V&∆ñ27FFñ2fñÊ¬7G&ñÊrUÖE$ı$Tdîƒ≈Ùî‘tUıU$í–¢&WáG&˜&Vfñ∆≈ˆñ÷vU˜W&í#∞†¢V&∆ñ27FFñ2fñÊ¬7G&ñÊrUÖE$ı$Tdîƒ≈Ùî‘tUı$ïdDUıDÇ–¢&WáG&˜&Vfñ∆≈ˆñ÷vU˜&ófFU˜FÇ#∞†¢&ófFR7FFñ2fñÊ¬7G&ñÊrƒÙuıDr–¢$6µ7GVGï6FÜí#∞†¢&ófFR7FFñ2fñÊ¬7G&ñÊrıDîÙ‰≈Ù4ÑDU%Ùƒ$T¬–¢$6ÜFW"
+Jé
+Kû
+X
+H"
+IÆ
+X
+Jé
+K‚(	B˜FñˆÊ¬#∞†¢&ófFR7FFñ2fñÊ¬7G&ñÊrtT‰U$≈ıTU5DîÙÂÙ4ÑDU%ıDïDƒR–¢$vVÊW&¬VW7Fñˆ‚#∞†¢&ófFR7FFñ2fñÊ¬7G&ñÊr5DDUı4TƒT5DTEıTU5DîÙÂÙî‘tUıU$í–¢'7FFU˜6V∆V7FVE˜VW7FñˆÂˆñ÷vU˜W&í#∞†¢&ófFR7FFñ2fñÊ¬7G&ñÊr5DDUı4TƒT5DTEıTU5DîÙÂÙî‘tUıDÇ–¢'7FFU˜6V∆V7FVE˜VW7FñˆÂˆñ÷vU˜FÇ#∞†¢&ófFR7FFñ2fñÊ¬7G&ñÊr5DDUıT‰Dî‰uÙ4‘U$Ùî‘tUıU$í–¢'7FFU˜VÊFñÊuˆ6÷W&ˆñ÷vU˜W&í#∞†¢&ófFR7FFñ2fñÊ¬7G&ñÊr5DDUıT‰Dî‰uÙ4‘U$Ùî‘tUıDÇ–¢'7FFU˜VÊFñÊuˆ6÷W&ˆñ÷vU˜FÇ#∞†¢&ófFR7FFñ2fñÊ¬7G&ñÊr5DDUÙƒ5EÙî‘tUÙÙ5%ıDUÖB–¢'7FFUˆ∆7Eˆñ÷vUˆˆ7%˜FWáB#∞†¢&ófFR7FFñ2fñÊ¬7G&ñÊrTU5DîÙÂÙî‘tUÙDï$T5Dı%í–¢&&ˆˆµˆ6˜fW%ˆ66ÜR˜VW7FñˆÂˆñ÷vW2#∞†¢&ófFR7FFñ2fñÊ¬ñÁB‘Ñî’T’ı$UdîUuÙî‘tUı4ï§R–¢C∞†¢&ófFR7FófóGî6µ7GVGï6FÜî&ñÊFñÊr&ñÊFñÊs∞†¢&ófFR7GVFVÁE&ˆfñ∆U&W˜6óF˜'í7GVFVÁE&ˆfñ∆U&W˜6óF˜'ì∞†¢&ófFRF˜V'DÜó7F˜'ï&W˜6óF˜'íF˜V'DÜó7F˜'ï&W˜6óF˜'ì∞†¢&ófFR66Üˆˆ≈7V&¶V7E&W˜6óF˜'í66Üˆˆ≈7V&¶V7E&W˜6óF˜'ì∞†¢&ófFR6Üñ∆E66Üˆˆƒ&ˆˆ¥6ÜFW%&W˜6óF˜'ê¢6Üñ∆E66Üˆˆƒ&ˆˆ¥6ÜFW%&W˜6óF˜'ì∞†¢&ófFRfó&V&6U7GVGïGWF˜$6∆ñVÁBfó&V&6U7GVGïGWF˜$6∆ñVÁC∞†¢&ófFRVW7Fñˆ‰ñ÷vT&óF÷∆ˆFW"VW7Fñˆ‰ñ÷vT&óF÷∆ˆFW#∞†¢&ófFR7FófóGï&W7V«D∆VÊ6ÜW#ƒñÁFVÁC‡¢fˆñ6UVW7Fñˆ‰∆VÊ6ÜW#∞†¢&ófFR7FófóGï&W7V«D∆VÊ6ÜW#≈7G&ñÊuµ”‡¢VW7Fñˆ‰v∆∆W'î∆VÊ6ÜW#∞†¢&ófFR7FófóGï&W7V«D∆VÊ6ÜW#≈W&ì‡¢VW7Fñˆ‰6÷W&∆VÊ6ÜW#∞†¢ÁV∆∆&∆P¢&ófFR7GVFVÁE&ˆfñ∆TVÁFóGí7FófU7GVFVÁE&ˆfñ∆S∞†¢ÁV∆∆&∆P¢&ófFR66Üˆˆ≈7V&¶V7DVÁFóGí6V∆V7FVE66Üˆˆ≈7V&¶V7C∞†¢ÁV∆∆&∆P¢&ófFR66Üˆˆƒ&ˆˆ¥6ÜFW$VÁFóGí6V∆V7FVD6ÜFW#∞†¢ÁV∆∆&∆P¢&ófFRW&í6V∆V7FVEVW7Fñˆ‰ñ÷vUW&ì∞†¢ÁV∆∆&∆P¢&ófFR7G&ñÊr6V∆V7FVEVW7Fñˆ‰ñ÷vU&ófFUFÉ∞†¢ÁV∆∆&∆P¢&ófFRW&íVÊFñÊt6÷W&ñ÷vUW&ì∞†¢ÁV∆∆&∆P¢&ófFR7G&ñÊrVÊFñÊt6÷W&ñ÷vUFÉ∞†¢ÁV∆∆&∆P¢&ófFRFWáE&V6ˆvÊó¶W"VW7Fñˆ‰∆FñÂ&V6ˆvÊó¶W#∞†¢ÁV∆∆&∆P¢&ófFRFWáE&V6ˆvÊó¶W"VW7Fñˆ‰FWfÊv&ï&V6ˆvÊó¶W#∞†¢Êˆ‰ÁV∆¿¢&ófFRfñÊ¬∆ó7C≈66Üˆˆ≈7V&¶V7DVÁFóGì‚66Üˆˆ≈7V&¶V7G2–¢ÊWr'&î∆ó7C√‚Çì∞†¢Êˆ‰ÁV∆¿¢&ófFRfñÊ¬∆ó7C≈7G&ñÊs‚7V&¶V7DFó7∆îÊ÷W2–¢ÊWr'&î∆ó7C√‚Çì∞†¢Êˆ‰ÁV∆¿¢&ófFRfñÊ¬∆ó7C≈66Üˆˆƒ&ˆˆ¥6ÜFW$VÁFóGì‚6ÜFW$óFV◊2–¢ÊWr'&î∆ó7C√‚Çì∞†¢&ófFR7G&ñÊr6V∆V7FVE7V&¶V7DÊ÷R–¢"#∞†¢&ófFR7G&ñÊr&Vfñ∆≈7V&¶V7DÊ÷R–¢"#∞†¢&ófFR7G&ñÊr&Vfñ∆ƒ6ÜFW%FóF∆R–¢"#∞†¢&ófFR7G&ñÊr&Vfñ∆≈VW7Fñˆ‚–¢"#∞†¢&ófFR7G&ñÊr&WVW7FVDñÁWD÷ˆFR–¢"#∞†¢&ófFR&ˆˆ∆V‚&V6ˆ÷÷VÊFVE&Wfó6ñˆÂ6W76ñˆ„∞¢&ófFR&ˆˆ∆V‚&V6ˆ÷÷VÊFVE&Wfó6ñˆ‰6ˆ◊∆WFñˆÂ&V6˜&FVC∞†¢&ófFR7G&ñÊr∆7EVW7Fñˆ‰ñ÷vTˆ7%FWáB–¢"#∞†¢&ófFR∆ˆÊr∆FW7D6ÜFW%&WVW7E7V&¶V7E&˜tñB–¢√∞†¢&ófFRñÁBVW7Fñˆ‰ñ÷vTˆ7$vVÊW&Fñˆ„∞†¢&ófFRñÁBîÁ7vW%&WVW7DvVÊW&Fñˆ„∞†¢&ófFR&ˆˆ∆V‚&Vfñ∆∆VEVW7Fñˆ‰∆ñVC∞¢&ófFR&ˆˆ∆V‚&WVW7FVDñÁWD÷ˆFT∆ñVC∞†¢&ófFR&ˆˆ∆V‚VW7Fñˆ‰ñ÷vTˆ7$ñÂ&ˆw&W73∞†¢&ófFR&ˆˆ∆V‚&W7F'Dñ÷vTˆ7$gFW%7V&¶V7D∆ˆC∞†¢&ófFR&ˆˆ∆V‚îÁ7vW%&WVW7DñÂ&ˆw&W73∞¢&ófFR&ˆˆ∆V‚6ˆ◊∆WFVEGW&‰&6ÜófVC∞†¢Êˆ‰ÁV∆¿¢&ófFR7G&ñÊr∆7D6ˆ◊∆WFVEVW7Fñˆ‚–¢"#∞†¢ÁV∆∆&∆P¢&ófFR6Ü%6WVVÊ6R∆7D6ˆ◊∆WFVDÁ7vW#∞†¢˜fW'&ñFP¢&˜FV7FVBfˆñBˆ‰7&VFRÄ¢ÁV∆∆&∆R'VÊF∆R6fVDñÁ7FÊ6U7FFP¢í∞¢7WW"Êˆ‰7&VFRÄ¢6fVDñÁ7FÊ6U7FFP¢ì∞†¢&ñÊFñÊr–¢7FófóGî6µ7GVGï6FÜî&ñÊFñÊrÊñÊf∆FRÄ¢vWD∆ñ˜WDñÊf∆FW"Çê¢ì∞†¢6WD6ˆÁFVÁEfñWrÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇê¢ì∞†¢7GVFVÁE&ˆfñ∆U&W˜6óF˜'í–¢ÊWr7GVFVÁE&ˆfñ∆U&W˜6óF˜'íÄ¢FÜó0¢ì∞†¢F˜V'DÜó7F˜'ï&W˜6óF˜'í–¢ÊWrF˜V'DÜó7F˜'ï&W˜6óF˜'íÄ¢FÜó0¢ì∞†¢66Üˆˆ≈7V&¶V7E&W˜6óF˜'í–¢ÊWr66Üˆˆ≈7V&¶V7E&W˜6óF˜'íÄ¢FÜó0¢ì∞†¢6Üñ∆E66Üˆˆƒ&ˆˆ¥6ÜFW%&W˜6óF˜'í–¢ÊWr6Üñ∆E66Üˆˆƒ&ˆˆ¥6ÜFW%&W˜6óF˜'íÄ¢FÜó0¢ì∞†¢fó&V&6U7GVGïGWF˜$6∆ñVÁB–¢ÊWrfó&V&6U7GVGïGWF˜$6∆ñVÁBÄ¢FÜó0¢ì∞†¢VW7Fñˆ‰ñ÷vT&óF÷∆ˆFW"–¢ÊWrVW7Fñˆ‰ñ÷vT&óF÷∆ˆFW"Ä¢FÜó0¢ì∞†¢&Vvó7FW%fˆñ6UVW7Fñˆ‰∆VÊ6ÜW"Çì∞¢&Vvó7FW%VW7Fñˆ‰ñ÷vT∆VÊ6ÜW'2Çì∞¢&VE&Vfñ∆ƒ&wV÷VÁG2Çì∞¢&W&TñÊóFñ≈67&VVÂ7FFRÇì∞¢6WGWfˆñ6UVW7Fñˆ‰ñÁWBÇì∞¢6WGW6∆ñ6¥∆ó7FVÊW'2Çì∞¢ñbá6V∆V7FVEVW7Fñˆ‰ñ÷vUW&í“ÁV∆¬í∞¢Fó7∆ï6V∆V7FVEVW7Fñˆ‰ñ÷vRÇì∞¢&ñÊFñÊrÁFWáEVW7Fñˆ‰ñ÷vU7FGW2Á6WEFWáBÄ¢%vÜóFV&ˆ&BÜÊGw&óFñÊr
+IŒ
+X
+J
+K¬
+I~
+HÇ
+Kû
+Xé
+ZB7V&¶V7B∆ˆB
+Kû
+Xæ
+Jé
+Xr
+I^
+Xr
+JŒ
+KÓ
+JbÙ5"fW&ñfñ6Fñˆ‚
+IÆ
+K.
+X~
+I~
+KÓ
+ZB"ì∞¢–¢&W7F˜&UVW7Fñˆ‰ñ÷vU7FFRÄ¢6fVDñÁ7FÊ6U7FFP¢ì∞¢∆ˆD7FófU7GVFVÁE&ˆfñ∆RÇì∞¢–†¢&ófFRfˆñB&Vvó7FW%fˆñ6UVW7Fñˆ‰∆VÊ6ÜW"Çí∞¢fˆñ6UVW7Fñˆ‰∆VÊ6ÜW"–¢&Vvó7FW$f˜$7FófóGï&W7V«BÄ¢ÊWr7FófóGï&W7V«D6ˆÁG&7G0¢Â7F'D7FófóGîf˜%&W7V«BÇí¿¢&W7V«B”‚∞¢ñbÇó47FófóGîfñ∆&∆RÇíí∞¢&WGW&„∞¢–†¢ñbá&W7V«BÊvWE&W7V«D6ˆFRÇê¢“7FófóGíÂ$U5T≈EÙÙ≤í∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‡¢Á6WDÜV«W%FWáBÄ¢ÁV∆¿¢ì∞†¢&WGW&„∞¢–†¢ñÁFVÁB&W7V«DFF–¢&W7V«BÊvWDFFÇì∞†¢ñbá&W7V«DFF”“ÁV∆¬í∞¢6Ü˜ufˆñ6U&W7V«D÷ó76ñÊrÇì∞¢&WGW&„∞¢–†¢'&î∆ó7C≈7G&ñÊs‚7VV6Ö&W7V«G2–¢&W7V«DFF¢ÊvWE7G&ñÊt'&î∆ó7DWáG&Ä¢&V6ˆvÊó¶W$ñÁFVÁ@¢‰UÖE$ı$U5T≈E0¢ì∞†¢7G&ñÊr7ˆ∂VÂVW7Fñˆ‚–¢vWDfó'7Ef∆ñE7VV6Ö&W7V«BÄ¢7VV6Ö&W7V«G0¢ì∞†¢ñbá7ˆ∂VÂVW7Fñˆ‚Êó4V◊GíÇíí∞¢6Ü˜ufˆñ6U&W7V«D÷ó76ñÊrÇì∞¢&WGW&„∞¢–†¢«ï7ˆ∂VÂVW7Fñˆ‚Ä¢7ˆ∂VÂVW7Fñˆ‡¢ì∞¢–¢ì∞¢–†¢&ófFRfˆñB&Vvó7FW%VW7Fñˆ‰ñ÷vT∆VÊ6ÜW'2Çí∞¢VW7Fñˆ‰v∆∆W'î∆VÊ6ÜW"–¢&Vvó7FW$f˜$7FófóGï&W7V«BÄ¢ÊWr7FófóGï&W7V«D6ˆÁG&7G2‰˜V‰Fˆ7V÷VÁBÇí¿¢FÜó3£¶ÜÊF∆U6V∆V7FVDv∆∆W'ïVW7Fñˆ‰ñ÷vP¢ì∞†¢VW7Fñˆ‰6÷W&∆VÊ6ÜW"–¢&Vvó7FW$f˜$7FófóGï&W7V«BÄ¢ÊWr7FófóGï&W7V«D6ˆÁG&7G2ÂF∂Uñ7GW&RÇí¿¢FÜó3£¶ÜÊF∆T6÷W&VW7Fñˆ‰ñ÷vU&W7V«@¢ì∞¢–†¢&ófFRfˆñB6WGWfˆñ6UVW7Fñˆ‰ñÁWBÇí∞¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDVÊDñ6ˆ‰÷ˆFRÄ¢FWáDñÁWD∆ñ˜WB‰T‰EÙî4ÙÂÙ5U5DÙ–¢ì∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDVÊDñ6ˆ‰G&v&∆RÄ¢ÊG&ˆñBÂ"ÊG&v&∆RÊñ5ˆ'FÂ˜7VµˆÊ˜p¢ì∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDVÊDñ6ˆ‰6ˆÁFVÁDFW67&óFñˆ‚Ä¢.
+JŒ
+Xæ
+K.
+I^
+K
+Ké
+K^
+KÓ
+K"
+JÆ
+X.
+Iæ
+X~
+H" ¢ì∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDVÊDñ6ˆ‰ˆ‰6∆ñ6¥∆ó7FVÊW"Ä¢fñWr”‚7F'Efˆñ6UVW7Fñˆ‰ñÁWBÇê¢ì∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDVÊDñ6ˆÂfó6ñ&∆RÄ¢f«6P¢ì∞¢–†¢&ófFRfˆñB7F'Efˆñ6UVW7Fñˆ‰ñÁWBÇí∞¢ñbÜîÁ7vW%&WVW7DñÂ&ˆw&W72í∞¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+JÆ
+Kû
+K.
+Xr
+K^
+K
+Xﬁ
+JN
+JÓ
+KÓ
+JÇ6÷'BíÁ7vW"
+JÆ
+X.
+K
+K‚
+Kû
+Xæ
+Jé
+Xr
+Jn
+X~
+H.
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞†¢&WGW&„∞¢–†¢ñbÜ7FófU7GVFVÁE&ˆfñ∆R”“ÁV∆¬í∞¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+JÆ
+Kû
+K.
+Xr7GVFVÁB&ˆfñ∆R
+IÆ
+X
+Jé
+X~
+H.
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞†¢&WGW&„∞¢–†¢ñbá6V∆V7FVE66Üˆˆ≈7V&¶V7B”“ÁV∆¿¢«¬6V∆V7FVE7V&¶V7DÊ÷RÊó4V◊GíÇíí∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+JÆ
+Kû
+K.
+Xr
+H^
+JÆ
+Jé
+K‚7V&¶V7B
+IÆ
+X
+Jé
+X~
+H.
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞†¢&WGW&„∞¢–†¢ÜñFT∂Wñ&ˆ&BÇì∞†¢ñÁFVÁB7VV6ÑñÁFVÁB–¢ÊWrñÁFVÁBÄ¢&V6ˆvÊó¶W$ñÁFVÁ@¢‰5DîÙÂı$T4Ùt‰ï§Uı5TT4Ä¢ì∞†¢7VV6ÑñÁFVÁBÁWDWáG&Ä¢&V6ˆvÊó¶W$ñÁFVÁB‰UÖE$Ùƒ‰uTtUÙ‘ÙDT¬¿¢&V6ˆvÊó¶W$ñÁFVÁB‰ƒ‰uTtUÙ‘ÙDT≈Ùe$TUÙdı$–¢ì∞†¢7VV6ÑñÁFVÁBÁWDWáG&Ä¢&V6ˆvÊó¶W$ñÁFVÁB‰UÖE$ı$Ù’B¿¢6V∆V7FVE7V&¶V7DÊ÷P¢≤"
+I^
+K‚
+Ké
+K^
+KÓ
+K"
+JŒ
+Xæ
+K.
+X~
+H" ¢ì∞†¢7VV6ÑñÁFVÁBÁWDWáG&Ä¢&V6ˆvÊó¶W$ñÁFVÁB‰UÖE$Ù‘Öı$U5T≈E2¿¢P¢ì∞†¢7VV6ÑñÁFVÁBÁWDWáG&Ä¢&V6ˆvÊó¶W$ñÁFVÁB‰UÖE$ı%Dî≈ı$U5T≈E2¿¢f«6P¢ì∞†¢7G&ñÊr∆ÊwVvUFr–¢&W6ˆ«fUfˆñ6T∆ÊwVvUFrÇì∞†¢ñbÇ∆ÊwVvUFrÊó4V◊GíÇíí∞¢7VV6ÑñÁFVÁBÁWDWáG&Ä¢&V6ˆvÊó¶W$ñÁFVÁB‰UÖE$Ùƒ‰uTtR¿¢∆ÊwVvUFp¢ì∞†¢7VV6ÑñÁFVÁBÁWDWáG&Ä¢&V6ˆvÊó¶W$ñÁFVÁB‰UÖE$Ùƒ‰uTtUı$TdU$T‰4R¿¢∆ÊwVvUFp¢ì∞¢–†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDW'&˜"Ä¢ÁV∆¿¢ì∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDÜV«W%FWáBÄ¢.
+H^
+JÆ
+Jé
+K‚
+Ké
+K^
+KÓ
+K"
+Ké
+KÓ
+J≤
+IN
+K
+J~
+X
+K
+Xr
+JŒ
+Xæ
+K.
+X~
+H.
+ZB ¢ì∞†¢G'í∞¢fˆñ6UVW7Fñˆ‰∆VÊ6ÜW"Ê∆VÊ6ÇÄ¢7VV6ÑñÁFVÁ@¢ì∞†¢“6F6ÇÑ7FófóGîÊ˜Df˜VÊDWÜ6WFñˆ‚WÜ6WFñˆ‚í∞¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDÜV«W%FWáBÄ¢ÁV∆¿¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+H~
+KÇ
+Jæ
+Xæ
+JÇ
+JÓ
+X~
+H"fˆñ6R&V6ˆvÊóFñˆ‚
+Ké
+X~
+K^
+K‚
+Hû
+JÆ
+K.
+JŒ
+Xﬁ
+Jr
+Jé
+Kû
+X
+H"
+Kû
+Xé
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞†¢“6F6ÇÖ'VÁFñ÷TWÜ6WFñˆ‚WÜ6WFñˆ‚í∞¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDÜV«W%FWáBÄ¢ÁV∆¿¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢%fˆñ6RñÁWB
+Kn
+X
+K
+X"
+Jé
+Kû
+X
+H"
+Kû
+X≤
+Ké
+I^
+KÓ
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞¢–¢–†¢Êˆ‰ÁV∆¿¢&ófFR7G&ñÊr&W6ˆ«fUfˆñ6T∆ÊwVvUFrÇí∞¢VW7Fñˆ‰∆ÊwVvT÷ˆFR∆ÊwVvT÷ˆFR–¢&W6ˆ«fUVW7Fñˆ‰∆ÊwVvT÷ˆFRÇì∞†¢ñbÜ∆ÊwVvT÷ˆFP¢”“VW7Fñˆ‰∆ÊwVvT÷ˆFR‰ƒDîÂı$TdU%$TBí∞†¢&WGW&‚&V‚‘î‚#∞¢–†¢&WGW&‚&Üí‘î‚#∞¢–†¢Êˆ‰ÁV∆¿¢&ófFR7G&ñÊrvWDfó'7Ef∆ñE7VV6Ö&W7V«BÄ¢ÁV∆∆&∆R∆ó7C≈7G&ñÊs‚7VV6Ö&W7V«G0¢í∞¢ñbá7VV6Ö&W7V«G2”“ÁV∆¿¢«¬7VV6Ö&W7V«G2Êó4V◊GíÇíí∞†¢&WGW&‚"#∞¢–†¢f˜"Ö7G&ñÊr7VV6Ö&W7V«B†¢7VV6Ö&W7V«G2í∞†¢7G&ñÊr6fU&W7V«B–¢6fUFWáBÄ¢7VV6Ö&W7V«@¢ì∞†¢ñbÇ6fU&W7V«BÊó4V◊GíÇíí∞¢&WGW&‚6fU&W7V«C∞¢–¢–†¢&WGW&‚"#∞¢–†¢&ófFRfˆñB«ï7ˆ∂VÂVW7Fñˆ‚Ä¢Êˆ‰ÁV∆¬7G&ñÊr7ˆ∂VÂVW7Fñˆ‡¢í∞¢7G&ñÊr7W'&VÁEVW7Fñˆ‚–¢vWD7W'&VÁEVW7FñˆÂFWáBÇì∞†¢7G&ñÊrfñÊ≈VW7Fñˆ„∞†¢ñbÜ7W'&VÁEVW7Fñˆ‚Êó4V◊GíÇíí∞¢fñÊ≈VW7Fñˆ‚–¢7ˆ∂VÂVW7Fñˆ„∞†¢“V«6R∞¢fñÊ≈VW7Fñˆ‚–¢7W'&VÁEVW7Fñˆ‡¢≤%∆‚ ¢≤7ˆ∂VÂVW7Fñˆ„∞¢–†¢6WEVW7FñˆÂFWáBÄ¢fñÊ≈VW7Fñˆ‡¢ì∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDW'&˜"Ä¢ÁV∆¿¢ì∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDÜV«W%FWáBÄ¢%fˆñ6R
+Ké
+Xr
+Hn
+J˛
+K‚
+Ké
+K^
+KÓ
+K"
+IŒ
+KÓ
+H
+IÆ
+X~
+H.
+ZB
+IŒ
+K
+X.
+K
+JB
+Kû
+X≤
+JN
+X≤FWáB
+Ké
+X
+J~
+KÓ
+K
+I^
+K6≤
+Jn
+JŒ
+KÓ
+H˛
+H
+ZB ¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+Hn
+JÆ
+I^
+K‚
+JŒ
+Xæ
+K.
+K‚
+Kû
+X
+Hb
+Ké
+K^
+KÓ
+K"
+K.
+K˛
+Ib
+Jn
+K˛
+J˛
+K‚
+I~
+J˛
+K‚
+Kû
+Xé
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞¢–†¢&ófFRfˆñB6Ü˜ufˆñ6U&W7V«D÷ó76ñÊrÇí∞¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDÜV«W%FWáBÄ¢ÁV∆¿¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+Hn
+K^
+KÓ
+I¬
+Ké
+Xﬁ
+JÆ
+K~
+Xﬁ
+IÚ
+Jé
+Kû
+X
+H"
+JÓ
+K˛
+K.
+X
+ZB
+Jn
+Xæ
+JŒ
+KÓ
+K
+K‚
+JŒ
+Xæ
+K.
+X~
+H"
+J˛
+K‚FWáB
+K.
+K˛
+In
+X~
+H.
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞¢–†¢&ófFRfˆñB&VE&Vfñ∆ƒ&wV÷VÁG2Çí∞¢&Vfñ∆≈7V&¶V7DÊ÷R–¢vWE6fTWáG&Ä¢UÖE$ı$Tdîƒ≈ı5T$§T5@¢ì∞†¢&Vfñ∆ƒ6ÜFW%FóF∆R–¢vWE6fTWáG&Ä¢UÖE$ı$Tdîƒ≈Ù4ÑDU ¢ì∞†¢&Vfñ∆≈VW7Fñˆ‚–¢vWE6fTWáG&Ä¢UÖE$ı$Tdîƒ≈ıTU5DîÙ‡¢ì∞†¢7G&ñÊr&Vfñ∆ƒñ÷vUW&í“vWE6fTWáG&ÑUÖE$ı$Tdîƒ≈Ùî‘tUıU$íì∞¢ñbÇ&Vfñ∆ƒñ÷vUW&íÊó4V◊GíÇíí∞¢6V∆V7FVEVW7Fñˆ‰ñ÷vUW&í“W&íÁ'6Rá&Vfñ∆ƒñ÷vUW&íì∞¢6V∆V7FVEVW7Fñˆ‰ñ÷vU&ófFUFÇ–¢vWE6fTWáG&ÑUÖE$ı$Tdîƒ≈Ùî‘tUı$ïdDUıDÇì∞¢&W7F'Dñ÷vTˆ7$gFW%7V&¶V7D∆ˆB“G'VS∞¢–†¢&WVW7FVDñÁWD÷ˆFR–¢vWE6fTWáG&Ä¢6÷'Dî6ˆ◊Êñˆ‰6ˆÁG&ˆ∆∆W"‰UÖE$ÙıTÂÙîÂUEÙ‘ÙDP¢ì∞¢&V6ˆ÷÷VÊFVE&Wfó6ñˆÂ6W76ñˆ‚“vWDñÁFVÁBÇíÊvWD&ˆˆ∆V‰WáG&Ä¢UÖE$ı$T4Ù‘‘T‰DTEı$Udï4îÙ‚¬f«6Rì∞¢–†¢Êˆ‰ÁV∆¿¢&ófFR7G&ñÊrvWE6fTWáG&Ä¢Êˆ‰ÁV∆¬7G&ñÊr∂Wê¢í∞¢7G&ñÊrf«VR–¢vWDñÁFVÁBÇê¢ÊvWE7G&ñÊtWáG&Ä¢∂Wê¢ì∞†¢&WGW&‚6fUFWáBÄ¢f«VP¢ì∞¢–†¢&ófFRfˆñB&W&TñÊóFñ≈67&VVÂ7FFRÇí∞¢&ñÊFñÊrÊG&˜F˜v‰6µ7V&¶V7BÁ6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊG&˜F˜v‰6¥6ÜFW"Á6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊVFóEVW7Fñˆ‚Á6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊ'WGFˆ‰6µ6FÜíÁ6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊ'WGFˆ‰F˜V'DÜó7F˜'íÁ6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊ'WGFˆ‰F˜V'DÜó7F˜'íÁ6WEfó6ñ&ñ∆óGíÄ¢fñWr‰tÙ‰P¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVñ6¥Wá∆ñ‚Á6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVñ6¥∂WïˆñÁG2Á6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVñ6¥WÜ◊∆RÁ6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVñ6µ&7Fñ6RÁ6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVW7Fñˆ‰6÷W&Á6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVW7Fñˆ‰v∆∆W'íÁ6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂ&V÷˜fUVW7Fñˆ‰ñ÷vRÁ6WDVÊ&∆VBÄ¢f«6P¢ì∞†¢&ñÊFñÊrÊ'WGFˆ‰˜V‰∆W76ˆ‚Á6WEfó6ñ&ñ∆óGíÄ¢fñWr‰tÙ‰P¢ì∞†¢&ñÊFñÊrÊ6&DÁ7vW"Á6WEfó6ñ&ñ∆óGíÄ¢fñWr‰tÙ‰P¢ì∞†¢&ñÊFñÊrÊ6&EVW7Fñˆ‰ñ÷vU&WfñWrÁ6WEfó6ñ&ñ∆óGíÄ¢fñWr‰tÙ‰P¢ì∞†¢&ñÊFñÊrÁ&ˆw&W75VW7Fñˆ‰ñ÷vTˆ7"Á6WEfó6ñ&ñ∆óGíÄ¢fñWr‰tÙ‰P¢ì∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDVÊDñ6ˆÂfó6ñ&∆RÄ¢f«6P¢ì∞†¢6WD˜FñˆÊƒ6ÜFW$G&˜F˜v‚Ä¢ÊWr'&î∆ó7C√‚Çí¿¢" ¢ì∞¢–†¢&ófFRfˆñB6WGW6∆ñ6¥∆ó7FVÊW'2Çí∞¢&ñÊFñÊrÊ'WGFˆ‰&6≤Á6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢vWDˆ‰&6µ&W76VDFó7F6ÜW"Çê¢Êˆ‰&6µ&W76VBÇê¢ì∞†¢&ñÊFñÊrÊ'WGFˆ‰F˜V'DÜó7F˜'íÁ6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢˜V‰F˜V'DÜó7F˜'íÇê¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVW7Fñˆ‰6÷W&Á6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢˜VÂVW7Fñˆ‰6÷W&Çê¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVW7Fñˆ‰v∆∆W'íÁ6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢˜VÂVW7Fñˆ‰v∆∆W'íÇê¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂ&V÷˜fUVW7Fñˆ‰ñ÷vRÁ6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢&V÷˜fU6V∆V7FVEVW7Fñˆ‰ñ÷vRÇê¢ì∞†¢&ñÊFñÊrÊ'WGFˆ‰6µ6FÜíÁ6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢7V&÷óEVW7Fñˆ‚Ä¢vWD7W'&VÁEVW7FñˆÂFWáBÇê¢ê¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂ6VÊDfˆ∆∆˜uWÁ6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢7V&÷óDfˆ∆∆˜uWVW7Fñˆ‚Çê¢ì∞†¢&ñÊFñÊrÊVFóDfˆ∆∆˜uWVW7Fñˆ‡¢Á6WDˆ‰VFóF˜$7Fñˆ‰∆ó7FVÊW"Ä¢áFWáEfñWr¬7Fñˆ‰ñB¬WfVÁBí”‚∞¢ñbÜ7Fñˆ‰ñ@¢“VFóF˜$ñÊfÚ‰î‘UÙ5DîÙÂı4T‰Bí∞†¢&WGW&‚f«6S∞¢–†¢7V&÷óDfˆ∆∆˜uWVW7Fñˆ‚Çì∞¢&WGW&‚G'VS∞¢–¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVñ6¥Wá∆ñ‚Á6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢7V&÷óEVñ6µVW7Fñˆ‚Ä¢vWE7G&ñÊrÄ¢"Á7G&ñÊrÁVñ6µ˜VW7FñˆÂˆWá∆ñ‡¢ê¢ê¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVñ6¥∂WïˆñÁG2Á6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢7V&÷óEVñ6µVW7Fñˆ‚Ä¢vWE7G&ñÊrÄ¢"Á7G&ñÊrÁVñ6µ˜VW7FñˆÂˆ∂Wï˜ˆñÁG0¢ê¢ê¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVñ6¥WÜ◊∆RÁ6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢7V&÷óEVñ6µVW7Fñˆ‚Ä¢vWE7G&ñÊrÄ¢"Á7G&ñÊrÁVñ6µ˜VW7FñˆÂˆWÜ◊∆P¢ê¢ê¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂVñ6µ&7Fñ6RÁ6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢7V&÷óEVñ6µVW7Fñˆ‚Ä¢vWE7G&ñÊrÄ¢"Á7G&ñÊrÁVñ6µ˜VW7FñˆÂ˜&7Fñ6P¢ê¢ê¢ì∞†¢&ñÊFñÊrÊ'WGFˆ‰˜V‰∆W76ˆ‚Á6WDˆ‰6∆ñ6¥∆ó7FVÊW"áfñWr”‡¢˜VÂ6V∆V7FVD∆W76ˆ‚Çê¢ì∞¢–†¢&ófFRfˆñB˜VÂVW7Fñˆ‰6÷W&Çí∞¢ñbÇó5VW7Fñˆ‰ñ÷vTñÁWDfñ∆&∆RÇíí∞¢&WGW&„∞¢–†¢ÜñFT∂Wñ&ˆ&BÇì∞†¢G'í∞¢fñ∆Rñ÷vTfñ∆R–¢7&VFUVW7Fñˆ‰6÷W&fñ∆RÇì∞†¢VÊFñÊt6÷W&ñ÷vUFÇ–¢ñ÷vTfñ∆RÊvWD'6ˆ«WFUFÇÇì∞†¢VÊFñÊt6÷W&ñ÷vUW&í–¢fñ∆U&˜fñFW"ÊvWEW&îf˜$fñ∆RÄ¢FÜó2¿¢vWE6∂vTÊ÷RÇê¢≤"Êfñ∆W&˜fñFW""¿¢ñ÷vTfñ∆P¢ì∞†¢VW7Fñˆ‰6÷W&∆VÊ6ÜW"Ê∆VÊ6ÇÄ¢VÊFñÊt6÷W&ñ÷vUW&ê¢ì∞†¢“6F6ÇÑîÙWÜ6WFñˆ‚WÜ6WFñˆ‚í∞¢6∆V%VÊFñÊt6÷W&ñ÷vRÄ¢G'VP¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢$6÷W&Ü˜FÚ
+I^
+Xr
+K.
+K˛
+HÚFV◊˜&'ífñ∆R
+Jé
+Kû
+X
+H"
+JŒ
+JÇ
+Ké
+I^
+X
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞†¢“6F6ÇÑñ∆∆Vvƒ&wV÷VÁDWÜ6WFñˆ‚WÜ6WFñˆ‚í∞¢6∆V%VÊFñÊt6÷W&ñ÷vRÄ¢G'VP¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢$6÷W&Ü˜FÚ&˜fñFW"
+JN
+Xé
+J˛
+KÓ
+K
+Jé
+Kû
+X
+H"
+Kû
+X≤
+Ké
+I^
+KÓ
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞†¢“6F6ÇÑ7FófóGîÊ˜Df˜VÊDWÜ6WFñˆ‚WÜ6WFñˆ‚í∞¢6∆V%VÊFñÊt6÷W&ñ÷vRÄ¢G'VP¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+H~
+KÇFWfñ6R
+JÓ
+X~
+H"6÷W&
+Hû
+JÆ
+K.
+JŒ
+Xﬁ
+Jr
+Jé
+Kû
+X
+H"
+Kû
+Xé
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞†¢“6F6ÇÖ'VÁFñ÷TWÜ6WFñˆ‚WÜ6WFñˆ‚í∞¢6∆V%VÊFñÊt6÷W&ñ÷vRÄ¢G'VP¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢$6÷W&
+Kn
+X
+K
+X"
+Jé
+Kû
+X
+H"
+Kû
+X≤
+Ké
+I^
+KÓ
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞¢–¢–†¢&ófFRfˆñB˜VÂVW7Fñˆ‰v∆∆W'íÇí∞¢ñbÇó5VW7Fñˆ‰ñ÷vTñÁWDfñ∆&∆RÇíí∞¢&WGW&„∞¢–†¢ÜñFT∂Wñ&ˆ&BÇì∞†¢G'í∞¢VW7Fñˆ‰v∆∆W'î∆VÊ6ÜW"Ê∆VÊ6ÇÄ¢ÊWr7G&ñÊuµ◊∞¢&ñ÷vRÚ¢ ¢–¢ì∞†¢“6F6ÇÑ7FófóGîÊ˜Df˜VÊDWÜ6WFñˆ‚WÜ6WFñˆ‚í∞¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢$v∆∆W'í
+J˛
+K‚fñ∆Rñ6∂W"
+Hû
+JÆ
+K.
+JŒ
+Xﬁ
+Jr
+Jé
+Kû
+X
+H"
+Kû
+Xé
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞†¢“6F6ÇÖ'VÁFñ÷TWÜ6WFñˆ‚WÜ6WFñˆ‚í∞¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢$v∆∆W'í
+Jé
+Kû
+X
+H"
+In
+X
+K"
+Ké
+I^
+X
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞¢–¢–†¢&ófFR&ˆˆ∆V‚ó5VW7Fñˆ‰ñ÷vTñÁWDfñ∆&∆RÇí∞¢ñbÜîÁ7vW%&WVW7DñÂ&ˆw&W72í∞¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+JÆ
+Kû
+K.
+Xr
+K^
+K
+Xﬁ
+JN
+JÓ
+KÓ
+JÇ6÷'BíÁ7vW"
+JÆ
+X.
+K
+K‚
+Kû
+Xæ
+Jé
+Xr
+Jn
+X~
+H.
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞†¢&WGW&‚f«6S∞¢–†¢ñbÜ7FófU7GVFVÁE&ˆfñ∆R”“ÁV∆¬í∞¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+JÆ
+Kû
+K.
+Xr7GVFVÁB&ˆfñ∆R
+IÆ
+X
+Jé
+X~
+H.
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞†¢&WGW&‚f«6S∞¢–†¢ñbá6V∆V7FVE66Üˆˆ≈7V&¶V7B”“ÁV∆¿¢«¬6V∆V7FVE7V&¶V7DÊ÷RÊó4V◊GíÇíí∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+JÆ
+Kû
+K.
+Xr
+H^
+JÆ
+Jé
+K‚7V&¶V7B
+IÆ
+X
+Jé
+X~
+H.
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞†¢&WGW&‚f«6S∞¢–†¢ñbáVW7Fñˆ‰ñ÷vTˆ7$ñÂ&ˆw&W72í∞¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+JÆ
+Kû
+K.
+X
+Jæ
+Xæ
+I˛
+X≤
+H^
+Jﬁ
+X
+JÆ
+J.
+KŒ
+X
+IŒ
+K‚
+K
+Kû
+X
+Kû
+Xé
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞†¢&WGW&‚f«6S∞¢–†¢&WGW&‚G'VS∞¢–†¢Êˆ‰ÁV∆¿¢&ófFRfñ∆R7&VFUVW7Fñˆ‰6÷W&fñ∆RÇê¢Fá&˜w2îÙWÜ6WFñˆ‚∞†¢fñ∆Rñ÷vTFó&V7F˜'í–¢ÊWrfñ∆RÄ¢vWD66ÜTFó"Çí¿¢TU5DîÙÂÙî‘tUÙDï$T5Dı%ê¢ì∞†¢ñbÇñ÷vTFó&V7F˜'íÊWÜó7G2Çê¢bbñ÷vTFó&V7F˜'íÊ÷∂Fó'2Çíí∞†¢Fá&˜rÊWrîÙWÜ6WFñˆ‚Ä¢%VW7Fñˆ‚ñ÷vRFó&V7F˜'í6˜V∆BÊ˜B&R7&VFVB‚ ¢ì∞¢–†¢&WGW&‚fñ∆RÊ7&VFUFV◊fñ∆RÄ¢'VW7FñˆÂÚ"¿¢"Êßr"¿¢ñ÷vTFó&V7F˜'ê¢ì∞¢–†¢&ófFRfˆñBÜÊF∆T6÷W&VW7Fñˆ‰ñ÷vU&W7V«BÄ¢&ˆˆ∆V‚6GW&V@¢í∞¢ñbÇó47FófóGîfñ∆&∆RÇíí∞¢&WGW&„∞¢–†¢ñbÇ6GW&V@¢«¬VÊFñÊt6÷W&ñ÷vUW&í”“ÁV∆¬í∞†¢6∆V%VÊFñÊt6÷W&ñ÷vRÄ¢G'VP¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢$6÷W&Ü˜FÚ
+Jé
+Kû
+X
+H"
+K.
+X
+I~
+Hé
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞†¢&WGW&„∞¢–†¢VW7Fñˆ‰ñ÷vT&óF÷∆ˆFW"Ê6Ê6Vƒ7W'&VÁD∆ˆBÇì∞†¢&V÷˜fTˆ∆DñÁFW&Ê≈VW7Fñˆ‰ñ÷vRÇì∞†¢6V∆V7FVEVW7Fñˆ‰ñ÷vUW&í–¢VÊFñÊt6÷W&ñ÷vUW&ì∞†¢6V∆V7FVEVW7Fñˆ‰ñ÷vU&ófFUFÇ–¢6fUFWáBÄ¢VÊFñÊt6÷W&ñ÷vUFÄ¢ì∞†¢VÊFñÊt6÷W&ñ÷vUW&í–¢ÁV∆√∞†¢VÊFñÊt6÷W&ñ÷vUFÇ–¢ÁV∆√∞†¢Fó7∆ï6V∆V7FVEVW7Fñˆ‰ñ÷vRÇì∞†¢7F'EVW7Fñˆ‰ñ÷vTˆ7"Ä¢6V∆V7FVEVW7Fñˆ‰ñ÷vUW&ê¢ì∞¢–†¢&ófFRfˆñBÜÊF∆U6V∆V7FVDv∆∆W'ïVW7Fñˆ‰ñ÷vRÄ¢ÁV∆∆&∆RW&íñ÷vUW&ê¢í∞¢ñbÇó47FófóGîfñ∆&∆RÇíí∞¢&WGW&„∞¢–†¢ñbÜñ÷vUW&í”“ÁV∆¬í∞¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢$v∆∆W'í
+Ké
+Xr
+I^
+Xæ
+HÇ
+Jæ
+Xæ
+I˛
+X≤
+Jé
+Kû
+X
+H"
+IÆ
+X
+Jé
+X
+I~
+Hé
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞†¢&WGW&„∞¢–†¢G'í∞¢vWD6ˆÁFVÁE&W6ˆ«fW"Çê¢ÁF∂UW'6ó7F&∆UW&ïW&÷ó76ñˆ‚Ä¢ñ÷vUW&í¿¢ñÁFVÁB‰dƒuÙu$ÂEı$TEıU$ïıU$‘ï54îÙ‡¢ì∞†¢“6F6ÇÖ6V7W&óGîWÜ6WFñˆ‚ñvÊ˜&VBí∞¢ÚÚ7W'&VÁB7FófóGí6W76ñˆ‚
+JÓ
+X~
+H"U$í
+Hû
+JÆ
+J˛
+Xæ
+Ir
+Kû
+X≤
+Ké
+I^
+JN
+X
+Kû
+Xé
+Z@¢–†¢VW7Fñˆ‰ñ÷vT&óF÷∆ˆFW"Ê6Ê6Vƒ7W'&VÁD∆ˆBÇì∞†¢&V÷˜fTˆ∆DñÁFW&Ê≈VW7Fñˆ‰ñ÷vRÇì∞†¢6V∆V7FVEVW7Fñˆ‰ñ÷vUW&í–¢ñ÷vUW&ì∞†¢6V∆V7FVEVW7Fñˆ‰ñ÷vU&ófFUFÇ–¢ÁV∆√∞†¢Fó7∆ï6V∆V7FVEVW7Fñˆ‰ñ÷vRÇì∞†¢7F'EVW7Fñˆ‰ñ÷vTˆ7"Ä¢ñ÷vUW&ê¢ì∞¢–†¢&ófFRfˆñBFó7∆ï6V∆V7FVEVW7Fñˆ‰ñ÷vRÇí∞¢ñbá6V∆V7FVEVW7Fñˆ‰ñ÷vUW&í”“ÁV∆¬í∞¢&ñÊFñÊrÊ6&EVW7Fñˆ‰ñ÷vU&WfñWrÁ6WEfó6ñ&ñ∆óGíÄ¢fñWr‰tÙ‰P¢ì∞†¢&ñÊFñÊrÊñ÷vUVW7FñˆÂ&WfñWrÁ6WDñ÷vTG&v&∆RÄ¢ÁV∆¿¢ì∞†¢&WGW&„∞¢–†¢&ñÊFñÊrÊ6&EVW7Fñˆ‰ñ÷vU&WfñWrÁ6WEfó6ñ&ñ∆óGíÄ¢fñWrÂdï4î$ƒP¢ì∞†¢&ñÊFñÊrÊ'WGFˆÂ&V÷˜fUVW7Fñˆ‰ñ÷vRÁ6WDVÊ&∆VBÄ¢VW7Fñˆ‰ñ÷vTˆ7$ñÂ&ˆw&W70¢bbîÁ7vW%&WVW7DñÂ&ˆw&W70¢ì∞†¢&ñÊFñÊrÁFWáEVW7Fñˆ‰ñ÷vU7FGW2Á6WEFWáBÄ¢.
+Jæ
+Xæ
+I˛
+X≤
+JN
+Xé
+J˛
+KÓ
+K
+Kû
+Xé
+ZB
+Ké
+K^
+KÓ
+K"
+JÆ
+J.
+KŒ
+Jé
+K‚
+Kn
+X
+K
+X"
+I^
+K˛
+J˛
+K‚
+IŒ
+K‚
+K
+Kû
+K‚
+Kû
+Xé
+ZB ¢ì∞†¢&óF÷&WfñWt&óF÷–¢FV6ˆFU&WfñWt&óF÷Ä¢6V∆V7FVEVW7Fñˆ‰ñ÷vUW&ê¢ì∞†¢&ñÊFñÊrÊñ÷vUVW7FñˆÂ&WfñWrÁ6WDñ÷vTG&v&∆RÄ¢ÁV∆¿¢ì∞†¢ñbá&WfñWt&óF÷“ÁV∆¬í∞¢&ñÊFñÊrÊñ÷vUVW7FñˆÂ&WfñWrÁ6WDñ÷vT&óF÷Ä¢&WfñWt&óF÷ ¢ì∞†¢“V«6R∞¢&ñÊFñÊrÊñ÷vUVW7FñˆÂ&WfñWrÁ6WDñ÷vUU$íÄ¢6V∆V7FVEVW7Fñˆ‰ñ÷vUW&ê¢ì∞¢–†¢&ñÊFñÊrÊ6µ6FÜï67&ˆ∆≈fñWrÁ˜7BÇÇí”‡¢&ñÊFñÊrÊ6µ6FÜï67&ˆ∆≈fñWrÁ6÷ˆ˜FÖ67&ˆ∆≈FÚÄ¢¿¢&ñÊFñÊrÊ6&EVW7Fñˆ‰ñ÷vU&WfñWp¢ÊvWD&˜GFˆ“Çê¢ê¢ì∞¢–†¢ÁV∆∆&∆P¢&ófFR&óF÷FV6ˆFU&WfñWt&óF÷Ä¢Êˆ‰ÁV∆¬W&íñ÷vUW&ê¢í∞¢&óF÷f7F˜'í‰˜FñˆÁ2&˜VÊG4˜FñˆÁ2–¢ÊWr&óF÷f7F˜'í‰˜FñˆÁ2Çì∞†¢&˜VÊG4˜FñˆÁ2Êñ‰ßW7DFV6ˆFT&˜VÊG2–¢G'VS∞†¢G'íÖ&6Vƒfñ∆TFW67&óF˜"FW67&óF˜"–¢vWD6ˆÁFVÁE&W6ˆ«fW"Çê¢Ê˜V‰fñ∆TFW67&óF˜"Ä¢ñ÷vUW&í¿¢'" ¢íí∞†¢ñbÜFW67&óF˜"”“ÁV∆¬í∞¢&WGW&‚ÁV∆√∞¢–†¢&óF÷f7F˜'íÊFV6ˆFTfñ∆TFW67&óF˜"Ä¢FW67&óF˜"ÊvWDfñ∆TFW67&óF˜"Çí¿¢ÁV∆¬¿¢&˜VÊG4˜FñˆÁ0¢ì∞†¢“6F6ÇÑîÙWÜ6WFñˆ‡¢¬'VÁFñ÷TWÜ6WFñˆ‚WÜ6WFñˆ‚í∞†¢&WGW&‚ÁV∆√∞¢–†¢ñbÜ&˜VÊG4˜FñˆÁ2Ê˜WEvñGFÇ√“ ¢«¬&˜VÊG4˜FñˆÁ2Ê˜WDÜVñváB√“í∞†¢&WGW&‚ÁV∆√∞¢–†¢ñÁB6◊∆U6ó¶R–¢6∆7V∆FU&WfñWu6◊∆U6ó¶RÄ¢&˜VÊG4˜FñˆÁ2Ê˜WEvñGFÇ¿¢&˜VÊG4˜FñˆÁ2Ê˜WDÜVñvá@¢ì∞†¢&óF÷f7F˜'í‰˜FñˆÁ2&óF÷˜FñˆÁ2–¢ÊWr&óF÷f7F˜'í‰˜FñˆÁ2Çì∞†¢&óF÷˜FñˆÁ2ÊñÂ6◊∆U6ó¶R–¢6◊∆U6ó¶S∞†¢&óF÷˜FñˆÁ2ÊñÂ&VfW'&VD6ˆÊfñr–¢&óF÷‰6ˆÊfñrÂ$t%ÛScS∞†¢G'íÖ&6Vƒfñ∆TFW67&óF˜"FW67&óF˜"–¢vWD6ˆÁFVÁE&W6ˆ«fW"Çê¢Ê˜V‰fñ∆TFW67&óF˜"Ä¢ñ÷vUW&í¿¢'" ¢íí∞†¢ñbÜFW67&óF˜"”“ÁV∆¬í∞¢&WGW&‚ÁV∆√∞¢–†¢&WGW&‚&óF÷f7F˜'íÊFV6ˆFTfñ∆TFW67&óF˜"Ä¢FW67&óF˜"ÊvWDfñ∆TFW67&óF˜"Çí¿¢ÁV∆¬¿¢&óF÷˜FñˆÁ0¢ì∞†¢“6F6ÇÑîÙWÜ6WFñˆ‡¢¬'VÁFñ÷TWÜ6WFñˆ‚WÜ6WFñˆ‚í∞†¢&WGW&‚ÁV∆√∞¢–¢–†¢&ófFRñÁB6∆7V∆FU&WfñWu6◊∆U6ó¶RÄ¢ñÁBñ÷vUvñGFÇ¿¢ñÁBñ÷vTÜVñvá@¢í∞¢ñÁB6◊∆U6ó¶R–¢∞†¢vÜñ∆RÇÜñ÷vUvñGFÇÚ6◊∆U6ó¶Rê¢‚‘Ñî’T’ı$UdîUuÙî‘tUı4ï§P¢«¬Üñ÷vTÜVñváBÚ6◊∆U6ó¶Rê¢‚‘Ñî’T’ı$UdîUuÙî‘tUı4ï§Rí∞†¢6◊∆U6ó¶R£–¢#∞¢–†¢&WGW&‚÷FÇÊ÷ÇÄ¢¿¢6◊∆U6ó¶P¢ì∞¢–†¢&ófFRfˆñB7F'EVW7Fñˆ‰ñ÷vTˆ7"Ä¢Êˆ‰ÁV∆¬W&íñ÷vUW&ê¢í∞¢ñbá6V∆V7FVE66Üˆˆ≈7V&¶V7B”“ÁV∆¬í∞¢&W7F'Dñ÷vTˆ7$gFW%7V&¶V7D∆ˆB–¢G'VS∞†¢&WGW&„∞¢–†¢VW7Fñˆ‰ñ÷vTˆ7$vVÊW&Fñˆ‚≤≥∞†¢ñÁB˜W&Fñˆ‰vVÊW&Fñˆ‚–¢VW7Fñˆ‰ñ÷vTˆ7$vVÊW&Fñˆ„∞†¢6∆˜6UVW7FñˆÂFWáE&V6ˆvÊó¶W'2Çì∞†¢6WEVW7Fñˆ‰ñ÷vTˆ7%7FFRÄ¢G'VP¢ì∞†¢fñÊ¬ñÁWDñ÷vRñÁWDñ÷vS∞†¢G'í∞¢ñÁWDñ÷vR–¢ñÁWDñ÷vRÊg&ˆ‘fñ∆UFÇÄ¢FÜó2¿¢ñ÷vUW&ê¢ì∞†¢“6F6ÇÑîÙWÜ6WFñˆ‡¢¬'VÁFñ÷TWÜ6WFñˆ‚WÜ6WFñˆ‚í∞†¢fñÊó6ÖVW7Fñˆ‰ñ÷vTˆ7%vóFÑW'&˜"Ä¢˜W&Fñˆ‰vVÊW&Fñˆ‚¿¢.
+Jæ
+Xæ
+I˛
+X≤
+JÆ
+J.
+KŒ
+Jé
+Xr
+J˛
+Xæ
+I~
+Xﬁ
+JÚf˜&÷B
+JÓ
+X~
+H"
+Jé
+Kû
+X
+H"
+Kû
+Xé
+ZB ¢ì∞†¢&WGW&„∞¢–†¢VW7Fñˆ‰∆FñÂ&V6ˆvÊó¶W"–¢FWáE&V6ˆvÊóFñˆ‚ÊvWD6∆ñVÁBÄ¢FWáE&V6ˆvÊó¶W$˜FñˆÁ2‰DTdT≈EÙıDîÙÂ0¢ì∞†¢VW7Fñˆ‰FWfÊv&ï&V6ˆvÊó¶W"–¢FWáE&V6ˆvÊóFñˆ‚ÊvWD6∆ñVÁBÄ¢ÊWrFWfÊv&ïFWáE&V6ˆvÊó¶W$˜FñˆÁ0¢‰'Vñ∆FW"Çê¢Ê'Vñ∆BÇê¢ì∞†¢&V6ˆvÊó¶T∆FñÂVW7FñˆÂFWáBÄ¢ñÁWDñ÷vR¿¢˜W&Fñˆ‰vVÊW&Fñˆ‡¢ì∞¢–†¢&ófFRfˆñB&V6ˆvÊó¶T∆FñÂVW7FñˆÂFWáBÄ¢Êˆ‰ÁV∆¬ñÁWDñ÷vRñÁWDñ÷vR¿¢ñÁB˜W&Fñˆ‰vVÊW&Fñˆ‡¢í∞¢FWáE&V6ˆvÊó¶W"&V6ˆvÊó¶W"–¢VW7Fñˆ‰∆FñÂ&V6ˆvÊó¶W#∞†¢ñbá&V6ˆvÊó¶W"”“ÁV∆¬í∞¢&V6ˆvÊó¶TFWfÊv&ïVW7FñˆÂFWáBÄ¢ñÁWDñ÷vR¿¢""¿¢ÊWrñ∆∆Vv≈7FFTWÜ6WFñˆ‚Ä¢$∆Fñ‚&V6ˆvÊó¶W"VÊfñ∆&∆R‚ ¢í¿¢˜W&Fñˆ‰vVÊW&Fñˆ‡¢ì∞†¢&WGW&„∞¢–†¢&V6ˆvÊó¶W"Á&ˆ6W72Ä¢ñÁWDñ÷vP¢ê¢ÊFDˆÂ7V66W74∆ó7FVÊW"áFWáB”‡¢&V6ˆvÊó¶TFWfÊv&ïVW7FñˆÂFWáBÄ¢ñÁWDñ÷vR¿¢6fUFWáBÄ¢FWáB”“ÁV∆¿¢ÚÁV∆¿¢¢FWáBÊvWEFWáBÇê¢í¿¢ÁV∆¬¿¢˜W&Fñˆ‰vVÊW&Fñˆ‡¢ê¢ê¢ÊFDˆ‰fñ«W&T∆ó7FVÊW"ÜWÜ6WFñˆ‚”‡¢&V6ˆvÊó¶TFWfÊv&ïVW7FñˆÂFWáBÄ¢ñÁWDñ÷vR¿¢""¿¢WÜ6WFñˆ‚¿¢˜W&Fñˆ‰vVÊW&Fñˆ‡¢ê¢ì∞¢–†¢&ófFRfˆñB&V6ˆvÊó¶TFWfÊv&ïVW7FñˆÂFWáBÄ¢Êˆ‰ÁV∆¬ñÁWDñ÷vRñÁWDñ÷vR¿¢Êˆ‰ÁV∆¬7G&ñÊr∆FñÂFWáB¿¢ÁV∆∆&∆RWÜ6WFñˆ‚∆Fñ‰fñ«W&R¿¢ñÁB˜W&Fñˆ‰vVÊW&Fñˆ‡¢í∞¢ñbÇó47W'&VÁEVW7Fñˆ‰ñ÷vTˆ7"Ä¢˜W&Fñˆ‰vVÊW&Fñˆ‡¢íí∞¢&WGW&„∞¢–†¢FWáE&V6ˆvÊó¶W"&V6ˆvÊó¶W"–¢VW7Fñˆ‰FWfÊv&ï&V6ˆvÊó¶W#∞†¢ñbá&V6ˆvÊó¶W"”“ÁV∆¬í∞¢ñbÇ∆FñÂFWáBÊó4V◊GíÇíí∞¢6ˆ◊∆WFUVW7Fñˆ‰ñ÷vTˆ7"Ä¢∆FñÂFWáB¿¢""¿¢˜W&Fñˆ‰vVÊW&Fñˆ‡¢ì∞†¢“V«6R∞¢fñÊó6ÖVW7Fñˆ‰ñ÷vTˆ7%vóFÑW'&˜"Ä¢˜W&Fñˆ‰vVÊW&Fñˆ‚¿¢%VW7Fñˆ‚Ù5"VÊvñÊR
+Hû
+JÆ
+K.
+JŒ
+Xﬁ
+Jr
+Jé
+Kû
+X
+H"
+Kû
+Xé
+ZB ¢ì∞¢–†¢&WGW&„∞¢–†¢&V6ˆvÊó¶W"Á&ˆ6W72Ä¢ñÁWDñ÷vP¢ê¢ÊFDˆÂ7V66W74∆ó7FVÊW"áFWáB”‚∞¢7G&ñÊrFWfÊv&ïFWáB–¢6fUFWáBÄ¢FWáB”“ÁV∆¿¢ÚÁV∆¿¢¢FWáBÊvWEFWáBÇê¢ì∞†¢6ˆ◊∆WFUVW7Fñˆ‰ñ÷vTˆ7"Ä¢∆FñÂFWáB¿¢FWfÊv&ïFWáB¿¢˜W&Fñˆ‰vVÊW&Fñˆ‡¢ì∞¢“ê¢ÊFDˆ‰fñ«W&T∆ó7FVÊW"ÜWÜ6WFñˆ‚”‚∞¢ñbÇ∆FñÂFWáBÊó4V◊GíÇíí∞¢6ˆ◊∆WFUVW7Fñˆ‰ñ÷vTˆ7"Ä¢∆FñÂFWáB¿¢""¿¢˜W&Fñˆ‰vVÊW&Fñˆ‡¢ì∞†¢&WGW&„∞¢–†¢7G&ñÊrW'&˜$÷W76vR–¢∆Fñ‰fñ«W&R”“ÁV∆¿¢Ú.
+Jæ
+Xæ
+I˛
+X≤
+JÓ
+X~
+H"
+JÆ
+J.
+KŒ
+Jé
+Xr
+J˛
+Xæ
+I~
+Xﬁ
+JÚ
+Ké
+K^
+KÓ
+K"
+Jé
+Kû
+X
+H"
+JÓ
+K˛
+K.
+KÓ
+ZB ¢¢$∆Fñ‚
+IN
+KFWfÊv&í
+Jn
+Xæ
+Jé
+Xæ
+H"Ù5"FWáB
+Jé
+Kû
+X
+H"
+JÆ
+J.
+K¬
+Ké
+I^
+X~
+ZB#∞†¢fñÊó6ÖVW7Fñˆ‰ñ÷vTˆ7%vóFÑW'&˜"Ä¢˜W&Fñˆ‰vVÊW&Fñˆ‚¿¢W'&˜$÷W76vP¢ì∞¢“ì∞¢–†¢&ófFRfˆñB6ˆ◊∆WFUVW7Fñˆ‰ñ÷vTˆ7"Ä¢Êˆ‰ÁV∆¬7G&ñÊr∆FñÂFWáB¿¢Êˆ‰ÁV∆¬7G&ñÊrFWfÊv&ïFWáB¿¢ñÁB˜W&Fñˆ‰vVÊW&Fñˆ‡¢í∞¢ñbÇó47W'&VÁEVW7Fñˆ‰ñ÷vTˆ7"Ä¢˜W&Fñˆ‰vVÊW&Fñˆ‡¢íí∞¢&WGW&„∞¢–†¢VW7Fñˆ‰ˆ7%6V∆V7Fñˆ‚6V∆V7Fñˆ‚–¢6V∆V7D&W7EVW7Fñˆ‰ˆ7%FWáBÄ¢∆FñÂFWáB¿¢FWfÊv&ïFWá@¢ì∞†¢6∆˜6UVW7FñˆÂFWáE&V6ˆvÊó¶W'2Çì∞†¢VW7Fñˆ‰ñ÷vTˆ7$ñÂ&ˆw&W72–¢f«6S∞†¢WFFUVW7Fñˆ‰ñ÷vT'WGFˆÁ4VÊ&∆VE7FFRÇì∞†¢&ñÊFñÊrÁ&ˆw&W75VW7Fñˆ‰ñ÷vTˆ7"Á6WEfó6ñ&ñ∆óGíÄ¢fñWr‰tÙ‰P¢ì∞†¢ñbá6V∆V7Fñˆ‚ÊvWE6V∆V7FVEFWáBÇê¢Êó4V◊GíÇíí∞†¢&ñÊFñÊrÁFWáEVW7Fñˆ‰ñ÷vU7FGW2Á6WEFWáBÄ¢.
+Jæ
+Xæ
+I˛
+X≤
+JÓ
+K˛
+K"
+I~
+HÇ¬
+K.
+X~
+I^
+K˛
+JÇ
+Ké
+K^
+KÓ
+K"
+Ké
+KÓ
+J≤
+Jé
+Kû
+X
+H"
+JÆ
+J.
+KŒ
+K‚
+IŒ
+K‚
+Ké
+I^
+KÓ
+ZB ¢≤.
+Jæ
+Xæ
+I˛
+X≤7&˜
+I^
+K
+I^
+Xr
+Jn
+Xæ
+JŒ
+KÓ
+K
+K‚
+K.
+X~
+H"
+J˛
+K‚
+Ké
+K^
+KÓ
+K"÷ÁV∆«í
+K.
+K˛
+In
+X~
+H.
+ZB ¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢.
+Jæ
+Xæ
+I˛
+X≤
+JÓ
+X~
+H"
+JÆ
+J.
+KŒ
+Jé
+Xr
+J˛
+Xæ
+I~
+Xﬁ
+JÚ
+Ké
+K^
+KÓ
+K"
+Jé
+Kû
+X
+H"
+JÓ
+K˛
+K.
+KÓ
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞†¢&WGW&„∞¢–†¢Ú†¢¢gV∆¬◊vRÙ5"ó2&WFñÊVBˆÊ«í2&ófFRñ÷vR6ˆÁFWáB‚óB◊W7@¢¢ÊWfW"&W∆6R˜"VÊBFÚFÜR6Üñ∆Bw2F&vWFVBGóVBVW7Fñˆ‚‡¢¢¢∆7EVW7Fñˆ‰ñ÷vTˆ7%FWáB–¢6fUFWáBá6V∆V7Fñˆ‚ÊvWE6V∆V7FVEFWáBÇíì∞†¢&ñÊFñÊrÁFWáEVW7Fñˆ‰ñ÷vU7FGW2Á6WEFWáBÄ¢6V∆V7Fñˆ‚Ê7&VFU7FGW4÷W76vRÇê¢ì∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDW'&˜"Ä¢ÁV∆¿¢ì∞†¢&ñÊFñÊrÊñÁWEVW7Fñˆ‚Á6WDÜV«W%FWáBÄ¢.
+H^
+J¬
+I^
+X~
+K^
+K"
+K.
+I^
+Xﬁ
+K~
+Xﬁ
+JÚ
+K.
+K˛
+In
+X~
+H"¬
+IŒ
+Xé
+Ké
+Xs¢
+Ké
+K^
+KÓ
+K"
+Jé
+H"‚2
+Kû
+K"
+I^
+K
+Xæ
+ZB
+JÆ
+X.
+K
+K‚vRFWáB
+J˛
+Kû
+KÓ
+H
+Jé
+Kû
+X
+H"
+IŒ
+Xæ
+J
+KŒ
+K‚
+IŒ
+KÓ
+H˛
+I~
+KÓ
+ZB ¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢%Ü˜FÚ
+JN
+Xé
+J˛
+KÓ
+K
+Kû
+Xé
+ZB
+I^
+X~
+K^
+K"
+IŒ
+K˛
+KÇVW7Fñˆ‚
+I^
+K‚Á7vW"
+IÆ
+KÓ
+Kû
+K˛
+HÚ
+K^
+Kí
+K.
+K˛
+In
+X~
+H.
+ZB"¿¢6Ê6∂&"‰ƒT‰uDÖı4Ñı%@¢íÁ6Ü˜rÇì∞¢–†¢&ófFRfˆñBfñÊó6ÖVW7Fñˆ‰ñ÷vTˆ7%vóFÑW'&˜"Ä¢ñÁB˜W&Fñˆ‰vVÊW&Fñˆ‚¿¢Êˆ‰ÁV∆¬7G&ñÊrW'&˜$÷W76vP¢í∞¢ñbÇó47W'&VÁEVW7Fñˆ‰ñ÷vTˆ7"Ä¢˜W&Fñˆ‰vVÊW&Fñˆ‡¢íí∞¢&WGW&„∞¢–†¢6∆˜6UVW7FñˆÂFWáE&V6ˆvÊó¶W'2Çì∞†¢VW7Fñˆ‰ñ÷vTˆ7$ñÂ&ˆw&W72–¢f«6S∞†¢WFFUVW7Fñˆ‰ñ÷vT'WGFˆÁ4VÊ&∆VE7FFRÇì∞†¢&ñÊFñÊrÁ&ˆw&W75VW7Fñˆ‰ñ÷vTˆ7"Á6WEfó6ñ&ñ∆óGíÄ¢fñWr‰tÙ‰P¢ì∞†¢&ñÊFñÊrÁFWáEVW7Fñˆ‰ñ÷vU7FGW2Á6WEFWáBÄ¢W'&˜$÷W76vP¢≤"
+Ké
+KÓ
+J≤Ü˜FÚ
+K.
+X~
+H"
+J˛
+K‚
+Ké
+K^
+KÓ
+K"÷ÁV∆«í
+K.
+K˛
+In
+X~
+H.
+ZB ¢ì∞†¢6Ê6∂&"Ê÷∂RÄ¢&ñÊFñÊrÊvWE&ˆ˜BÇí¿¢W'&˜$÷W76vR¿¢6Ê6∂&"‰ƒT‰uDÖÙƒÙ‰p¢íÁ6Ü˜rÇì∞¢–†¢&ófFR&ˆˆ∆V‚ó47W'&VÁEVW7Fñˆ‰ñ÷vTˆ7"Ä¢ñÁB˜W&Fñˆ‰vVÊW&Fñˆ‡¢í∞¢&WGW&‚ó47FófóGîfñ∆&∆RÇê¢bbVW7Fñˆ‰ñ÷vTˆ7$ñÂ&ˆw&W70¢bb˜W&Fñˆ‰vVÊW&Fñˆ‡¢”“VW7Fñˆ‰ñ÷vTˆ7$vVÊW&Fñˆ„∞¢–†¢&ófFRfˆñB6WEVW7Fñˆ‰ñ÷vTˆ7%7FFRÄ¢&ˆˆ∆V‚&ˆ6W76ñÊp¢í∞¢VW7Fñˆ‰ñ÷vTˆ7$ñÂ&ˆw&W72–¢&ˆ6W76ñÊs∞†¢&ñÊFñÊrÁ&ˆw&W75VW7Fñˆ‰ñ÷vTˆ7"Á6WEfó6ñ&ñ∆óGíÄ¢&ˆ6W76ñÊp¢ÚfñWrÂdï4î$ƒP¢¢fñWr‰tÙ‰P¢ì∞†¢ñbá&ˆ6W76ñÊrí∞¢&ñÊFñÊrÁFWáEVW7Fñˆ‰ñ÷vU7FGW2Á6WEFWáBÄ¢7&VFUVW7Fñˆ‰ñ÷vU&ˆ6W76ñÊt÷W76vRÇê¢ì∞¢–†¢WFFUVW7Fñˆ‰ñ÷vT'WGFˆÁ4VÊ&∆VE7FFRÇì∞¢–†¢Êˆ‰ÁV∆¿¢&ófFR7G&ñÊr7&VFUVW7Fñˆ‰ñ÷vU&ˆ6W76ñÊt÷W76vRÇí∞¢VW7Fñˆ‰∆ÊwVvT÷ˆFR∆ÊwVvT÷ˆFR–¢&W6ˆ«fUVW7Fñˆ‰∆ÊwVvT÷ˆFRÇì∞†¢7vóF6ÇÜ∆ÊwVvT÷ˆFRí∞¢66RDUd‰t$ïı4Â4µ$ïC†¢&WGW&‚.
+Ké
+H.
+Ké
+Xﬁ
+I^
+X>
+JB
+Ké
+K^
+KÓ
+K"
+I^
+X≤FWfÊv&íÙ5"
+Ké
+Xr
+JÆ
+J.
+KŒ
+K‚
+IŒ
+K‚
+K
+Kû
+K‚
+Kû
+Xé
+ZB#∞†¢66RDUd‰t$ïÙÑî‰Dì†¢&WGW&‚.
+Kû
+K˛
+Jé
+Xﬁ
+Jn
+X
+Ké
+K^
+KÓ
+K"
+I^
+X≤FWfÊv&íÙ5"
+Ké
+Xr
+JÆ
+J.
+KŒ
+K‚
+IŒ
+K‚
+K
+Kû
+K‚
+Kû
+Xé
+ZB#∞†¢66RƒDîÂı$TdU%$TC†¢&WGW&‚$VÊv∆ó6ÇFWáB
+I^
+X≤
+JÆ
+J.
+KŒ
+K‚
+IŒ
+K‚
+K
+Kû
+K‚
+Kû
+Xé
+ZB#∞†¢66R‘ïÑTC†¢FVfVÕyÔŒm¢Gß≤⁄Óù∆≠y–§π‡•à‡•§ ‡§•‡•ã‡§°‡§º‡•Ä ‡§¶‡•á‡§∞ ‡§∞‡•Å‡§ï‡•á‡§Ç‡•§",
                     Snackbar.LENGTH_SHORT
             ).show();
 
