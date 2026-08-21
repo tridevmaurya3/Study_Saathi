@@ -3,6 +3,7 @@ package com.tridev.studysaathi;
 import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -20,6 +21,7 @@ import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
 import com.tridev.studysaathi.data.ai.FirebaseAiQuotaActivityObserver;
 import com.tridev.studysaathi.data.ai.SmartTutorTextToSpeechActivityObserver;
+import com.tridev.studysaathi.overlay.StudyOverlayBubbleService;
 import com.tridev.studysaathi.ui.SmartAiCompanionController;
 import com.tridev.studysaathi.ui.PersistentNavigationController;
 
@@ -66,6 +68,8 @@ public final class StudySaathiApplication
             Collections.newSetFromMap(
                     new WeakHashMap<>()
             );
+
+    private int visibleActivityCount;
 
     @Override
     public void onCreate() {
@@ -396,7 +400,8 @@ public final class StudySaathiApplication
     public void onActivityStarted(
             @NonNull Activity activity
     ) {
-        // No action required.
+        visibleActivityCount++;
+        StudyOverlayBubbleService.stop(this);
     }
 
     @Override
@@ -431,7 +436,11 @@ public final class StudySaathiApplication
     public void onActivityStopped(
             @NonNull Activity activity
     ) {
-        // No action required.
+        visibleActivityCount = Math.max(0, visibleActivityCount - 1);
+        if (visibleActivityCount == 0
+                && Settings.canDrawOverlays(this)) {
+            StudyOverlayBubbleService.start(this);
+        }
     }
 
     @Override

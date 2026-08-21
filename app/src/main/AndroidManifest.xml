@@ -10,6 +10,15 @@
     <uses-permission
         android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <uses-permission
+        android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
     <application
         android:name=".StudySaathiApplication"
         android:allowBackup="false"
@@ -35,6 +44,17 @@
                 android:resource="@xml/book_cover_file_paths" />
 
         </provider>
+
+        <service
+            android:name=".overlay.StudyOverlayBubbleService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Student-requested floating AI study access" />
+
+        </service>
 
         <receiver
             android:name=".reminder.StudyReminderActionReceiver"

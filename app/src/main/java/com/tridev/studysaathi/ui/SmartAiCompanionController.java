@@ -4,12 +4,15 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -81,6 +84,7 @@ public final class SmartAiCompanionController {
             "extra_open_input_mode";
     public static final String INPUT_MODE_VOICE = "voice";
     public static final String INPUT_MODE_PHOTO = "photo";
+    public static final String EXTRA_OPEN_COMPANION = "extra_open_companion";
 
     private static final int VIEW_TAG_KEY =
             R.id.smartAiCompanionRoot;
@@ -230,6 +234,8 @@ public final class SmartAiCompanionController {
         @NonNull
         private final MaterialCardView card;
         @NonNull
+        private final View panel;
+        @NonNull
         private final View dismissArea;
         @NonNull
         private final EditText questionInput;
@@ -273,6 +279,18 @@ public final class SmartAiCompanionController {
 
         private boolean requestInProgress;
         private boolean closed;
+        private int normalPanelWidth;
+        private int normalCardHeight;
+        private boolean maximized;
+        private float dragDownRawX;
+        private float dragDownRawY;
+        private float dragStartX;
+        private float dragStartY;
+        private int resizeStartWidth;
+        private int resizeStartHeight;
+        private float resizeDownRawX;
+        private float resizeDownRawY;
+        private int resizeCorner;
 
         private CompanionSession(
                 @NonNull Activity activity,
@@ -281,6 +299,7 @@ public final class SmartAiCompanionController {
             this.activity = activity;
             this.companion = companion;
             card = companion.findViewById(R.id.cardSmartAiCompanion);
+            panel = companion.findViewById(R.id.smartAiCompanionPanel);
             dismissArea = companion.findViewById(
                     R.id.smartAiDismissArea
             );
@@ -380,9 +399,146 @@ public final class SmartAiCompanionController {
             );
 
             startPulse();
+            installMovableResizableWindow();
             showStatus(R.string.smart_companion_profile_loading);
             loadProfile();
             loadApprovedChapterContent();
+            if (activity.getIntent().getBooleanExtra(EXTRA_OPEN_COMPANION, false)) {
+                activity.getIntent().removeExtra(EXTRA_OPEN_COMPANION);
+                card.post(this::toggleCard);
+            }
+        }
+
+        private void installMovableResizableWindow() {
+            FrameLayout.LayoutParams panelParams =
+                    (FrameLayout.LayoutParams) panel.getLayoutParams();
+            normalPanelWidth = panelParams.width;
+            normalCardHeight = card.getLayoutParams().height;
+
+            addCornerHint("⌜", Gravity.START | Gravity.TOP);
+            addCornerHint("⌝", Gravity.END | Gravity.TOP);
+            addCornerHint("⌞", Gravity.START | Gravity.BOTTOM);
+            addCornerHint("⌟", Gravity.END | Gravity.BOTTOM);
+
+            View header = companion.findViewById(R.id.smartAiDragHeader);
+            header.setOnTouchListener((view, event) -> handleDrag(event));
+            header.setOnLongClickListener(view -> {
+                toggleMaximize();
+                return true;
+            });
+            card.setOnTouchListener((view, event) -> handleCornerResize(event));
+
+            aiButton.setOnLongClickListener(view -> {
+                requestOverlayPermission();
+                return true;
+            });
+        }
+
+        private void addCornerHint(@NonNull String symbol, int gravity) {
+            TextView hint = new TextView(activity);
+            hint.setText(symbol);
+            hint.setTextSize(18f);
+            hint.setAlpha(0.28f);
+            hint.setTextColor(activity.getColor(R.color.ss_primary));
+            hint.setGravity(Gravity.CENTER);
+            hint.setClickable(false);
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                    dp(activity, 30), dp(activity, 30), gravity);
+            card.addView(hint, params);
+        }
+
+        private boolean handleDrag(@NonNull MotionEvent event) {
+            if (maximized) return false;
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                dragDownRawX = event.getRawX();
+                dragDownRawY = event.getRawY();
+                dragStartX = panel.getTranslationX();
+                dragStartY = panel.getTranslationY();
+                return true;
+            }
+            if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                float nextX = dragStartX + event.getRawX() - dragDownRawX;
+                float nextY = dragStartY + event.getRawY() - dragDownRawY;
+                float maxX = Math.max(0f, companion.getWidth() - panel.getWidth());
+                float maxY = Math.max(0f, companion.getHeight() - panel.getHeight());
+                panel.setTranslationX(Math.max(-maxX, Math.min(maxX, nextX)));
+                panel.setTranslationY(Math.max(-maxY, Math.min(maxY, nextY)));
+                return true;
+            }
+            return event.getActionMasked() == MotionEvent.ACTION_UP;
+        }
+
+        private boolean handleCornerResize(@NonNull MotionEvent event) {
+            int edge = dp(activity, 34);
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                boolean left = event.getX() <= edge;
+                boolean right = event.getX() >= card.getWidth() - edge;
+                boolean top = event.getY() <= edge;
+                boolean bottom = event.getY() >= card.getHeight() - edge;
+                if (!(left || right) || !(top || bottom) || maximized) return false;
+                resizeCorner = (left ? 1 : 2) | (top ? 4 : 8);
+                resizeDownRawX = event.getRawX();
+                resizeDownRawY = event.getRawY();
+                resizeStartWidth = panel.getWidth();
+                resizeStartHeight = card.getHeight();
+                return true;
+            }
+            if (event.getActionMasked() == MotionEvent.ACTION_MOVE && resizeCorner != 0) {
+                float dx = event.getRawX() - resizeDownRawX;
+                float dy = event.getRawY() - resizeDownRawY;
+                int width = resizeStartWidth + ((resizeCorner & 1) != 0 ? Math.round(-dx) : Math.round(dx));
+                int height = resizeStartHeight + ((resizeCorner & 4) != 0 ? Math.round(-dy) : Math.round(dy));
+                width = Math.max(dp(activity, 290), Math.min(companion.getWidth() - dp(activity, 12), width));
+                height = Math.max(dp(activity, 360), Math.min(companion.getHeight() - dp(activity, 60), height));
+                ViewGroup.LayoutParams panelParams = panel.getLayoutParams();
+                panelParams.width = width;
+                panel.setLayoutParams(panelParams);
+                ViewGroup.LayoutParams cardParams = card.getLayoutParams();
+                cardParams.height = height;
+                card.setLayoutParams(cardParams);
+                return true;
+            }
+            if (event.getActionMasked() == MotionEvent.ACTION_UP
+                    || event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
+                boolean handled = resizeCorner != 0;
+                resizeCorner = 0;
+                return handled;
+            }
+            return resizeCorner != 0;
+        }
+
+        private void toggleMaximize() {
+            ViewGroup.LayoutParams panelParams = panel.getLayoutParams();
+            ViewGroup.LayoutParams cardParams = card.getLayoutParams();
+            if (!maximized) {
+                normalPanelWidth = panel.getWidth();
+                normalCardHeight = card.getHeight();
+                panelParams.width = companion.getWidth() - dp(activity, 12);
+                cardParams.height = companion.getHeight() - dp(activity, 72);
+                panel.setTranslationX(0f);
+                panel.setTranslationY(0f);
+            } else {
+                panelParams.width = normalPanelWidth;
+                cardParams.height = normalCardHeight;
+            }
+            panel.setLayoutParams(panelParams);
+            card.setLayoutParams(cardParams);
+            maximized = !maximized;
+        }
+
+        private void requestOverlayPermission() {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                    || Settings.canDrawOverlays(activity)) {
+                com.tridev.studysaathi.overlay.StudyOverlayBubbleService.start(activity);
+                return;
+            }
+            Intent intent = new Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + activity.getPackageName()));
+            activity.startActivity(intent);
+            Snackbar.make(companion,
+                    "Display over other apps अनुमति के बाद AI bubble हमेशा उपलब्ध रहेगा।",
+                    Snackbar.LENGTH_LONG).show();
         }
 
         private void loadProfile() {
@@ -501,6 +657,16 @@ public final class SmartAiCompanionController {
                     .scaleY(1f)
                     .setDuration(180L)
                     .start();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                    && !Settings.canDrawOverlays(activity)) {
+                Snackbar.make(
+                                companion,
+                                "दूसरी apps पर AI bubble दिखाने की अनुमति दें।",
+                                Snackbar.LENGTH_LONG
+                        )
+                        .setAction("Allow", view -> requestOverlayPermission())
+                        .show();
+            }
             scrollToBottom();
         }
 
