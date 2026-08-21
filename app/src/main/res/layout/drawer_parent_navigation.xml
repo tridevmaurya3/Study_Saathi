@@ -24,15 +24,39 @@
             android:paddingEnd="18dp"
             android:paddingBottom="22dp">
 
-            <TextView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:background="@drawable/bg_help_step_badge"
-                android:gravity="center"
-                android:text="P"
-                android:textColor="@color/ss_on_primary"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_help_step_badge"
+                    android:gravity="center"
+                    android:text="P"
+                    android:textColor="@color/ss_on_primary"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonDrawerStudentMode"
+                    style="@style/Widget.StudySaathi.Button.Outlined"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:minWidth="0dp"
+                    android:text="Student Mode"
+                    android:textAllCaps="false"
+                    android:textSize="12sp"
+                    app:backgroundTint="@color/ss_surface"
+                    app:strokeColor="@color/ss_blue_border" />
+            </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
@@ -57,7 +81,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="20dp"
             android:text="LEARNING &amp; PROFILES"
             android:textColor="@color/ss_text_muted"
@@ -70,7 +94,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="5dp"
             android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical"
             android:text="▣   School Curriculum &amp; Books"
@@ -84,7 +108,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="7dp"
+            android:layout_marginTop="4dp"
             android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical"
             android:text="♟   Manage Student Profiles"
@@ -94,7 +118,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="20dp"
             android:text="INSIGHTS &amp; ROUTINE"
             android:textColor="@color/ss_text_muted"
@@ -107,7 +131,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="5dp"
             android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical"
             android:text="◆   Doubts &amp; AI Answer Insights"
@@ -121,7 +145,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="7dp"
+            android:layout_marginTop="4dp"
             android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical"
             android:text="✓   Settings &amp; Daily Goals"
@@ -135,7 +159,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="7dp"
+            android:layout_marginTop="4dp"
             android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical"
             android:text="◷   Study Reminders"
@@ -147,7 +171,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="20dp"
             android:text="ACCOUNT &amp; DATA SAFETY"
             android:textColor="@color/ss_text_muted"
@@ -160,7 +184,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="5dp"
             android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical"
             android:text="⇧   Create Local Backup"
@@ -174,7 +198,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="7dp"
+            android:layout_marginTop="4dp"
             android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical"
             android:text="↻   Restore Backup &amp; Import"
@@ -188,17 +212,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="7dp"
+            android:layout_marginTop="4dp"
             android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical"
-            android:maxLines="1"
-            android:text="☁   Cloud Account &amp; Secure Sync"
+            android:text="☁   Cloud &amp; Secure Sync"
             android:textAllCaps="false"
-            android:textSize="12sp"
-            app:autoSizeMaxTextSize="12sp"
-            app:autoSizeMinTextSize="10sp"
-            app:autoSizeStepGranularity="1sp"
-            app:autoSizeTextType="uniform"
             app:backgroundTint="@color/ss_blue_soft"
             app:strokeColor="@color/ss_blue_border" />
 
@@ -208,25 +226,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="4dp"
             android:layout_marginEnd="16dp"
             android:gravity="start|center_vertical"
             android:text="ⓘ   Help &amp; Parent Guide"
             android:textAllCaps="false"
             app:backgroundTint="@color/ss_purple_soft"
             app:strokeColor="@color/ss_purple_border" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonDrawerStudentMode"
-            style="@style/Widget.StudySaathi.Button.Outlined"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:gravity="start|center_vertical"
-            android:text="←   Switch to Student Mode"
-            android:textAllCaps="false" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

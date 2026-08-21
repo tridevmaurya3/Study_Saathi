@@ -341,6 +341,19 @@ public class ParentDashboardActivity
         binding.parentDashboardRoot.setDrawerLockMode(
                 DrawerLayout.LOCK_MODE_UNLOCKED,
                 GravityCompat.START);
+        binding.parentDashboardRoot.addDrawerListener(
+                new DrawerLayout.SimpleDrawerListener() {
+                    @Override
+                    public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
+                        binding.buttonParentMenu.setVisibility(
+                                slideOffset > 0f ? View.INVISIBLE : View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onDrawerClosed(@NonNull View drawerView) {
+                        binding.buttonParentMenu.setVisibility(View.VISIBLE);
+                    }
+                });
 
         binding.parentNavigationDrawer.buttonDrawerCurriculum.setOnClickListener(view ->
                 openFromDrawer(SchoolCurriculumSetupActivity.class));
