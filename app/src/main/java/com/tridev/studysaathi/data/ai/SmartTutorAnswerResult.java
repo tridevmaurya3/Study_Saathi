@@ -411,6 +411,23 @@ public final class SmartTutorAnswerResult {
         );
     }
 
+    /** Firebase answer whose page citation matched approved book evidence. */
+    @NonNull
+    public static SmartTutorAnswerResult fromGroundedFirebaseAi(
+            @NonNull String answerText,
+            @Nullable String modelName
+    ) {
+        return new SmartTutorAnswerResult(
+                answerText,
+                AnswerSource.FIREBASE_AI,
+                "Firebase AI Logic • Approved book evidence",
+                "",
+                modelName,
+                true,
+                System.currentTimeMillis()
+        );
+    }
+
     /**
      * General local fallback result।
      */

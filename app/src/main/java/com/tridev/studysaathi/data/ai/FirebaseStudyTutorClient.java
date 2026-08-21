@@ -928,6 +928,34 @@ public final class FirebaseStudyTutorClient {
             @NonNull TutorRequest request,
             @NonNull SmartTutorAnswerResult baseAnswerResult
     ) {
+        BookAnswerGroundingValidator.Result grounding =
+                BookAnswerGroundingValidator.validate(
+                        baseAnswerResult.getRawAnswerText(),
+                        request.getApprovedChapterReference());
+
+        if (grounding.hasUnsupportedCitation()) {
+            SmartTutorAnswerResult blockedResult = SmartTutorAnswerResult.fromLocalFallback(
+                    "↻ उत्तर में ऐसा पुस्तक पृष्ठ दिया गया जो approved evidence में नहीं है। "
+                            + "सही page citation के साथ प्रश्न दोबारा पूछें।");
+            return new PreparedAnswer(
+                    blockedResult,
+                    SmartTutorAnswerVerifier.verify(
+                            blockedResult, request.getQuestion(), request.getSubjectName(),
+                            request.getExplanationLanguage()));
+        }
+
+        if (grounding.needsCitationCaution()) {
+            baseAnswerResult = rebuildAnswerResult(
+                    baseAnswerResult,
+                    baseAnswerResult.getRawAnswerText()
+                            + "\n\nⓘ Approved book evidence उपलब्ध था, लेकिन उत्तर में exact page citation नहीं मिला।");
+        } else if (grounding.isGrounded()
+                && baseAnswerResult.getAnswerSource()
+                == SmartTutorAnswerResult.AnswerSource.FIREBASE_AI) {
+            baseAnswerResult = SmartTutorAnswerResult.fromGroundedFirebaseAi(
+                    baseAnswerResult.getRawAnswerText(), baseAnswerResult.getModelName());
+        }
+
         SmartTutorAnswerVerifier.VerificationResult
                 verificationResult =
                 SmartTutorAnswerVerifier.verify(
@@ -1766,6 +1794,13 @@ public final class FirebaseStudyTutorClient {
                         + "a page from chapter order, a chapter range, an image, or conversation text. If the "
                         + "student asks for an exact page and no verified marker is available, clearly say that "
                         + "the exact page is unavailable instead of guessing.\n"
+        );
+
+        prompt.append(
+                "28B. ANSWER GROUNDING: When verified page markers are present, support textbook-specific "
+                        + "claims only with their marked content and include the matching 📖 पुस्तक पृष्ठ N "
+                        + "citation. Do not add a different page number or unsupported textbook fact. Clearly "
+                        + "separate general explanation from facts grounded in the approved book evidence.\n"
         );
 
         prompt.append(
