@@ -948,12 +948,16 @@ public final class FirebaseStudyTutorClient {
             baseAnswerResult = rebuildAnswerResult(
                     baseAnswerResult,
                     baseAnswerResult.getRawAnswerText()
-                            + "\n\nⓘ Approved book evidence उपलब्ध था, लेकिन उत्तर में exact page citation नहीं मिला।");
+                            + "\n\n" + GroundingTransparencyFormatter.format(
+                            grounding, request.getExplanationLanguage()));
         } else if (grounding.isGrounded()
                 && baseAnswerResult.getAnswerSource()
                 == SmartTutorAnswerResult.AnswerSource.FIREBASE_AI) {
             baseAnswerResult = SmartTutorAnswerResult.fromGroundedFirebaseAi(
-                    baseAnswerResult.getRawAnswerText(), baseAnswerResult.getModelName());
+                    baseAnswerResult.getRawAnswerText() + "\n\n"
+                            + GroundingTransparencyFormatter.format(
+                            grounding, request.getExplanationLanguage()),
+                    baseAnswerResult.getModelName());
         }
 
         SmartTutorAnswerVerifier.VerificationResult

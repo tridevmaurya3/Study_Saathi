@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,20 +22,22 @@ public final class BookAnswerGroundingValidator {
     @NonNull
     public static Result validate(@Nullable String answer, @Nullable String approvedReference) {
         Set<Integer> approvedPages = collect(APPROVED_PAGE, approvedReference);
-        if (approvedPages.isEmpty()) return new Result(Status.NO_EXACT_EVIDENCE, 0, 0);
+        if (approvedPages.isEmpty()) {
+            return new Result(Status.NO_EXACT_EVIDENCE, approvedPages, Collections.emptySet());
+        }
 
         Set<Integer> citedPages = collect(ANSWER_CITATION, answer);
         for (int citedPage : citedPages) {
             if (!approvedPages.contains(citedPage)) {
                 return new Result(Status.UNSUPPORTED_PAGE_CITATION,
-                        approvedPages.size(), citedPages.size());
+                        approvedPages, citedPages);
             }
         }
         if (citedPages.isEmpty()) {
             return new Result(Status.EVIDENCE_AVAILABLE_NOT_CITED,
-                    approvedPages.size(), 0);
+                    approvedPages, citedPages);
         }
-        return new Result(Status.GROUNDED, approvedPages.size(), citedPages.size());
+        return new Result(Status.GROUNDED, approvedPages, citedPages);
     }
 
     @NonNull
@@ -61,18 +64,22 @@ public final class BookAnswerGroundingValidator {
 
     public static final class Result {
         @NonNull private final Status status;
-        private final int approvedPageCount;
-        private final int citedPageCount;
+        @NonNull private final Set<Integer> approvedPages;
+        @NonNull private final Set<Integer> citedPages;
 
-        private Result(@NonNull Status status, int approvedPageCount, int citedPageCount) {
+        private Result(@NonNull Status status, @NonNull Set<Integer> approvedPages,
+                       @NonNull Set<Integer> citedPages) {
             this.status = status;
-            this.approvedPageCount = approvedPageCount;
-            this.citedPageCount = citedPageCount;
+            this.approvedPages = Collections.unmodifiableSet(
+                    new LinkedHashSet<>(approvedPages));
+            this.citedPages = Collections.unmodifiableSet(new LinkedHashSet<>(citedPages));
         }
 
         @NonNull public Status getStatus() { return status; }
-        public int getApprovedPageCount() { return approvedPageCount; }
-        public int getCitedPageCount() { return citedPageCount; }
+        public int getApprovedPageCount() { return approvedPages.size(); }
+        public int getCitedPageCount() { return citedPages.size(); }
+        @NonNull public Set<Integer> getApprovedPages() { return approvedPages; }
+        @NonNull public Set<Integer> getCitedPages() { return citedPages; }
         public boolean isGrounded() { return status == Status.GROUNDED; }
         public boolean hasUnsupportedCitation() {
             return status == Status.UNSUPPORTED_PAGE_CITATION;
