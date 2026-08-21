@@ -493,6 +493,23 @@ public class ParentDashboardActivity
                 ? "सभी reviewed answers approved book evidence से grounded रहे।"
                 : summary.getMissing() + " answers में citation missing था और "
                 + summary.getBlocked() + " unsupported citations block किए गए।");
+
+        List<CitationCoverageHistoryStore.ScopeSummary> scopes =
+                citationCoverageHistoryStore.getTopScopeSummaries(3);
+        if (scopes.isEmpty()) {
+            binding.textParentCitationScopeInsights.setText(
+                    "Subject और chapter breakdown अभी उपलब्ध नहीं है।");
+            return;
+        }
+        StringBuilder scopeText = new StringBuilder();
+        for (CitationCoverageHistoryStore.ScopeSummary scope : scopes) {
+            if (scopeText.length() > 0) scopeText.append("\n");
+            scopeText.append("• ").append(scope.getSubject()).append(" — ")
+                    .append(scope.getChapter()).append(": ")
+                    .append(scope.getCoveragePercent()).append("% grounded")
+                    .append(" • ").append(scope.getAttentionNeeded()).append(" attention");
+        }
+        binding.textParentCitationScopeInsights.setText(scopeText.toString());
     }
 
     private void loadProfileProgress(

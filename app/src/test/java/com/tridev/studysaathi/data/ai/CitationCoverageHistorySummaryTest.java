@@ -18,4 +18,14 @@ public class CitationCoverageHistorySummaryTest {
         assertEquals(0, summary.getCoveragePercent());
         assertEquals(0, summary.getAttentionNeeded());
     }
+
+    @Test public void scopeSummaryKeepsSubjectChapterAndCoverage() {
+        CitationCoverageHistoryStore.ScopeSummary scope =
+                CitationCoverageHistoryStore.ScopeSummary.fromCounts(
+                        "Science", "Light", 5, 4, 1, 0);
+        assertEquals("Science", scope.getSubject());
+        assertEquals("Light", scope.getChapter());
+        assertEquals(80, scope.getCoveragePercent());
+        assertEquals(1, scope.getAttentionNeeded());
+    }
 }

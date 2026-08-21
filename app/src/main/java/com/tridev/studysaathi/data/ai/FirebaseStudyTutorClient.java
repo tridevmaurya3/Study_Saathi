@@ -938,7 +938,8 @@ public final class FirebaseStudyTutorClient {
                 BookAnswerGroundingValidator.validate(
                         baseAnswerResult.getRawAnswerText(),
                         request.getApprovedChapterReference());
-        citationCoverageHistoryStore.record(grounding);
+        citationCoverageHistoryStore.record(
+                grounding, request.getSubjectName(), request.getChapterTitle());
 
         if (grounding.hasUnsupportedCitation()) {
             SmartTutorAnswerResult blockedResult = SmartTutorAnswerResult.fromLocalFallback(
