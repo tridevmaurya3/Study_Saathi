@@ -12,6 +12,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -104,6 +106,10 @@ public class ParentDashboardActivity
                 new OnBackPressedCallback(true) {
                     @Override
                     public void handleOnBackPressed() {
+                        if (binding.parentDashboardRoot.isDrawerOpen(GravityCompat.START)) {
+                            binding.parentDashboardRoot.closeDrawer(GravityCompat.START);
+                            return;
+                        }
                         returnToModeSelection();
                     }
                 }
@@ -328,9 +334,47 @@ public class ParentDashboardActivity
     }
 
     private void setupClickListeners() {
-        binding.buttonBack.setOnClickListener(view ->
-                returnToModeSelection()
+        binding.buttonParentMenu.setOnClickListener(view ->
+                binding.parentDashboardRoot.openDrawer(GravityCompat.START)
         );
+
+        binding.parentDashboardRoot.setDrawerLockMode(
+                DrawerLayout.LOCK_MODE_UNLOCKED,
+                GravityCompat.START);
+
+        binding.parentNavigationDrawer.buttonDrawerCurriculum.setOnClickListener(view ->
+                openFromDrawer(SchoolCurriculumSetupActivity.class));
+
+        binding.parentNavigationDrawer.buttonDrawerProfiles.setOnClickListener(view -> {
+            binding.parentDashboardRoot.closeDrawer(GravityCompat.START);
+            openProfileManager();
+        });
+
+        binding.parentNavigationDrawer.buttonDrawerDoubts.setOnClickListener(view ->
+                openFromDrawer(DoubtHistoryActivity.class));
+
+        binding.parentNavigationDrawer.buttonDrawerGoals.setOnClickListener(view ->
+                openParentControlFromDrawer(SettingsActivity.class));
+
+        binding.parentNavigationDrawer.buttonDrawerReminders.setOnClickListener(view ->
+                openParentControlFromDrawer(ReminderSettingsActivity.class));
+
+        binding.parentNavigationDrawer.buttonDrawerBackup.setOnClickListener(view ->
+                openParentControlFromDrawer(BackupExportActivity.class));
+
+        binding.parentNavigationDrawer.buttonDrawerRestore.setOnClickListener(view ->
+                openParentControlFromDrawer(BackupRestoreActivity.class));
+
+        binding.parentNavigationDrawer.buttonDrawerCloud.setOnClickListener(view ->
+                openParentControlFromDrawer(CloudAccountActivity.class));
+
+        binding.parentNavigationDrawer.buttonDrawerHelp.setOnClickListener(view -> {
+            binding.parentDashboardRoot.closeDrawer(GravityCompat.START);
+            openParentHelp();
+        });
+
+        binding.parentNavigationDrawer.buttonDrawerStudentMode.setOnClickListener(view ->
+                returnToModeSelection());
 
         binding.buttonManageParentProfiles.setOnClickListener(view ->
                 openProfileManager()
@@ -381,16 +425,24 @@ public class ParentDashboardActivity
         );
 
         binding.buttonParentHelp.setOnClickListener(view -> {
-            Intent helpIntent = new Intent(
-                    ParentDashboardActivity.this,
-                    HelpAboutActivity.class
-            );
-            helpIntent.putExtra(
-                    HelpAboutActivity.EXTRA_MODE,
-                    HelpAboutActivity.MODE_PARENT
-            );
-            startActivity(helpIntent);
+            openParentHelp();
         });
+    }
+
+    private void openFromDrawer(@NonNull Class<?> destination) {
+        binding.parentDashboardRoot.closeDrawer(GravityCompat.START);
+        startActivity(new Intent(this, destination));
+    }
+
+    private void openParentControlFromDrawer(@NonNull Class<?> destination) {
+        binding.parentDashboardRoot.closeDrawer(GravityCompat.START);
+        openParentControl(destination);
+    }
+
+    private void openParentHelp() {
+        Intent helpIntent = new Intent(this, HelpAboutActivity.class);
+        helpIntent.putExtra(HelpAboutActivity.EXTRA_MODE, HelpAboutActivity.MODE_PARENT);
+        startActivity(helpIntent);
     }
 
     private void returnToModeSelection() {

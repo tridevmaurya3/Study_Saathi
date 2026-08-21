@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ss_surface"
+    android:clipToPadding="false"
+    android:elevation="20dp"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="28dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/ss_blue_soft"
+            android:orientation="vertical"
+            android:paddingStart="22dp"
+            android:paddingTop="30dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="22dp">
+
+            <TextView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_help_step_badge"
+                android:gravity="center"
+                android:text="P"
+                android:textColor="@color/ss_on_primary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:fontFamily="sans-serif-rounded"
+                android:text="Parent Control Center"
+                android:textColor="@color/ss_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Secure tools • Progress • Learning setup"
+                android:textColor="@color/ss_text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
+            android:text="LEARNING &amp; PROFILES"
+            android:textColor="@color/ss_text_muted"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <com.tridev.studysaathi.view.SchoolCurriculumSetupButton
+            android:id="@+id/buttonDrawerCurriculum"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="▣   School Curriculum &amp; Books"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_teal_soft"
+            app:strokeColor="@color/ss_teal_border" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerProfiles"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="7dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="♟   Manage Student Profiles"
+            android:textAllCaps="false" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
+            android:text="INSIGHTS &amp; ROUTINE"
+            android:textColor="@color/ss_text_muted"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerDoubts"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="◆   Doubts &amp; AI Answer Insights"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_purple_soft"
+            app:strokeColor="@color/ss_purple_border" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerGoals"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="7dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="✓   Settings &amp; Daily Goals"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_green_soft"
+            app:strokeColor="@color/ss_green_border" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerReminders"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="7dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="◷   Study Reminders"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_yellow_soft"
+            app:strokeColor="@color/ss_yellow_border" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
+            android:text="ACCOUNT &amp; DATA SAFETY"
+            android:textColor="@color/ss_text_muted"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerBackup"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="⇧   Create Local Backup"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_blue_soft"
+            app:strokeColor="@color/ss_blue_border" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerRestore"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="7dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="↻   Restore Backup &amp; Import"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_red_soft"
+            app:strokeColor="@color/ss_red_border" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerCloud"
+            style="@style/Widget.StudySaathi.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="7dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="☁   Cloud Account &amp; Encrypted Sync"
+            android:textAllCaps="false" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerHelp"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="?   Help &amp; Parent Guide"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_purple_soft"
+            app:strokeColor="@color/ss_purple_border" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerStudentMode"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="←   Switch to Student Mode"
+            android:textAllCaps="false" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
