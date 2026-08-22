@@ -21,6 +21,11 @@ public final class StudyWhiteboardView extends View {
     private final List<Stroke> strokes = new ArrayList<>();
     private Path activePath;
     private boolean eraser;
+    @Nullable private OnStrokeCompleteListener strokeCompleteListener;
+
+    public interface OnStrokeCompleteListener {
+        void onStrokeComplete();
+    }
 
     public StudyWhiteboardView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -31,6 +36,9 @@ public final class StudyWhiteboardView extends View {
     }
 
     public void setEraser(boolean enabled) { eraser = enabled; }
+    public void setOnStrokeCompleteListener(@Nullable OnStrokeCompleteListener listener) {
+        strokeCompleteListener = listener;
+    }
     public void undo() { if (!strokes.isEmpty()) { strokes.remove(strokes.size() - 1); invalidate(); } }
     public void clearBoard() { strokes.clear(); activePath = null; invalidate(); }
     public boolean isBlank() { return strokes.isEmpty(); }
@@ -70,6 +78,7 @@ public final class StudyWhiteboardView extends View {
         if (event.getAction() == MotionEvent.ACTION_UP) {
             activePath = null;
             performClick();
+            if (strokeCompleteListener != null) strokeCompleteListener.onStrokeComplete();
             return true;
         }
         return true;

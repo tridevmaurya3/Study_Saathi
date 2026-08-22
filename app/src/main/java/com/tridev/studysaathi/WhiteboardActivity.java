@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -29,6 +31,8 @@ public final class WhiteboardActivity extends AppCompatActivity {
     private TextRecognizer latinRecognizer;
     private TextRecognizer devanagariRecognizer;
     private boolean recognitionRunning;
+    private final Handler handwritingHandler = new Handler(Looper.getMainLooper());
+    private final Runnable autoRecognize = () -> recognizeBoard(false);
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,12 +53,19 @@ public final class WhiteboardActivity extends AppCompatActivity {
         });
         binding.buttonUndo.setOnClickListener(v -> binding.studyWhiteboard.undo());
         binding.buttonClear.setOnClickListener(v -> {
+            handwritingHandler.removeCallbacks(autoRecognize);
             binding.studyWhiteboard.clearBoard();
             binding.editDetectedQuestion.setText("");
-            binding.textRecognitionStatus.setText("Write a question, then tap Recognize.");
+            binding.textWhiteboardCanvasAnswer.setVisibility(View.GONE);
+            binding.textRecognitionStatus.setText("Whiteboard पर लिखें • Auto recognition चालू है");
         });
         binding.buttonRecognize.setOnClickListener(v -> recognizeBoard(false));
         binding.buttonSolve.setOnClickListener(v -> solveWithStudySaathi());
+        binding.studyWhiteboard.setOnStrokeCompleteListener(() -> {
+            handwritingHandler.removeCallbacks(autoRecognize);
+            binding.textRecognitionStatus.setText("लिखना पूरा करें • Auto recognition तैयार है…");
+            handwritingHandler.postDelayed(autoRecognize, 950L);
+        });
     }
 
     private void recognizeBoard(boolean solveAfter) {
@@ -92,6 +103,14 @@ public final class WhiteboardActivity extends AppCompatActivity {
                 : "Smart Calculator: " + detected + " = " + quickAnswer
                         + " • Step explanation के लिए Solve with AI दबाएँ।");
         if (!detected.isEmpty()) binding.editDetectedQuestion.setText(detected);
+        if (!quickAnswer.isEmpty()) {
+            binding.textWhiteboardCanvasAnswer.setText(detected + "  =  " + quickAnswer);
+            binding.textWhiteboardCanvasAnswer.setVisibility(View.VISIBLE);
+        } else if (!detected.isEmpty()) {
+            binding.textWhiteboardCanvasAnswer.setText(
+                    "पहचाना: " + detected + "\n✦ से smart answer खोलें");
+            binding.textWhiteboardCanvasAnswer.setVisibility(View.VISIBLE);
+        }
         if (solveAfter && !detected.isEmpty()) openTutor(bitmap, detected);
         else bitmap.recycle();
     }
@@ -159,6 +178,7 @@ public final class WhiteboardActivity extends AppCompatActivity {
     }
 
     @Override protected void onDestroy() {
+        handwritingHandler.removeCallbacksAndMessages(null);
         if (latinRecognizer != null) latinRecognizer.close();
         if (devanagariRecognizer != null) devanagariRecognizer.close();
         super.onDestroy();

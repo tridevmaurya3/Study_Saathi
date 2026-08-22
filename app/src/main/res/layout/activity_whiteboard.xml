@@ -2,46 +2,55 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:background="@drawable/bg_app_soft_mix" android:orientation="vertical" android:padding="16dp">
+    android:background="@drawable/bg_app_soft_mix" android:orientation="vertical" android:padding="10dp">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:gravity="center_vertical" android:orientation="horizontal">
         <com.google.android.material.button.MaterialButton android:id="@+id/buttonBack"
             style="@style/Widget.Material3.Button.TextButton" android:layout_width="48dp"
-            android:layout_height="48dp" android:minWidth="0dp" android:text="←" android:textSize="26sp" />
+            android:layout_height="42dp" android:minWidth="0dp" android:text="←" android:textSize="24sp" />
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_marginStart="8dp" android:layout_weight="1" android:orientation="vertical">
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:text="Interactive Whiteboard" android:textColor="@color/ss_text_primary"
-                android:textSize="22sp" android:textStyle="bold" />
+                android:textSize="19sp" android:textStyle="bold" />
             <TextView android:id="@+id/textWhiteboardMode" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:text="Pen mode • लिखना शुरू करें"
                 android:textColor="@color/ss_text_secondary" android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" android:orientation="horizontal">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="42dp"
+        android:layout_marginTop="4dp" android:orientation="horizontal">
         <com.google.android.material.button.MaterialButton android:id="@+id/buttonPen"
             style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_weight="1" android:minWidth="0dp" android:text="Pen" android:textAllCaps="false" />
+            android:layout_height="40dp" android:layout_weight="1" android:minWidth="0dp" android:text="✎" android:textSize="18sp" android:contentDescription="Pen" android:tooltipText="Pen" android:textAllCaps="false" />
         <com.google.android.material.button.MaterialButton android:id="@+id/buttonEraser"
             style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_weight="1" android:minWidth="0dp" android:text="Eraser" android:textAllCaps="false" />
+            android:layout_height="40dp" android:layout_marginStart="3dp" android:layout_weight="1" android:minWidth="0dp" android:text="⌫" android:textSize="18sp" android:contentDescription="Eraser" android:tooltipText="Eraser" android:textAllCaps="false" />
         <com.google.android.material.button.MaterialButton android:id="@+id/buttonUndo"
             style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_weight="1" android:minWidth="0dp" android:text="Undo" android:textAllCaps="false" />
+            android:layout_height="40dp" android:layout_marginStart="3dp" android:layout_weight="1" android:minWidth="0dp" android:text="↶" android:textSize="19sp" android:contentDescription="Undo" android:tooltipText="Undo" android:textAllCaps="false" />
         <com.google.android.material.button.MaterialButton android:id="@+id/buttonClear"
             style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_weight="1" android:minWidth="0dp" android:text="Clear" android:textAllCaps="false" />
+            android:layout_height="40dp" android:layout_marginStart="3dp" android:layout_weight="1" android:minWidth="0dp" android:text="✕" android:textSize="17sp" android:contentDescription="Clear" android:tooltipText="Clear" android:textAllCaps="false" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonRecognize"
+            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="0dp"
+            android:layout_height="40dp" android:layout_marginStart="3dp" android:layout_weight="1" android:minWidth="0dp"
+            android:text="◎" android:textSize="18sp" android:contentDescription="Recognize handwriting" android:tooltipText="Recognize"
+            android:textAllCaps="false" app:backgroundTint="@color/ss_blue_soft" app:strokeColor="@color/ss_blue_border" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/buttonSolve"
+            style="@style/Widget.StudySaathi.Button.Primary" android:layout_width="0dp"
+            android:layout_height="40dp" android:layout_marginStart="3dp" android:layout_weight="1"
+            android:minWidth="0dp" android:text="✦" android:textSize="18sp" android:contentDescription="Solve with Study Saathi AI" android:tooltipText="Solve with AI" android:textAllCaps="false" />
     </LinearLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" android:hint="Detected question • Edit before solving">
+        android:layout_marginTop="4dp" android:hint="Recognized question • जरूरत हो तो edit करें">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editDetectedQuestion" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:inputType="textMultiLine"
-            android:maxLines="3" android:minLines="1" />
+            android:maxLines="2" android:minLines="1" android:textSize="13sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -52,27 +61,24 @@
             app:trackThickness="3dp" />
         <TextView android:id="@+id/textRecognitionStatus" android:layout_width="0dp"
             android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_weight="1"
-            android:text="Write a question, then tap Recognize." android:textColor="@color/ss_text_secondary" android:textSize="11sp" />
-    </LinearLayout>
-
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="5dp" android:orientation="horizontal">
-        <com.google.android.material.button.MaterialButton android:id="@+id/buttonRecognize"
-            style="@style/Widget.StudySaathi.Button.Outlined" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_weight="1" android:minWidth="0dp"
-            android:text="Recognize" android:textAllCaps="false"
-            app:backgroundTint="@color/ss_blue_soft" app:strokeColor="@color/ss_blue_border" />
-        <com.google.android.material.button.MaterialButton android:id="@+id/buttonSolve"
-            style="@style/Widget.StudySaathi.Button.Primary" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_marginStart="5dp" android:layout_weight="1"
-            android:minWidth="0dp" android:text="Solve with AI" android:textAllCaps="false" />
+            android:text="Whiteboard पर लिखें • Auto recognition चालू है" android:textColor="@color/ss_text_secondary" android:textSize="11sp" />
     </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView android:layout_width="match_parent"
-        android:layout_height="0dp" android:layout_marginTop="10dp" android:layout_weight="1"
+        android:layout_height="0dp" android:layout_marginTop="5dp" android:layout_weight="1"
         app:cardCornerRadius="20dp" app:cardElevation="0dp" app:strokeColor="@color/ss_blue_border" app:strokeWidth="1dp">
-        <com.tridev.studysaathi.view.StudyWhiteboardView android:id="@+id/studyWhiteboard"
-            android:layout_width="match_parent" android:layout_height="match_parent"
-            android:contentDescription="Touch drawing whiteboard" />
+        <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
+            <com.tridev.studysaathi.view.StudyWhiteboardView android:id="@+id/studyWhiteboard"
+                android:layout_width="match_parent" android:layout_height="match_parent"
+                android:contentDescription="Touch drawing whiteboard" />
+            <TextView android:id="@+id/textWhiteboardCanvasAnswer"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="end|bottom" android:layout_margin="12dp"
+                android:background="@drawable/bg_whiteboard_smart_answer"
+                android:elevation="6dp" android:maxWidth="300dp" android:paddingStart="14dp"
+                android:paddingTop="9dp" android:paddingEnd="14dp" android:paddingBottom="9dp"
+                android:textColor="#135F46" android:textSize="16sp" android:textStyle="bold"
+                android:visibility="gone" />
+        </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
 </LinearLayout>

@@ -372,12 +372,13 @@ public final class StudyOverlayBubbleService extends Service {
         TextView drawerTitle = text("Chat History", 16, Color.rgb(28, 54, 105));
         drawerTitle.setTypeface(drawerTitle.getTypeface(), android.graphics.Typeface.BOLD);
         drawerHeader.addView(drawerTitle, new LinearLayout.LayoutParams(0, dp(42), 1));
-        Button newChat = actionButton("＋ नई चैट", Color.rgb(232, 241, 255),
-                Color.rgb(70, 111, 197));
-        newChat.setTextSize(10);
-        drawerHeader.addView(newChat, new LinearLayout.LayoutParams(dp(104), dp(38)));
+        TextView recentLabel = text("RECENT CHATS", 9, Color.rgb(70, 111, 197));
+        recentLabel.setGravity(Gravity.CENTER);
+        recentLabel.setTypeface(recentLabel.getTypeface(), android.graphics.Typeface.BOLD);
+        recentLabel.setBackground(rounded(Color.rgb(232, 241, 255),
+                Color.rgb(190, 210, 242), 14));
+        drawerHeader.addView(recentLabel, new LinearLayout.LayoutParams(dp(104), dp(32)));
         historyDrawer.addView(drawerHeader, matchWrap());
-        newChat.setOnClickListener(v -> startNewChat());
 
         ScrollView historyScroll = new ScrollView(this);
         historyList = new LinearLayout(this);
