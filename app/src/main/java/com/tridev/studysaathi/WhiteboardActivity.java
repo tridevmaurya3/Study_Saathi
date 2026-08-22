@@ -31,6 +31,7 @@ public final class WhiteboardActivity extends AppCompatActivity {
     private TextRecognizer latinRecognizer;
     private TextRecognizer devanagariRecognizer;
     private boolean recognitionRunning;
+    @NonNull private String lastDetectedText = "";
     private final Handler handwritingHandler = new Handler(Looper.getMainLooper());
     private final Runnable autoRecognize = () -> recognizeBoard(false);
 
@@ -55,7 +56,7 @@ public final class WhiteboardActivity extends AppCompatActivity {
         binding.buttonClear.setOnClickListener(v -> {
             handwritingHandler.removeCallbacks(autoRecognize);
             binding.studyWhiteboard.clearBoard();
-            binding.editDetectedQuestion.setText("");
+            lastDetectedText = "";
             binding.textWhiteboardCanvasAnswer.setVisibility(View.GONE);
             binding.textRecognitionStatus.setText("Whiteboard पर लिखें • Auto recognition चालू है");
         });
@@ -102,7 +103,7 @@ public final class WhiteboardActivity extends AppCompatActivity {
                 ? "OCR preview • Text जाँचें और जरूरत हो तो edit करें।"
                 : "Smart Calculator: " + detected + " = " + quickAnswer
                         + " • Step explanation के लिए Solve with AI दबाएँ।");
-        if (!detected.isEmpty()) binding.editDetectedQuestion.setText(detected);
+        if (!detected.isEmpty()) lastDetectedText = detected;
         if (!quickAnswer.isEmpty()) {
             binding.textWhiteboardCanvasAnswer.setText(detected + "  =  " + quickAnswer);
             binding.textWhiteboardCanvasAnswer.setVisibility(View.VISIBLE);
@@ -120,13 +121,11 @@ public final class WhiteboardActivity extends AppCompatActivity {
             Snackbar.make(binding.getRoot(), "पहले whiteboard पर सवाल लिखें।", Snackbar.LENGTH_SHORT).show();
             return;
         }
-        String edited = safe(binding.editDetectedQuestion.getText() == null
-                ? "" : binding.editDetectedQuestion.getText().toString());
-        if (edited.isEmpty()) {
+        if (lastDetectedText.isEmpty()) {
             recognizeBoard(true);
             return;
         }
-        openTutor(binding.studyWhiteboard.createBitmap(), edited);
+        openTutor(binding.studyWhiteboard.createBitmap(), lastDetectedText);
     }
 
     private void openTutor(@NonNull Bitmap bitmap, @NonNull String detectedText) {
