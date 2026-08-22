@@ -46,7 +46,6 @@ import com.tridev.studysaathi.data.learning.LearningStyleMemoryStore;
 import com.tridev.studysaathi.data.learning.LearningStylePreference;
 import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
-import com.tridev.studysaathi.ui.widget.StudyMarkdownTextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -802,10 +801,8 @@ public final class StudyOverlayBubbleService extends Service {
                 Color.rgb(18, 137, 126));
         answerLabel.setTypeface(answerLabel.getTypeface(), android.graphics.Typeface.BOLD);
         answerCard.addView(answerLabel, matchWrap());
-        StudyMarkdownTextView answerText = new StudyMarkdownTextView(this);
-        answerText.setText(answered);
-        answerText.setTextSize(15);
-        answerText.setTextColor(Color.rgb(30, 40, 60));
+        TextView answerText = text(cleanOverlayAnswer(answered), 15,
+                Color.rgb(30, 40, 60));
         answerText.setPadding(0, dp(6), 0, 0);
         answerText.setLineSpacing(dp(3), 1f);
         answerCard.addView(answerText, matchWrap());
@@ -857,6 +854,28 @@ public final class StudyOverlayBubbleService extends Service {
                 .putString(KEY_CHATS, array.toString())
                 .putString(KEY_ACTIVE_CHAT, activeChatId)
                 .apply();
+    }
+
+    @NonNull
+    private String cleanOverlayAnswer(@NonNull String rawAnswer) {
+        String clean = rawAnswer
+                .replaceAll("(?m)^\\s*#{1,6}\\s*", "")
+                .replaceAll("(?m)^\\s*(?:-{3,}|_{3,}|\\*{3,})\\s*$", "")
+                .replaceAll("\\\\frac\\s*\\{([^{}]+)\\}\\s*\\{([^{}]+)\\}", "$1/$2")
+                .replaceAll("\\\\(?:text|mathrm|mathbf|mathit)\\s*\\{([^{}]+)\\}", "$1")
+                .replaceAll("\\\\sqrt\\s*\\{([^{}]+)\\}", "√($1)")
+                .replace("\\times", "×")
+                .replace("\\div", "÷")
+                .replace("\\leq", "≤")
+                .replace("\\geq", "≥")
+                .replace("\\neq", "≠")
+                .replace("\\pm", "±")
+                .replace("**", "")
+                .replace("__", "")
+                .replace("`", "")
+                .replaceAll("\\n{3,}", "\\n\\n")
+                .trim();
+        return clean;
     }
 
     private TextView text(String value, int size, int color) {
