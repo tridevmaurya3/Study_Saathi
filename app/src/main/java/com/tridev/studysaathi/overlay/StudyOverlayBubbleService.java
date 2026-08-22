@@ -46,6 +46,7 @@ import com.tridev.studysaathi.data.learning.LearningStyleMemoryStore;
 import com.tridev.studysaathi.data.learning.LearningStylePreference;
 import com.tridev.studysaathi.data.learning.StudentMisconceptionDetector;
 import com.tridev.studysaathi.data.repository.StudentProfileRepository;
+import com.tridev.studysaathi.ui.widget.StudyMarkdownTextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -801,7 +802,10 @@ public final class StudyOverlayBubbleService extends Service {
                 Color.rgb(18, 137, 126));
         answerLabel.setTypeface(answerLabel.getTypeface(), android.graphics.Typeface.BOLD);
         answerCard.addView(answerLabel, matchWrap());
-        TextView answerText = text(answered, 15, Color.rgb(30, 40, 60));
+        StudyMarkdownTextView answerText = new StudyMarkdownTextView(this);
+        answerText.setText(answered);
+        answerText.setTextSize(15);
+        answerText.setTextColor(Color.rgb(30, 40, 60));
         answerText.setPadding(0, dp(6), 0, 0);
         answerText.setLineSpacing(dp(3), 1f);
         answerCard.addView(answerText, matchWrap());
