@@ -37,8 +37,6 @@ import androidx.core.content.ContextCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.tridev.studysaathi.R;
-import com.tridev.studysaathi.AskStudySaathiActivity;
-import com.tridev.studysaathi.DoubtHistoryActivity;
 import com.tridev.studysaathi.data.ai.FirebaseStudyTutorClient;
 import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
@@ -369,25 +367,17 @@ public final class StudyOverlayBubbleService extends Service {
         historyDrawer.setElevation(dp(22));
         historyDrawer.setVisibility(View.GONE);
 
+        LinearLayout drawerHeader = new LinearLayout(this);
+        drawerHeader.setGravity(Gravity.CENTER_VERTICAL);
         TextView drawerTitle = text("Chat History", 16, Color.rgb(28, 54, 105));
         drawerTitle.setTypeface(drawerTitle.getTypeface(), android.graphics.Typeface.BOLD);
-        historyDrawer.addView(drawerTitle, matchWrap());
+        drawerHeader.addView(drawerTitle, new LinearLayout.LayoutParams(0, dp(42), 1));
         Button newChat = actionButton("＋ नई चैट", Color.rgb(232, 241, 255),
                 Color.rgb(70, 111, 197));
-        LinearLayout.LayoutParams newChatParams = new LinearLayout.LayoutParams(-1, dp(42));
-        newChatParams.topMargin = dp(8);
-        historyDrawer.addView(newChat, newChatParams);
+        newChat.setTextSize(10);
+        drawerHeader.addView(newChat, new LinearLayout.LayoutParams(dp(104), dp(38)));
+        historyDrawer.addView(drawerHeader, matchWrap());
         newChat.setOnClickListener(v -> startNewChat());
-
-        Button openApp = drawerButton("▣  पूरी Study Saathi खोलें");
-        historyDrawer.addView(openApp, drawerButtonParams());
-        openApp.setOnClickListener(v -> openActivity(AskStudySaathiActivity.class));
-        Button doubts = drawerButton("◷  सवाल-जवाब इतिहास");
-        historyDrawer.addView(doubts, drawerButtonParams());
-        doubts.setOnClickListener(v -> openActivity(DoubtHistoryActivity.class));
-        Button hideBubble = drawerButton("—  Floating panel बंद करें");
-        historyDrawer.addView(hideBubble, drawerButtonParams());
-        hideBubble.setOnClickListener(v -> removePanel());
 
         ScrollView historyScroll = new ScrollView(this);
         historyList = new LinearLayout(this);
@@ -822,25 +812,6 @@ public final class StudyOverlayBubbleService extends Service {
         transcript.addView(answerRow, rowParams);
     }
 
-    private Button drawerButton(@NonNull String label) {
-        return actionButton(label, Color.WHITE, Color.rgb(213, 224, 244));
-    }
-
-    private LinearLayout.LayoutParams drawerButtonParams() {
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, dp(42));
-        params.topMargin = dp(6);
-        return params;
-    }
-
-    private void openActivity(@NonNull Class<?> activityClass) {
-        try {
-            startActivity(new Intent(this, activityClass)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-            removePanel();
-        } catch (RuntimeException error) {
-            if (status != null) status.setText("यह विकल्प अभी नहीं खुल पाया।");
-        }
-    }
 
     private void loadChats() {
         chats.clear();
