@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="17dp">
+        android:padding="14dp">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardSubjectIcon"

@@ -18,10 +18,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingTop="18dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="38dp">
+            android:paddingStart="12dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="12dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -74,7 +74,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="12dp"
                 app:cardBackgroundColor="@color/ss_red_soft"
                 app:cardCornerRadius="22dp"
                 app:cardElevation="0dp"
@@ -85,7 +85,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="18dp">
+                    android:padding="14dp">
 
                     <TextView
                         android:layout_width="match_parent"
@@ -112,7 +112,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="25dp"
+                android:layout_marginTop="12dp"
                 android:fontFamily="sans-serif-rounded"
                 android:text="@string/backup_restore_choose_title"
                 android:textColor="@color/ss_text_primary"
@@ -151,7 +151,7 @@
                 android:id="@+id/cardBackupPreview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="12dp"
                 android:visibility="gone"
                 app:cardBackgroundColor="@color/ss_blue_soft"
                 app:cardCornerRadius="22dp"
@@ -163,7 +163,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="18dp">
+                    android:padding="14dp">
 
                     <TextView
                         android:layout_width="match_parent"
@@ -186,7 +186,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="12dp"
                         android:orientation="horizontal">
 
                         <LinearLayout
@@ -352,7 +352,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="14dp"
                 app:cardBackgroundColor="@color/ss_green_soft"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="0dp"
@@ -363,7 +363,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="17dp">
+                    android:padding="14dp">
 
                     <TextView
                         android:layout_width="match_parent"
@@ -391,7 +391,7 @@
                 style="@style/Widget.StudySaathi.Button.Primary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="14dp"
                 android:text="@string/backup_restore_restore_button"
                 android:textAllCaps="false"
                 android:textSize="16sp"
@@ -401,7 +401,7 @@
                 android:id="@+id/textLastRestore"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="14dp"
                 android:gravity="center"
                 android:text="@string/backup_restore_last_none"
                 android:textColor="@color/ss_text_secondary"

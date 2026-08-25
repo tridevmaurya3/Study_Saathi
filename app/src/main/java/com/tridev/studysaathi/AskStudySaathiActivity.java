@@ -2707,7 +2707,7 @@ public class AskStudySaathiActivity
         ArrayAdapter<String> subjectAdapter =
                 new ArrayAdapter<>(
                         this,
-                        android.R.layout.simple_list_item_1,
+                        R.layout.item_professional_dropdown,
                         subjectDisplayNames
                 );
 
@@ -2935,7 +2935,7 @@ public class AskStudySaathiActivity
         ArrayAdapter<String> chapterAdapter =
                 new ArrayAdapter<>(
                         this,
-                        android.R.layout.simple_list_item_1,
+                        R.layout.item_professional_dropdown,
                         chapterDisplayNames
                 );
 

@@ -195,7 +195,7 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
             stateNames.add(state.getStateName());
         }
         binding.inputManualState.setAdapter(new ArrayAdapter<>(
-                this, android.R.layout.simple_dropdown_item_1line, stateNames));
+                this, R.layout.item_professional_dropdown, stateNames));
         binding.inputManualState.setOnItemClickListener((parent, view, position, id) ->
                 binding.layoutManualState.setError(null));
         binding.textSchoolEntryMode.setText("All India • Parent Entered School");
@@ -335,7 +335,7 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
                 for (StateDirectoryEntity state : states) {
                     stateNames.add(state.getStateName());
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(SchoolCurriculumSetupActivity.this, android.R.layout.simple_list_item_1, stateNames);
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(SchoolCurriculumSetupActivity.this, R.layout.item_professional_dropdown, stateNames);
                 binding.inputDirectoryState.setAdapter(adapter);
                 binding.layoutDirectoryState.setEnabled(!states.isEmpty());
                 setDirectoryLoadingState(false, "");
@@ -409,7 +409,7 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
                 for (DistrictDirectoryEntity district : districts) {
                     districtNames.add(district.getDistrictName());
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(SchoolCurriculumSetupActivity.this, android.R.layout.simple_list_item_1, districtNames);
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(SchoolCurriculumSetupActivity.this, R.layout.item_professional_dropdown, districtNames);
                 binding.inputDirectoryDistrict.setAdapter(adapter);
                 binding.layoutDirectoryDistrict.setEnabled(!districts.isEmpty());
                 setDirectoryLoadingState(false, "");
@@ -467,7 +467,7 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
                 for (String board : educationBoards) {
                     boardLabels.add(formatBoardName(board));
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(SchoolCurriculumSetupActivity.this, android.R.layout.simple_list_item_1, boardLabels);
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(SchoolCurriculumSetupActivity.this, R.layout.item_professional_dropdown, boardLabels);
                 binding.inputDirectoryEducationBoard.setAdapter(adapter);
                 binding.inputDirectoryEducationBoard.setTag(new ArrayList<>(educationBoards));
                 binding.layoutDirectoryEducationBoard.setEnabled(!educationBoards.isEmpty());
@@ -1339,7 +1339,7 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
 
     private void setupSubjectCategoryDropdown(@NonNull DialogAddSchoolSubjectBinding dialogBinding) {
         String[] categories = new String[]{"Core Academic", "Language", "Skill Based", "Activity Based", "School Specific"};
-        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, categories);
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(this, R.layout.item_professional_dropdown, categories);
         dialogBinding.inputSubjectCategory.setAdapter(categoryAdapter);
         dialogBinding.inputSubjectCategory.setText(categories[0], false);
     }

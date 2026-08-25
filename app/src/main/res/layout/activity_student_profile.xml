@@ -14,9 +14,9 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingStart="22dp"
-        android:paddingTop="18dp"
+        android:paddingTop="14dp"
         android:paddingEnd="22dp"
-        android:paddingBottom="36dp">
+        android:paddingBottom="12dp">
 
         <!-- Header -->
         <LinearLayout
@@ -71,7 +71,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="12dp"
             app:cardBackgroundColor="@color/ss_blue_soft"
             app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
@@ -82,7 +82,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="12dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -144,7 +144,7 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="14dp"
             android:hint="@string/student_name"
             app:boxBackgroundColor="@color/ss_surface"
             app:boxCornerRadiusBottomEnd="18dp"
@@ -186,6 +186,10 @@
                 android:id="@+id/dropdownBoard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                    android:dropDownHeight="320dp"
+                    android:popupElevation="8dp"
+                    android:popupBackground="@drawable/bg_professional_dropdown_popup"
+                    android:verticalOffset="6dp"
                 android:cursorVisible="false"
                 android:fontFamily="sans-serif"
                 android:inputType="none"
@@ -213,6 +217,10 @@
                 android:id="@+id/dropdownClass"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                    android:dropDownHeight="320dp"
+                    android:popupElevation="8dp"
+                    android:popupBackground="@drawable/bg_professional_dropdown_popup"
+                    android:verticalOffset="6dp"
                 android:cursorVisible="false"
                 android:fontFamily="sans-serif"
                 android:inputType="none"
@@ -240,6 +248,10 @@
                 android:id="@+id/dropdownMedium"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                    android:dropDownHeight="320dp"
+                    android:popupElevation="8dp"
+                    android:popupBackground="@drawable/bg_professional_dropdown_popup"
+                    android:verticalOffset="6dp"
                 android:cursorVisible="false"
                 android:fontFamily="sans-serif"
                 android:inputType="none"
@@ -267,6 +279,10 @@
                 android:id="@+id/dropdownExplanationLanguage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                    android:dropDownHeight="320dp"
+                    android:popupElevation="8dp"
+                    android:popupBackground="@drawable/bg_professional_dropdown_popup"
+                    android:verticalOffset="6dp"
                 android:cursorVisible="false"
                 android:fontFamily="sans-serif"
                 android:inputType="none"
@@ -280,7 +296,7 @@
             android:id="@+id/cardProfilePreview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="14dp"
             android:visibility="gone"
             app:cardBackgroundColor="@color/ss_green_soft"
             app:cardCornerRadius="18dp"
@@ -293,7 +309,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="12dp">
 
                 <TextView
                     android:layout_width="48dp"

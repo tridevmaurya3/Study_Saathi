@@ -254,7 +254,7 @@
                             android:layout_height="wrap_content"
                             android:background="@color/ss_blue_soft"
                             android:gravity="center"
-                            android:padding="18dp"
+                            android:padding="14dp"
                             android:text="@string/smart_companion_welcome"
                             android:textColor="@color/ss_text_secondary"
                             android:textSize="13sp" />

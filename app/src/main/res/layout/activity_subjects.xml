@@ -13,9 +13,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingStart="22dp"
-        android:paddingTop="18dp"
+        android:paddingTop="14dp"
         android:paddingEnd="22dp"
-        android:paddingBottom="20dp">
+        android:paddingBottom="12dp">
 
         <!-- Header -->
         <LinearLayout
@@ -71,7 +71,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="12dp"
             app:cardBackgroundColor="@color/ss_blue_soft"
             app:cardCornerRadius="22dp"
             app:cardElevation="0dp"
@@ -83,7 +83,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="18dp">
+                android:padding="14dp">
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="58dp"
@@ -203,7 +203,7 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:overScrollMode="never"
-                android:paddingBottom="16dp" />
+                android:paddingBottom="12dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardEmptySubjects"
@@ -222,7 +222,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="25dp">
+                    android:padding="12dp">
 
                     <TextView
                         android:layout_width="64dp"

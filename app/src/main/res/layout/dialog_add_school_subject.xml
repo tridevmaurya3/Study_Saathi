@@ -73,7 +73,7 @@
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:hint="Subject Name">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -141,6 +141,10 @@
             android:id="@+id/inputSubjectCategory"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+                                android:dropDownHeight="320dp"
+                                android:popupElevation="8dp"
+                                android:popupBackground="@drawable/bg_professional_dropdown_popup"
+                                android:verticalOffset="6dp"
             android:importantForAutofill="no"
             android:inputType="none"
             android:maxLines="1"

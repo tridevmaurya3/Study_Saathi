@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="36dp">
+            android:paddingBottom="12dp">
 
             <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/toolbarManualSchoolBook"
@@ -35,9 +35,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingStart="20dp"
-                android:paddingTop="18dp"
-                android:paddingEnd="20dp">
+                android:paddingStart="12dp"
+                android:paddingTop="14dp"
+                android:paddingEnd="12dp">
 
                 <!-- Manual entry information -->
                 <com.google.android.material.card.MaterialCardView
@@ -96,7 +96,7 @@
                     android:id="@+id/cardManualBookSubject"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="12dp"
                     app:cardBackgroundColor="@color/ss_green_soft"
                     app:cardCornerRadius="19dp"
                     app:cardElevation="0dp"
@@ -108,7 +108,7 @@
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="16dp">
+                        android:padding="12dp">
 
                         <TextView
                             android:layout_width="46dp"
@@ -185,7 +185,7 @@
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="17dp">
+                        android:padding="14dp">
 
                         <FrameLayout
                             android:id="@+id/containerManualBookCover"
@@ -340,7 +340,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="17dp">
+                        android:padding="14dp">
 
                         <com.google.android.material.textfield.TextInputLayout
                             android:id="@+id/layoutManualBookTitle"
@@ -522,7 +522,7 @@
                     android:id="@+id/cardManualBookSettings"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="12dp"
                     app:cardBackgroundColor="@color/ss_surface_soft"
                     app:cardCornerRadius="19dp"
                     app:cardElevation="0dp"
@@ -576,7 +576,7 @@
                     android:id="@+id/cardManualBookChapterNextStep"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="12dp"
                     app:cardBackgroundColor="@color/ss_teal_soft"
                     app:cardCornerRadius="19dp"
                     app:cardElevation="0dp"
@@ -587,7 +587,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="12dp">
 
                         <TextView
                             android:layout_width="match_parent"
@@ -626,7 +626,7 @@
                     style="@style/Widget.StudySaathi.Button.Primary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
+                    android:layout_marginTop="14dp"
                     android:enabled="false"
                     android:minHeight="54dp"
                     android:text="Save Book &amp; Continue to Chapters"

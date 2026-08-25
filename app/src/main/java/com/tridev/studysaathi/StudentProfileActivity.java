@@ -89,25 +89,25 @@ public class StudentProfileActivity extends AppCompatActivity {
     private void setupDropdowns() {
         ArrayAdapter<String> boardAdapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_dropdown_item_1line,
+                R.layout.item_professional_dropdown,
                 boardOptions
         );
 
         ArrayAdapter<String> classAdapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_dropdown_item_1line,
+                R.layout.item_professional_dropdown,
                 classOptions
         );
 
         ArrayAdapter<String> mediumAdapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_dropdown_item_1line,
+                R.layout.item_professional_dropdown,
                 mediumOptions
         );
 
         ArrayAdapter<String> explanationAdapter = new ArrayAdapter<>(
                 this,
-                android.R.layout.simple_dropdown_item_1line,
+                R.layout.item_professional_dropdown,
                 explanationOptions
         );
 

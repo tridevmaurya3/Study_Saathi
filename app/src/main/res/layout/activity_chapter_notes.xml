@@ -18,10 +18,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingTop="18dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="38dp">
+            android:paddingStart="12dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="12dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -87,7 +87,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="18dp">
+                    android:padding="14dp">
 
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="57dp"
@@ -172,6 +172,10 @@
                     android:id="@+id/dropdownNoteSubject"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:dropDownHeight="320dp"
+                    android:popupElevation="8dp"
+                    android:popupBackground="@drawable/bg_professional_dropdown_popup"
+                    android:verticalOffset="6dp"
                     android:fontFamily="sans-serif"
                     android:inputType="none"
                     android:textColor="@color/ss_text_primary"
@@ -196,6 +200,10 @@
                     android:id="@+id/dropdownNoteChapter"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:dropDownHeight="320dp"
+                    android:popupElevation="8dp"
+                    android:popupBackground="@drawable/bg_professional_dropdown_popup"
+                    android:verticalOffset="6dp"
                     android:fontFamily="sans-serif"
                     android:inputType="none"
                     android:textColor="@color/ss_text_primary"
@@ -218,7 +226,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="17dp">
+                    android:padding="14dp">
 
                     <TextView
                         android:layout_width="match_parent"
@@ -341,7 +349,7 @@
                     android:fontFamily="sans-serif"
                     android:gravity="center"
                     android:lineSpacingExtra="2dp"
-                    android:padding="24dp"
+                    android:padding="12dp"
                     android:text="@string/chapter_notes_no_chapters"
                     android:textColor="@color/ss_text_secondary"
                     android:textSize="14sp" />

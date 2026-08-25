@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="12dp">
 
         <TextView
             android:layout_width="match_parent"
@@ -44,7 +44,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="12dp"
             app:cardBackgroundColor="@color/ss_green_soft"
             app:cardCornerRadius="24dp"
             app:strokeColor="@color/ss_green_border"

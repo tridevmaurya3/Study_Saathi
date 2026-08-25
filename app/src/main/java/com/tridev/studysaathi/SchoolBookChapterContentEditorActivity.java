@@ -118,8 +118,7 @@ public final class SchoolBookChapterContentEditorActivity
         ArrayAdapter<String> languageAdapter =
                 new ArrayAdapter<>(
                         this,
-                        android.R.layout
-                                .simple_dropdown_item_1line,
+                        R.layout.item_professional_dropdown,
                         languageItems
                 );
 

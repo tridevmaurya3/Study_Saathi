@@ -6,9 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="2dp"
-    android:layout_marginTop="6dp"
+    android:layout_marginTop="4dp"
     android:layout_marginEnd="2dp"
-    android:layout_marginBottom="6dp"
+    android:layout_marginBottom="4dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
@@ -22,7 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="15dp">
+        android:padding="12dp">
 
         <!-- Subject main information -->
         <LinearLayout
@@ -33,8 +33,8 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardCurriculumSubjectIcon"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 app:cardBackgroundColor="@color/ss_blue_soft"
                 app:cardCornerRadius="15dp"
                 app:cardElevation="0dp"
@@ -58,7 +58,7 @@
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="13dp"
+                android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -118,7 +118,7 @@
             android:id="@+id/cardCurriculumSubjectBook"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="13dp"
+            android:layout_marginTop="9dp"
             app:cardBackgroundColor="@color/ss_blue_soft"
             app:cardCornerRadius="15dp"
             app:cardElevation="0dp"
@@ -191,7 +191,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp"
             android:gravity="end"
             android:orientation="horizontal">
 
@@ -201,7 +201,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:minHeight="42dp"
+                android:minHeight="36dp"
                 android:text="Scan Book"
                 android:textAllCaps="false"
                 android:textColor="@color/ss_primary"
@@ -213,7 +213,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:minHeight="42dp"
+                android:minHeight="36dp"
                 android:text="Manage Chapters"
                 android:textAllCaps="false"
                 android:textColor="@color/ss_primary"
@@ -235,7 +235,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:minHeight="42dp"
+                android:minHeight="36dp"
                 android:text="Edit Subject"
                 android:textAllCaps="false"
                 android:textColor="@color/ss_text_secondary"
@@ -247,7 +247,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:minHeight="42dp"
+                android:minHeight="36dp"
                 android:text="Remove Subject"
                 android:textAllCaps="false"
                 android:textColor="@color/ss_text_secondary"

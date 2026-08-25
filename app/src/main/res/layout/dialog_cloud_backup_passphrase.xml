@@ -5,9 +5,9 @@
     android:layout_height="wrap_content"
     android:importantForAutofill="noExcludeDescendants"
     android:orientation="vertical"
-    android:paddingStart="24dp"
+    android:paddingStart="12dp"
     android:paddingTop="8dp"
-    android:paddingEnd="24dp"
+    android:paddingEnd="12dp"
     android:paddingBottom="4dp">
 
     <com.google.android.material.textfield.TextInputLayout

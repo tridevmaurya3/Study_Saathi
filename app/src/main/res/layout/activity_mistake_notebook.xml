@@ -4,7 +4,7 @@
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:background="@drawable/bg_app_soft_mix" android:fillViewport="true">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="vertical" android:padding="20dp">
+        android:orientation="vertical" android:padding="12dp">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:gravity="center_vertical" android:orientation="horizontal">
             <com.google.android.material.button.MaterialButton android:id="@+id/buttonBack"
@@ -26,7 +26,7 @@
             android:text="Clear Mistake Notebook" android:textAllCaps="false"
             app:backgroundTint="@color/ss_red_soft" app:strokeColor="@color/ss_red_border" />
         <TextView android:id="@+id/textMistakeEmpty" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="24dp" android:gravity="center"
+            android:layout_height="wrap_content" android:layout_marginTop="12dp" android:gravity="center"
             android:padding="22dp" android:text="अभी कोई saved mistake नहीं है।\nPractice quiz में गलत उत्तर यहाँ अपने-आप जुड़ेंगे।"
             android:textColor="@color/ss_text_secondary" android:textSize="14sp" />
         <LinearLayout android:id="@+id/containerMistakes" android:layout_width="match_parent"

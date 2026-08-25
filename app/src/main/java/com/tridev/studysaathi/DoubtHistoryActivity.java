@@ -404,7 +404,7 @@ public class DoubtHistoryActivity
         ArrayAdapter<String> filterAdapter =
                 new ArrayAdapter<>(
                         this,
-                        android.R.layout.simple_list_item_1,
+                        R.layout.item_professional_dropdown,
                         subjectFilterOptions
                 );
 
