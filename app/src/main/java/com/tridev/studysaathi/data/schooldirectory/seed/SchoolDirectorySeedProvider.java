@@ -729,7 +729,6 @@ public final class SchoolDirectorySeedProvider {
                 Arrays.asList(
                         "CBSE",
                         "CISCE",
-                        "UPMSP",
                         "STATE_BOARD",
                         "IB",
                         "CAMBRIDGE",
@@ -756,7 +755,9 @@ public final class SchoolDirectorySeedProvider {
     createStarterDirectoryData() {
         return new StarterDirectoryData(
                 createIndianStatesAndUnionTerritories(),
-                createUttarPradeshDistricts(),
+                // No partial State-only district list is activated. Existing
+                // legacy directory rows are preserved but the UI does not use them.
+                Collections.emptyList(),
                 createStarterSchools(),
                 createSupportedEducationBoards()
         );

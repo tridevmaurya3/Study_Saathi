@@ -32,6 +32,7 @@ import com.tridev.studysaathi.data.schooldirectory.entity.DistrictDirectoryEntit
 import com.tridev.studysaathi.data.schooldirectory.entity.SchoolDirectoryEntity;
 import com.tridev.studysaathi.data.schooldirectory.entity.StateDirectoryEntity;
 import com.tridev.studysaathi.data.schooldirectory.repository.SchoolDirectoryRepository;
+import com.tridev.studysaathi.data.schooldirectory.seed.SchoolDirectorySeedProvider;
 import com.tridev.studysaathi.data.schooldirectory.storage.SchoolDirectorySelectionStore;
 import com.tridev.studysaathi.databinding.ActivitySchoolCurriculumSetupBinding;
 import com.tridev.studysaathi.databinding.DialogAddSchoolSubjectBinding;
@@ -47,6 +48,9 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
     private static final String DEFAULT_SCHOOL_NAME = "School details pending";
     private static final String CONTENT_SOURCE_SCHOOL_BOOK = "SCHOOL_BOOK";
     private static final int SCHOOL_SEARCH_LIMIT = 100;
+    // A verified nationwide school dataset is not bundled. Keep the exact
+    // curriculum workflow nationwide by using parent-entered school details.
+    private static final boolean VERIFIED_SCHOOL_DIRECTORY_ENABLED = false;
     private ActivitySchoolCurriculumSetupBinding binding;
     private StudentProfileRepository studentProfileRepository;
     private SchoolCurriculumProfileRepository curriculumProfileRepository;
@@ -93,18 +97,28 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
         curriculumProfileRepository = new SchoolCurriculumProfileRepository(this);
         schoolSubjectRepository = new SchoolSubjectRepository(this);
         schoolSubjectRemovalRepository = new SchoolSubjectRemovalRepository(this);
-        schoolDirectoryRepository = new SchoolDirectoryRepository(this);
+        if (VERIFIED_SCHOOL_DIRECTORY_ENABLED) {
+            schoolDirectoryRepository = new SchoolDirectoryRepository(this);
+        }
         schoolDirectorySelectionStore = new SchoolDirectorySelectionStore(this);
         registerBookSetupLauncher();
         setupRecyclerView();
-        setupSchoolDirectoryAdapters();
+        if (VERIFIED_SCHOOL_DIRECTORY_ENABLED) {
+            setupSchoolDirectoryAdapters();
+        }
         setupToolbar();
         setupClickListeners();
         setupFormValidation();
-        setupSchoolDirectoryListeners();
-        resetSchoolDirectorySelection();
+        if (VERIFIED_SCHOOL_DIRECTORY_ENABLED) {
+            setupSchoolDirectoryListeners();
+            resetSchoolDirectorySelection();
+        } else {
+            configureNationwideManualSchoolMode();
+        }
         loadActiveStudent();
-        initializeSchoolDirectory();
+        if (VERIFIED_SCHOOL_DIRECTORY_ENABLED) {
+            initializeSchoolDirectory();
+        }
     }
 
     private void registerBookSetupLauncher() {
@@ -154,7 +168,41 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
         binding.buttonSaveSchoolCurriculum.setOnClickListener(view -> saveSchoolCurriculum());
         binding.buttonCancelCurriculumSetup.setOnClickListener(view -> finish());
         binding.buttonEnterSchoolManually.setOnClickListener(view -> enableManualSchoolEntryMode());
-        binding.buttonChangeSelectedSchool.setOnClickListener(view -> changeSelectedSchool());
+        binding.buttonChangeSelectedSchool.setOnClickListener(view -> {
+            if (VERIFIED_SCHOOL_DIRECTORY_ENABLED) {
+                changeSelectedSchool();
+            } else {
+                configureNationwideManualSchoolMode();
+                binding.inputSchoolName.requestFocus();
+            }
+        });
+    }
+
+    private void configureNationwideManualSchoolMode() {
+        manualSchoolEntryMode = true;
+        selectedState = null;
+        selectedDistrict = null;
+        selectedDirectorySchool = null;
+        selectedEducationBoard = "";
+        binding.cardSchoolDirectorySelector.setVisibility(View.GONE);
+        hideSelectedSchoolCard();
+        binding.inputSchoolName.setEnabled(true);
+        binding.inputSchoolCode.setEnabled(true);
+        binding.inputEducationBoard.setEnabled(true);
+        List<String> stateNames = new ArrayList<>();
+        for (StateDirectoryEntity state :
+                SchoolDirectorySeedProvider.createIndianStatesAndUnionTerritories()) {
+            stateNames.add(state.getStateName());
+        }
+        binding.inputManualState.setAdapter(new ArrayAdapter<>(
+                this, android.R.layout.simple_dropdown_item_1line, stateNames));
+        binding.inputManualState.setOnItemClickListener((parent, view, position, id) ->
+                binding.layoutManualState.setError(null));
+        binding.textSchoolEntryMode.setText("All India • Parent Entered School");
+        binding.textSchoolDetailsFormDescription.setText(
+                "भारत के किसी भी State/UT के लिए सही School Name और Education Board भरें। "
+                        + "School Code optional है; subjects और exact books Parent confirm करेंगे।"
+        );
     }
 
     private void setupFormValidation() {
@@ -777,8 +825,28 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
             manualSchoolEntryMode = true;
             binding.textSchoolEntryMode.setText("Saved / Manual School Details");
         }
-        loadSavedSchoolSelection(profile.getProfileId());
+        if (VERIFIED_SCHOOL_DIRECTORY_ENABLED) {
+            loadSavedSchoolSelection(profile.getProfileId());
+        } else {
+            configureNationwideManualSchoolMode();
+            String savedStateName = safeText(profile.getSchoolStateName());
+            if (savedStateName.isEmpty()) {
+                loadNationwideManualState(profile.getProfileId());
+            } else {
+                binding.inputManualState.setText(savedStateName, false);
+            }
+        }
         refreshValidationState(false);
+    }
+
+    private void loadNationwideManualState(long profileId) {
+        try {
+            SchoolDirectorySelectionStore.SelectionData saved =
+                    schoolDirectorySelectionStore.getSelection(profileId);
+            binding.inputManualState.setText(saved.getStateName(), false);
+        } catch (Exception ignored) {
+            binding.inputManualState.setText("", false);
+        }
     }
 
     private void loadSavedSchoolSelection(long profileId) {
@@ -1064,7 +1132,10 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
             SchoolDirectoryEntity directorySchool = selectedDirectorySchool;
             String stateCode;
             String stateName;
-            if (selectedState != null) {
+            if (!VERIFIED_SCHOOL_DIRECTORY_ENABLED) {
+                stateName = safeText(binding.inputManualState.getText());
+                stateCode = findStateCode(stateName);
+            } else if (selectedState != null) {
                 stateCode = selectedState.getStateCode();
                 stateName = selectedState.getStateName();
             } else {
@@ -1073,7 +1144,10 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
             }
             String districtCode;
             String districtName;
-            if (selectedDistrict != null) {
+            if (!VERIFIED_SCHOOL_DIRECTORY_ENABLED) {
+                districtCode = "";
+                districtName = "";
+            } else if (selectedDistrict != null) {
                 districtCode = selectedDistrict.getDistrictCode();
                 districtName = selectedDistrict.getDistrictName();
             } else {
@@ -1096,6 +1170,19 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
         } catch (Exception exception) {
             return false;
         }
+    }
+
+    @NonNull
+    private String findStateCode(@Nullable String stateName) {
+        String normalized = normalizeText(stateName);
+        for (StateDirectoryEntity state :
+                SchoolDirectorySeedProvider.createIndianStatesAndUnionTerritories()) {
+            if (normalized.equals(normalizeText(state.getStateName()))
+                    || normalized.equals(normalizeText(state.getStateNameHindi()))) {
+                return state.getStateCode();
+            }
+        }
+        return "";
     }
 
     private void showSavedManualSelectionCard(@Nullable String schoolName, @Nullable String schoolCode, @Nullable String educationBoard, @Nullable String stateName, @Nullable String districtName, @NonNull String verificationLabel) {
@@ -1365,6 +1452,14 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
         if (operationInProgress) {
             return;
         }
+        if (!VERIFIED_SCHOOL_DIRECTORY_ENABLED
+                && safeText(binding.inputManualState.getText()).isEmpty()) {
+            binding.layoutManualState.setError("State / Union Territory चुनें");
+            binding.inputManualState.requestFocus();
+            showError("बच्चे के school का State / Union Territory चुनें।");
+            return;
+        }
+        binding.layoutManualState.setError(null);
         saveAttempted = true;
         SchoolCurriculumSetupValidator.ValidationResult validationResult = createValidationResult();
         applyValidationErrors(validationResult);
@@ -1410,6 +1505,9 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
     }
 
     private void updateCurriculumProfileFromForm(@NonNull SchoolCurriculumProfileEntity profile, @NonNull SchoolCurriculumSetupValidator.ValidationResult validationResult) {
+        String stateName = safeText(binding.inputManualState.getText());
+        profile.setSchoolStateCode(findStateCode(stateName));
+        profile.setSchoolStateName(stateName);
         profile.setSchoolName(validationResult.getSchoolName());
         profile.setSchoolCode(validationResult.getSchoolCode());
         profile.setEducationBoard(validationResult.getEducationBoard());
@@ -1903,6 +2001,7 @@ public final class SchoolCurriculumSetupActivity extends AppCompatActivity imple
         binding.buttonAddSchoolSubject.setEnabled(!inProgress);
         binding.buttonImportSubjectList.setEnabled(!inProgress);
         binding.buttonCancelCurriculumSetup.setEnabled(!inProgress);
+        binding.inputManualState.setEnabled(!inProgress);
         String safeProgressMessage = safeText(progressMessage);
         if (!safeProgressMessage.isEmpty()) {
             binding.textCurriculumSetupProgress.setText(safeProgressMessage);

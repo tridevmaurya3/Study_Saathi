@@ -46,7 +46,7 @@ import java.util.concurrent.Executors;
                 SchoolBookChapterContentEntity.class,
                 SchoolBookChapterPageEntity.class
         },
-        version = 10,
+        version = 11,
         exportSchema = false
 )
 public abstract class StudySaathiDatabase extends RoomDatabase {
@@ -262,6 +262,25 @@ public abstract class StudySaathiDatabase extends RoomDatabase {
                 }
             };
 
+    /**
+     * Preserve the nationwide State/UT selection in the curriculum record so
+     * the existing family record sync carries it to every linked parent.
+     */
+    public static final Migration MIGRATION_10_11 =
+            new Migration(10, 11) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL(
+                            "ALTER TABLE `school_curriculum_profiles` "
+                                    + "ADD COLUMN `school_state_code` TEXT NOT NULL DEFAULT ''"
+                    );
+                    database.execSQL(
+                            "ALTER TABLE `school_curriculum_profiles` "
+                                    + "ADD COLUMN `school_state_name` TEXT NOT NULL DEFAULT ''"
+                    );
+                }
+            };
+
     private static final Callback FAMILY_SYNC_CALLBACK = new Callback() {
         @Override
         public void onOpen(@NonNull SupportSQLiteDatabase database) {
@@ -346,6 +365,8 @@ public abstract class StudySaathiDatabase extends RoomDatabase {
                         + "`school_curriculum_profiles` ("
                         + "`profile_id` INTEGER NOT NULL, "
                         + "`curriculum_id` TEXT NOT NULL, "
+                        + "`school_state_code` TEXT NOT NULL DEFAULT '', "
+                        + "`school_state_name` TEXT NOT NULL DEFAULT '', "
                         + "`school_name` TEXT NOT NULL, "
                         + "`school_code` TEXT NOT NULL, "
                         + "`education_board` TEXT NOT NULL, "
@@ -869,7 +890,8 @@ public abstract class StudySaathiDatabase extends RoomDatabase {
                                             MIGRATION_6_7,
                                             MIGRATION_7_8,
                                             MIGRATION_8_9,
-                                            MIGRATION_9_10
+                                            MIGRATION_9_10,
+                                            MIGRATION_10_11
                                     )
                                     .addCallback(FAMILY_SYNC_CALLBACK)
                                     .build();

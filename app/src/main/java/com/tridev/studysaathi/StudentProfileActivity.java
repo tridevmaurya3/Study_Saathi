@@ -28,12 +28,11 @@ public class StudentProfileActivity extends AppCompatActivity {
     private final String[] boardOptions = {
             "CBSE",
             "CISCE – ICSE / ISC",
-            "State Board",
-            "UP Board",
+            "State Board / SCERT",
             "NIOS",
             "IB - International Baccalaureate",
             "Cambridge - CAIE",
-            "Other / Custom School"
+            "Other Board / Custom School"
     };
 
     private final String[] classOptions = {

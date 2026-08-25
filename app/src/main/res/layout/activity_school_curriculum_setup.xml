@@ -167,7 +167,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="23dp"
                     android:fontFamily="sans-serif-rounded"
-                    android:text="School चुनें"
+                    android:text="School और Board Details"
                     android:textColor="@color/ss_text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -177,7 +177,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
                     android:lineSpacingExtra="2dp"
-                    android:text="State, District और Education Board चुनकर बच्चे का school खोजें। School न मिलने पर manual entry उपलब्ध रहेगी।"
+                    android:text="भारत के किसी भी State/UT के school का सही नाम और Education Board भरें। Subjects और exact books Parent confirm करेंगे।"
                     android:textColor="@color/ss_text_secondary"
                     android:textSize="13sp" />
 
@@ -191,6 +191,7 @@
                     app:cardCornerRadius="22dp"
                     app:cardElevation="0dp"
                     app:strokeColor="@color/ss_outline"
+                    android:visibility="gone"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -567,11 +568,30 @@
                             android:textStyle="bold" />
 
                         <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layoutManualState"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:hint="State / Union Territory">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/inputManualState"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:importantForAutofill="no"
+                                android:inputType="none"
+                                android:maxLines="1"
+                                android:textSize="15sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
                             android:id="@+id/layoutSchoolName"
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="14dp"
+                            android:layout_marginTop="12dp"
                             android:hint="School Name">
 
                             <com.google.android.material.textfield.TextInputEditText

@@ -43,6 +43,20 @@ public class SchoolCurriculumProfileEntity {
     private String curriculumId = "";
 
     @NonNull
+    @ColumnInfo(
+            name = "school_state_code",
+            defaultValue = "''"
+    )
+    private String schoolStateCode = "";
+
+    @NonNull
+    @ColumnInfo(
+            name = "school_state_name",
+            defaultValue = "''"
+    )
+    private String schoolStateName = "";
+
+    @NonNull
     @ColumnInfo(name = "school_name")
     private String schoolName = "";
 
@@ -173,6 +187,34 @@ public class SchoolCurriculumProfileEntity {
         this.curriculumId =
                 normalizeIdentifier(
                         curriculumId
+                );
+    }
+
+    @NonNull
+    public String getSchoolStateCode() {
+        return schoolStateCode;
+    }
+
+    public void setSchoolStateCode(
+            @NonNull String schoolStateCode
+    ) {
+        this.schoolStateCode =
+                normalizeIdentifier(
+                        schoolStateCode
+                );
+    }
+
+    @NonNull
+    public String getSchoolStateName() {
+        return schoolStateName;
+    }
+
+    public void setSchoolStateName(
+            @NonNull String schoolStateName
+    ) {
+        this.schoolStateName =
+                normalizeText(
+                        schoolStateName
                 );
     }
 
