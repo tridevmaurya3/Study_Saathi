@@ -21,6 +21,7 @@ import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
 import com.tridev.studysaathi.data.ai.FirebaseAiQuotaActivityObserver;
 import com.tridev.studysaathi.data.ai.SmartTutorTextToSpeechActivityObserver;
+import com.tridev.studysaathi.family.FamilyRealtimeSyncManager;
 import com.tridev.studysaathi.overlay.StudyOverlayBubbleService;
 import com.tridev.studysaathi.ui.SmartAiCompanionController;
 import com.tridev.studysaathi.ui.PersistentNavigationController;
@@ -125,6 +126,9 @@ public final class StudySaathiApplication
         SmartTutorTextToSpeechActivityObserver.register(
                 this
         );
+
+        // No-op unless a verified parent has an active Family Workspace.
+        FamilyRealtimeSyncManager.start(this);
 
         Log.i(
                 LOG_TAG,

@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.snackbar.Snackbar;
 import com.tridev.studysaathi.databinding.ActivityFamilyWorkspaceBinding;
 import com.tridev.studysaathi.family.FamilySnapshotSyncRepository;
+import com.tridev.studysaathi.family.FamilyRealtimeSyncManager;
 import com.tridev.studysaathi.family.FamilyWorkspaceRepository;
 import com.tridev.studysaathi.family.FamilyWorkspaceSession;
 
@@ -46,7 +47,8 @@ public final class FamilyWorkspaceActivity extends AppCompatActivity {
     private FamilyWorkspaceRepository.Callback workspaceCallback() {
         return new FamilyWorkspaceRepository.Callback() {
             @Override public void onSuccess(@NonNull FamilyWorkspaceRepository.Result result) {
-                runOnUiThread(() -> { setBusy(false); renderSession(); message("Family Workspace तैयार है।"); });
+                FamilyRealtimeSyncManager.refresh(FamilyWorkspaceActivity.this);
+                runOnUiThread(() -> { setBusy(false); renderSession(); message("Family Workspace तैयार है—realtime sync चालू है।"); });
             }
             @Override public void onError(@NonNull Exception error) { showError(error); }
         };

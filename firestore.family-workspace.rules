@@ -30,9 +30,18 @@ service cloud.firestore {
 
       match /members/{uid} {
         allow read: if isActiveFamilyMember(familyId);
-        allow create: if signedIn() && uid == request.auth.uid;
-        allow update: if signedIn() && (uid == request.auth.uid
-          || get(/databases/$(database)/documents/families/$(familyId)).data.owner_uid == request.auth.uid);
+        allow create: if signedIn() && uid == request.auth.uid
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.active == true
+          && (getAfter(/databases/$(database)/documents/families/$(familyId)).data.owner_uid == request.auth.uid
+            || (request.resource.data.invite_code is string
+              && get(/databases/$(database)/documents/family_invites/$(request.resource.data.invite_code)).data.family_id == familyId
+              && get(/databases/$(database)/documents/family_invites/$(request.resource.data.invite_code)).data.active == true));
+        allow update: if signedIn() && (
+          get(/databases/$(database)/documents/families/$(familyId)).data.owner_uid == request.auth.uid
+          || (uid == request.auth.uid
+            && request.resource.data.uid == resource.data.uid
+            && request.resource.data.role == resource.data.role));
         allow delete: if isActiveFamilyMember(familyId)
           && get(/databases/$(database)/documents/families/$(familyId)).data.owner_uid == request.auth.uid;
       }
@@ -40,6 +49,13 @@ service cloud.firestore {
       match /shared_snapshots/{snapshotId} {
         allow read, write: if isActiveFamilyMember(familyId);
         match /chunks/{chunkId} {
+          allow read, write: if isActiveFamilyMember(familyId);
+        }
+      }
+
+      match /realtime_records/{recordId} {
+        allow read, write: if isActiveFamilyMember(familyId);
+        match /payload_chunks/{chunkId} {
           allow read, write: if isActiveFamilyMember(familyId);
         }
       }

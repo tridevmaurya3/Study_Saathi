@@ -66,7 +66,7 @@
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="20dp" android:text="पूरे app का सुरक्षित sync" android:textStyle="bold" android:textSize="18sp" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="4dp" android:text="Upload इस device की पूरी learning snapshot साझा करता है। Download के बाद preview और confirmation के बिना restore नहीं होगा।" />
+            android:layout_marginTop="4dp" android:text="Room records अपने-आप encrypted realtime sync होते हैं। नीचे का manual snapshot केवल backup/restore विकल्प है; Download के बाद preview और confirmation जरूरी रहेगा।" />
         <com.google.android.material.button.MaterialButton android:id="@+id/buttonUploadFamilyData"
             android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="12dp"
             android:text="Upload / Sync current data" android:textAllCaps="false" android:enabled="false" />

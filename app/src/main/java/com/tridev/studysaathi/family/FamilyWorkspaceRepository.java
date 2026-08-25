@@ -49,7 +49,7 @@ public final class FamilyWorkspaceRepository {
             familyData.put("owner_uid", user.getUid()); familyData.put("invite_hash", hash);
             familyData.put("schema_version", 1); familyData.put("created_at", FieldValue.serverTimestamp());
             familyData.put("updated_at", FieldValue.serverTimestamp());
-            Map<String,Object> memberData = memberData(user, ROLE_OWNER_PARENT);
+            Map<String,Object> memberData = memberData(user, ROLE_OWNER_PARENT, code);
             Map<String,Object> inviteData = new HashMap<>();
             inviteData.put("family_id", familyId); inviteData.put("invite_hash", hash);
             inviteData.put("family_name", name);
@@ -89,7 +89,7 @@ public final class FamilyWorkspaceRepository {
                                         .document(user.getUid()).collection("family_memberships")
                                         .document(familyId);
                                 WriteBatch batch = firestore.batch();
-                                batch.set(member, memberData(user, ROLE_PARENT), SetOptions.merge());
+                                batch.set(member, memberData(user, ROLE_PARENT, code), SetOptions.merge());
                                 batch.set(link, membershipData(familyId, name, ROLE_PARENT), SetOptions.merge());
                                 batch.commit().addOnSuccessListener(v -> {
                                     FamilyWorkspaceSession.save(context, familyId, name, ROLE_PARENT, code);
@@ -122,10 +122,11 @@ public final class FamilyWorkspaceRepository {
         return user;
     }
 
-    private static Map<String,Object> memberData(FirebaseUser user, String role) {
+    private static Map<String,Object> memberData(FirebaseUser user, String role, String inviteCode) {
         Map<String,Object> data = new HashMap<>(); data.put("uid", user.getUid());
         data.put("email", safe(user.getEmail())); data.put("display_name", safe(user.getDisplayName()));
         data.put("role", role); data.put("active", true);
+        data.put("invite_code", inviteCode);
         data.put("joined_at", FieldValue.serverTimestamp()); data.put("updated_at", FieldValue.serverTimestamp());
         return data;
     }

@@ -46,7 +46,7 @@ import java.util.concurrent.Executors;
                 SchoolBookChapterContentEntity.class,
                 SchoolBookChapterPageEntity.class
         },
-        version = 9,
+        version = 10,
         exportSchema = false
 )
 public abstract class StudySaathiDatabase extends RoomDatabase {
@@ -249,6 +249,94 @@ public abstract class StudySaathiDatabase extends RoomDatabase {
                     createSchoolBookChapterPagesTable(database);
                 }
             };
+
+    /**
+     * Additive metadata used by Family Workspace realtime synchronization.
+     * App records and their existing primary/foreign keys are not changed.
+     */
+    public static final Migration MIGRATION_9_10 =
+            new Migration(9, 10) {
+                @Override
+                public void migrate(@NonNull SupportSQLiteDatabase database) {
+                    createFamilySyncMetadata(database);
+                }
+            };
+
+    private static final Callback FAMILY_SYNC_CALLBACK = new Callback() {
+        @Override
+        public void onOpen(@NonNull SupportSQLiteDatabase database) {
+            super.onOpen(database);
+            createFamilySyncMetadata(database);
+        }
+    };
+
+    private static void createFamilySyncMetadata(@NonNull SupportSQLiteDatabase database) {
+                    database.execSQL("CREATE TABLE IF NOT EXISTS `family_sync_record_map` ("
+                            + "`table_name` TEXT NOT NULL, `local_id` TEXT NOT NULL, "
+                            + "`sync_id` TEXT NOT NULL, PRIMARY KEY(`table_name`,`local_id`))");
+                    database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS "
+                            + "`index_family_sync_record_map_sync_id` ON "
+                            + "`family_sync_record_map` (`sync_id`)");
+                    database.execSQL("CREATE TABLE IF NOT EXISTS `family_sync_outbox` ("
+                            + "`table_name` TEXT NOT NULL, `local_id` TEXT NOT NULL, "
+                            + "`sync_id` TEXT NOT NULL, `operation` TEXT NOT NULL, "
+                            + "`changed_at` INTEGER NOT NULL, PRIMARY KEY(`table_name`,`sync_id`))");
+                    database.execSQL("CREATE TABLE IF NOT EXISTS `family_sync_runtime` ("
+                            + "`singleton_id` INTEGER NOT NULL PRIMARY KEY CHECK(`singleton_id`=1), "
+                            + "`suppress_triggers` INTEGER NOT NULL DEFAULT 0)");
+                    database.execSQL("INSERT OR IGNORE INTO `family_sync_runtime` "
+                            + "(`singleton_id`,`suppress_triggers`) VALUES (1,0)");
+
+                    addFamilySyncTriggers(database, "student_profiles", "profile_id");
+                    addFamilySyncTriggers(database, "school_curriculum_profiles", "profile_id");
+                    addFamilySyncTriggers(database, "school_subjects", "subject_row_id");
+                    addFamilySyncTriggers(database, "school_books", "book_row_id");
+                    addFamilySyncTriggers(database, "school_book_chapters", "chapter_row_id");
+                    addFamilySyncTriggers(database, "school_book_chapter_contents", "content_row_id");
+                    addFamilySyncTriggers(database, "school_book_chapter_pages", "chapter_page_row_id");
+                    addFamilySyncTriggers(database, "lesson_progress", "progress_key");
+                    addFamilySyncTriggers(database, "quiz_attempts", "attempt_id");
+                    addFamilySyncTriggers(database, "doubt_history", "history_id");
+    }
+
+    private static void addFamilySyncTriggers(@NonNull SupportSQLiteDatabase database,
+                                               @NonNull String table,
+                                               @NonNull String primaryKey) {
+        String prefix = "family_sync_" + table;
+        String newId = "CAST(NEW.`" + primaryKey + "` AS TEXT)";
+        String oldId = "CAST(OLD.`" + primaryKey + "` AS TEXT)";
+        String enabled = "(SELECT `suppress_triggers` FROM `family_sync_runtime` "
+                + "WHERE `singleton_id`=1)=0";
+        database.execSQL("CREATE TRIGGER IF NOT EXISTS `" + prefix + "_insert` "
+                + "AFTER INSERT ON `" + table + "` WHEN " + enabled + " BEGIN "
+                + "INSERT OR IGNORE INTO `family_sync_record_map` "
+                + "(`table_name`,`local_id`,`sync_id`) VALUES ('" + table + "'," + newId
+                + ",lower(hex(randomblob(16)))); "
+                + "INSERT OR REPLACE INTO `family_sync_outbox` "
+                + "(`table_name`,`local_id`,`sync_id`,`operation`,`changed_at`) "
+                + "SELECT '" + table + "'," + newId + ",`sync_id`,'UPSERT',"
+                + "CAST(strftime('%s','now') AS INTEGER)*1000 FROM `family_sync_record_map` "
+                + "WHERE `table_name`='" + table + "' AND `local_id`=" + newId + "; END");
+        database.execSQL("CREATE TRIGGER IF NOT EXISTS `" + prefix + "_update` "
+                + "AFTER UPDATE ON `" + table + "` WHEN " + enabled + " BEGIN "
+                + "INSERT OR IGNORE INTO `family_sync_record_map` "
+                + "(`table_name`,`local_id`,`sync_id`) VALUES ('" + table + "'," + newId
+                + ",lower(hex(randomblob(16)))); "
+                + "INSERT OR REPLACE INTO `family_sync_outbox` "
+                + "(`table_name`,`local_id`,`sync_id`,`operation`,`changed_at`) "
+                + "SELECT '" + table + "'," + newId + ",`sync_id`,'UPSERT',"
+                + "CAST(strftime('%s','now') AS INTEGER)*1000 FROM `family_sync_record_map` "
+                + "WHERE `table_name`='" + table + "' AND `local_id`=" + newId + "; END");
+        database.execSQL("CREATE TRIGGER IF NOT EXISTS `" + prefix + "_delete` "
+                + "BEFORE DELETE ON `" + table + "` WHEN " + enabled + " BEGIN "
+                + "INSERT OR REPLACE INTO `family_sync_outbox` "
+                + "(`table_name`,`local_id`,`sync_id`,`operation`,`changed_at`) "
+                + "SELECT '" + table + "'," + oldId + ",`sync_id`,'DELETE',"
+                + "CAST(strftime('%s','now') AS INTEGER)*1000 FROM `family_sync_record_map` "
+                + "WHERE `table_name`='" + table + "' AND `local_id`=" + oldId + "; "
+                + "DELETE FROM `family_sync_record_map` WHERE `table_name`='" + table
+                + "' AND `local_id`=" + oldId + "; END");
+    }
 
     private static void createSchoolCurriculumProfilesTable(
             @NonNull SupportSQLiteDatabase database
@@ -780,8 +868,10 @@ public abstract class StudySaathiDatabase extends RoomDatabase {
                                             MIGRATION_5_6,
                                             MIGRATION_6_7,
                                             MIGRATION_7_8,
-                                            MIGRATION_8_9
+                                            MIGRATION_8_9,
+                                            MIGRATION_9_10
                                     )
+                                    .addCallback(FAMILY_SYNC_CALLBACK)
                                     .build();
                 }
             }

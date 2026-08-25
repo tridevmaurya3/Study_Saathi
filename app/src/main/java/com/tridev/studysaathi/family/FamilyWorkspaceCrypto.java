@@ -13,6 +13,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Client-side encryption dedicated to shared Family Workspace snapshots. */
 public final class FamilyWorkspaceCrypto {
@@ -20,6 +21,8 @@ public final class FamilyWorkspaceCrypto {
     private static final int KEY_BITS = 256;
     private static final int IV_BYTES = 12;
     private static final int TAG_BITS = 128;
+    private static final ConcurrentHashMap<String, SecretKeySpec> KEY_CACHE =
+            new ConcurrentHashMap<>();
 
     private FamilyWorkspaceCrypto() { }
 
@@ -68,12 +71,17 @@ public final class FamilyWorkspaceCrypto {
     }
 
     private static SecretKeySpec key(String familyId, String code) throws Exception {
+        String cacheKey = familyId + "|" + normalizeCode(code);
+        SecretKeySpec cached = KEY_CACHE.get(cacheKey);
+        if (cached != null) return cached;
         PBEKeySpec spec = new PBEKeySpec(normalizeCode(code).toCharArray(),
                 ("StudySaathiFamily|" + familyId).getBytes(StandardCharsets.UTF_8),
                 ITERATIONS, KEY_BITS);
         byte[] bytes = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
                 .generateSecret(spec).getEncoded();
         spec.clearPassword();
-        return new SecretKeySpec(bytes, "AES");
+        SecretKeySpec derived = new SecretKeySpec(bytes, "AES");
+        KEY_CACHE.put(cacheKey, derived);
+        return derived;
     }
 }
