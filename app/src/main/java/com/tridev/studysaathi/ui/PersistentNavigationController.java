@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.tridev.studysaathi.DashboardActivity;
 import com.tridev.studysaathi.MainActivity;
+import com.tridev.studysaathi.ParentDashboardActivity;
 import com.tridev.studysaathi.R;
 import com.tridev.studysaathi.UserModeSelectionActivity;
 
@@ -48,7 +49,9 @@ public final class PersistentNavigationController {
         }
 
         FrameLayout host = (FrameLayout) content;
-        boolean dashboard = activity instanceof DashboardActivity;
+        boolean studentDashboard = activity instanceof DashboardActivity;
+        boolean parentDashboard = activity instanceof ParentDashboardActivity;
+        boolean dashboard = studentDashboard || parentDashboard;
         TextView back = new TextView(activity);
         back.setText(dashboard ? "☰" : "←");
         back.setTextSize(25);
@@ -70,8 +73,11 @@ public final class PersistentNavigationController {
 
         back.setOnClickListener(view -> {
             if (dashboard) {
-                View dashboardRoot =
-                        activity.findViewById(R.id.dashboardRoot);
+                View dashboardRoot = activity.findViewById(
+                        parentDashboard
+                                ? R.id.parentDashboardRoot
+                                : R.id.dashboardRoot
+                );
                 if (dashboardRoot instanceof DrawerLayout) {
                     ((DrawerLayout) dashboardRoot)
                             .openDrawer(GravityCompat.START);
