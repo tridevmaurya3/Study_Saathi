@@ -38,6 +38,7 @@ public final class PersistentNavigationController {
     public static void attach(@NonNull Activity activity) {
         if (activity instanceof MainActivity
                 || activity instanceof UserModeSelectionActivity
+                || activity instanceof ParentDashboardActivity
                 || activity.isFinishing()
                 || SESSIONS.containsKey(activity)) {
             return;
@@ -49,9 +50,7 @@ public final class PersistentNavigationController {
         }
 
         FrameLayout host = (FrameLayout) content;
-        boolean studentDashboard = activity instanceof DashboardActivity;
-        boolean parentDashboard = activity instanceof ParentDashboardActivity;
-        boolean dashboard = studentDashboard || parentDashboard;
+        boolean dashboard = activity instanceof DashboardActivity;
         TextView back = new TextView(activity);
         back.setText(dashboard ? "☰" : "←");
         back.setTextSize(25);
@@ -73,11 +72,6 @@ public final class PersistentNavigationController {
 
         back.setOnClickListener(view -> {
             if (dashboard) {
-                if (parentDashboard) {
-                    ((ParentDashboardActivity) activity)
-                            .openParentNavigationDrawer();
-                    return;
-                }
                 View dashboardRoot = activity.findViewById(
                         R.id.dashboardRoot
                 );
