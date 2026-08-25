@@ -221,6 +221,20 @@
             app:strokeColor="@color/ss_blue_border" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDrawerFamilyWorkspace"
+            style="@style/Widget.StudySaathi.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="start|center_vertical"
+            android:text="⌂   Family Learning Workspace"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/ss_green_soft"
+            app:strokeColor="@color/ss_green_border" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonDrawerHelp"
             style="@style/Widget.StudySaathi.Button.Outlined"
             android:layout_width="match_parent"

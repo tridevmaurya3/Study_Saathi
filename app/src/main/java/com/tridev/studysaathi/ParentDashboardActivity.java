@@ -381,6 +381,9 @@ public class ParentDashboardActivity
         binding.parentNavigationDrawer.buttonDrawerCloud.setOnClickListener(view ->
                 openParentControlFromDrawer(CloudAccountActivity.class));
 
+        binding.parentNavigationDrawer.buttonDrawerFamilyWorkspace.setOnClickListener(view ->
+                openParentControlFromDrawer(FamilyWorkspaceActivity.class));
+
         binding.parentNavigationDrawer.buttonDrawerHelp.setOnClickListener(view -> {
             binding.parentDashboardRoot.closeDrawer(GravityCompat.START);
             openParentHelp();

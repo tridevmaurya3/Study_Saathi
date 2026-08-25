@@ -1,0 +1,52 @@
+// Merge these additive rules into the Firebase project's active firestore.rules.
+// Existing users/{uid} and cloud-backup rules must remain unchanged.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isFamilyMember(familyId) {
+      return signedIn() && exists(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid));
+    }
+    function isActiveFamilyMember(familyId) {
+      return isFamilyMember(familyId)
+        && get(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid)).data.active == true;
+    }
+
+    match /family_invites/{inviteCode} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && request.resource.data.family_id is string
+        && request.resource.data.active == true
+        && getAfter(/databases/$(database)/documents/families/$(request.resource.data.family_id)).data.owner_uid == request.auth.uid;
+      allow update, delete: if isActiveFamilyMember(resource.data.family_id)
+        && get(/databases/$(database)/documents/families/$(resource.data.family_id)/members/$(request.auth.uid)).data.role == 'OWNER_PARENT';
+    }
+
+    match /families/{familyId} {
+      allow create: if signedIn() && request.resource.data.owner_uid == request.auth.uid;
+      allow read: if isActiveFamilyMember(familyId);
+      allow update, delete: if isActiveFamilyMember(familyId)
+        && resource.data.owner_uid == request.auth.uid;
+
+      match /members/{uid} {
+        allow read: if isActiveFamilyMember(familyId);
+        allow create: if signedIn() && uid == request.auth.uid;
+        allow update: if signedIn() && (uid == request.auth.uid
+          || get(/databases/$(database)/documents/families/$(familyId)).data.owner_uid == request.auth.uid);
+        allow delete: if isActiveFamilyMember(familyId)
+          && get(/databases/$(database)/documents/families/$(familyId)).data.owner_uid == request.auth.uid;
+      }
+
+      match /shared_snapshots/{snapshotId} {
+        allow read, write: if isActiveFamilyMember(familyId);
+        match /chunks/{chunkId} {
+          allow read, write: if isActiveFamilyMember(familyId);
+        }
+      }
+    }
+
+    match /users/{uid}/family_memberships/{familyId} {
+      allow read, write: if signedIn() && uid == request.auth.uid;
+    }
+  }
+}

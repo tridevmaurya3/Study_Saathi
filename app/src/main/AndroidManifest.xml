@@ -143,6 +143,12 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".FamilyWorkspaceActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".UserModeSelectionActivity"
             android:exported="false" />
 
