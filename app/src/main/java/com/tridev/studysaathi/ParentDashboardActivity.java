@@ -335,7 +335,7 @@ public class ParentDashboardActivity
 
     private void setupClickListeners() {
         binding.buttonParentMenu.setOnClickListener(view ->
-                binding.parentDashboardRoot.openDrawer(GravityCompat.START)
+                openParentNavigationDrawer()
         );
 
         binding.parentDashboardRoot.setDrawerLockMode(
@@ -443,6 +443,19 @@ public class ParentDashboardActivity
         binding.buttonParentHelp.setOnClickListener(view -> {
             openParentHelp();
         });
+    }
+
+    public void openParentNavigationDrawer() {
+        binding.parentDashboardRoot.setDrawerLockMode(
+                DrawerLayout.LOCK_MODE_UNLOCKED,
+                GravityCompat.START
+        );
+        binding.parentDashboardRoot.post(() ->
+                binding.parentDashboardRoot.openDrawer(
+                        binding.parentNavigationDrawer.getRoot(),
+                        true
+                )
+        );
     }
 
     private void openFromDrawer(@NonNull Class<?> destination) {

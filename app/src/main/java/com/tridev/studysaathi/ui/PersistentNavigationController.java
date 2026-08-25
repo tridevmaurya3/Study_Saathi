@@ -73,10 +73,13 @@ public final class PersistentNavigationController {
 
         back.setOnClickListener(view -> {
             if (dashboard) {
+                if (parentDashboard) {
+                    ((ParentDashboardActivity) activity)
+                            .openParentNavigationDrawer();
+                    return;
+                }
                 View dashboardRoot = activity.findViewById(
-                        parentDashboard
-                                ? R.id.parentDashboardRoot
-                                : R.id.dashboardRoot
+                        R.id.dashboardRoot
                 );
                 if (dashboardRoot instanceof DrawerLayout) {
                     ((DrawerLayout) dashboardRoot)
