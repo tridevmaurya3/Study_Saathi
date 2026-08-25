@@ -3,6 +3,7 @@ package com.tridev.studysaathi.family;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -10,10 +11,17 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.WriteBatch;
 
 import java.security.SecureRandom;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -113,6 +121,45 @@ public final class FamilyWorkspaceRepository {
                 }).addOnFailureListener(callback::onError);
     }
 
+
+    @Nullable
+    public ListenerRegistration observeMembers(@NonNull MemberCallback callback) {
+        FamilyWorkspaceSession.State state = FamilyWorkspaceSession.load(context);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null || !user.isEmailVerified() || !state.isActive()) {
+            callback.onError(new SecurityException(
+                    "Active Family Workspace और verified account जरूरी है।"));
+            return null;
+        }
+        return firestore.collection("families").document(state.familyId)
+                .collection("members")
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        callback.onError(error);
+                        return;
+                    }
+                    List<Member> members = new ArrayList<>();
+                    if (snapshot != null) {
+                        for (QueryDocumentSnapshot document : snapshot) {
+                            Timestamp joinedAt = document.getTimestamp("joined_at");
+                            members.add(new Member(
+                                    document.getId(),
+                                    safe(document.getString("display_name")),
+                                    safe(document.getString("email")),
+                                    safe(document.getString("role")),
+                                    Boolean.TRUE.equals(document.getBoolean("active")),
+                                    joinedAt == null ? 0L : joinedAt.toDate().getTime()
+                            ));
+                        }
+                    }
+                    Collections.sort(members, Comparator
+                            .comparing((Member member) ->
+                                    !ROLE_OWNER_PARENT.equals(member.role))
+                            .thenComparingLong(member -> member.joinedAt));
+                    callback.onChanged(members);
+                });
+    }
+
     private FirebaseUser verifiedUser(Callback callback) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null || !user.isEmailVerified()) {
@@ -146,6 +193,28 @@ public final class FamilyWorkspaceRepository {
     private static String safe(String value) { return value == null ? "" : value.trim(); }
 
     public interface Callback { void onSuccess(@NonNull Result result); void onError(@NonNull Exception error); }
+
+    public interface MemberCallback {
+        void onChanged(@NonNull List<Member> members);
+        void onError(@NonNull Exception error);
+    }
+
+    public static final class Member {
+        public final String uid, displayName, email, role;
+        public final boolean active;
+        public final long joinedAt;
+
+        Member(String uid, String displayName, String email, String role,
+               boolean active, long joinedAt) {
+            this.uid = uid;
+            this.displayName = displayName;
+            this.email = email;
+            this.role = role;
+            this.active = active;
+            this.joinedAt = joinedAt;
+        }
+    }
+
     public static final class Result {
         public final String familyId, familyName, role, inviteCode;
         Result(String id, String name, String role, String code) {
