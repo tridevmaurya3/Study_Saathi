@@ -1,5 +1,5 @@
-// Merge these additive rules into the Firebase project's active firestore.rules.
-// Existing users/{uid} and cloud-backup rules must remain unchanged.
+// Deploy-ready Firestore rules for existing per-user cloud data and the
+// additive encrypted Family Learning Workspace.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -10,6 +10,18 @@ service cloud.firestore {
     function isActiveFamilyMember(familyId) {
       return isFamilyMember(familyId)
         && get(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid)).data.active == true;
+    }
+
+    // Preserve the original rule: every authenticated user can access only
+    // their own document and all of its cloud-backup subcollections.
+    match /users/{userId} {
+      allow read, create, update, delete: if signedIn()
+        && request.auth.uid == userId;
+
+      match /{document=**} {
+        allow read, write: if signedIn()
+          && request.auth.uid == userId;
+      }
     }
 
     match /family_invites/{inviteCode} {
@@ -59,10 +71,6 @@ service cloud.firestore {
           allow read, write: if isActiveFamilyMember(familyId);
         }
       }
-    }
-
-    match /users/{uid}/family_memberships/{familyId} {
-      allow read, write: if signedIn() && uid == request.auth.uid;
     }
   }
 }
