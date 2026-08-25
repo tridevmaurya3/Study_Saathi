@@ -67,7 +67,7 @@
                                 android:dropDownHeight="320dp"
                                 android:popupElevation="8dp"
                                 android:popupBackground="@drawable/bg_professional_dropdown_popup"
-                                android:verticalOffset="6dp"
+                                android:dropDownVerticalOffset="6dp"
                         android:inputType="none"
                         android:text="Bilingual" />
 
