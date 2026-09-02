@@ -19,6 +19,8 @@ import com.tridev.studysaathi.BookCoverScanActivity;
 import com.tridev.studysaathi.BookLearningImportActivity;
 import com.tridev.studysaathi.SchoolBookChaptersActivity;
 import com.tridev.studysaathi.data.content.setup
+        .SchoolBookContentProgressRepository;
+import com.tridev.studysaathi.data.content.setup
         .SubjectContentSetupStatus;
 import com.tridev.studysaathi.data.local.entity.SchoolBookEntity;
 import com.tridev.studysaathi.data.local.entity.SchoolSubjectEntity;
@@ -51,7 +53,13 @@ public final class SchoolCurriculumSubjectAdapter
     private final SchoolBookRepository schoolBookRepository;
 
     @Nullable
+    private final SchoolBookContentProgressRepository contentProgressRepository;
+
+    @Nullable
     private final ActivityResultLauncher<Intent> bookScanLauncher;
+
+    @Nullable
+    private final ActivityResultLauncher<Intent> contentImportLauncher;
 
     private long pendingBookScanSubjectRowId =
             -1L;
@@ -76,7 +84,13 @@ public final class SchoolCurriculumSubjectAdapter
         SchoolBookRepository resolvedBookRepository =
                 null;
 
+        SchoolBookContentProgressRepository resolvedProgressRepository =
+                null;
+
         ActivityResultLauncher<Intent> resolvedBookScanLauncher =
+                null;
+
+        ActivityResultLauncher<Intent> resolvedContentImportLauncher =
                 null;
 
         if (actionListener instanceof ComponentActivity) {
@@ -93,6 +107,11 @@ public final class SchoolCurriculumSubjectAdapter
                             resolvedHostActivity
                     );
 
+            resolvedProgressRepository =
+                    new SchoolBookContentProgressRepository(
+                            resolvedHostActivity
+                    );
+
             resolvedBookScanLauncher =
                     resolvedHostActivity
                             .getActivityResultRegistry()
@@ -102,6 +121,17 @@ public final class SchoolCurriculumSubjectAdapter
                                     new ActivityResultContracts
                                             .StartActivityForResult(),
                                     this::handleBookScanResult
+                            );
+
+            resolvedContentImportLauncher =
+                    resolvedHostActivity
+                            .getActivityResultRegistry()
+                            .register(
+                                    "school_curriculum_content_import",
+                                    resolvedHostActivity,
+                                    new ActivityResultContracts
+                                            .StartActivityForResult(),
+                                    ignored -> notifyDataSetChanged()
                             );
         }
 
@@ -114,8 +144,14 @@ public final class SchoolCurriculumSubjectAdapter
         schoolBookRepository =
                 resolvedBookRepository;
 
+        contentProgressRepository =
+                resolvedProgressRepository;
+
         bookScanLauncher =
                 resolvedBookScanLauncher;
+
+        contentImportLauncher =
+                resolvedContentImportLauncher;
 
         setHasStableIds(
                 true
@@ -1094,15 +1130,9 @@ public final class SchoolCurriculumSubjectAdapter
 
                             boundPrimaryBook = schoolBook;
 
-                            applyContentSetupStatus(
-                                    SubjectContentSetupStatus
-                                            .resolveBookProgress(
-                                                    schoolSubject.isEnabled(),
-                                                    schoolBook.getBookTitle(),
-                                                    schoolBook.getChapterCount(),
-                                                    schoolBook
-                                                            .getProcessedChapterCount()
-                                            )
+                            loadActualContentProgress(
+                                    schoolSubject,
+                                    schoolBook
                             );
                         }
 
@@ -1111,6 +1141,52 @@ public final class SchoolCurriculumSubjectAdapter
                                 @NonNull Exception exception
                         ) {
                             // Existing subject summary remains visible.
+                        }
+                    }
+            );
+        }
+
+        private void loadActualContentProgress(
+                @NonNull SchoolSubjectEntity schoolSubject,
+                @NonNull SchoolBookEntity schoolBook
+        ) {
+            SchoolBookContentProgressRepository repository =
+                    contentProgressRepository;
+
+            long subjectRowId = schoolSubject.getSubjectRowId();
+
+            if (repository == null) {
+                return;
+            }
+
+            repository.getProgress(
+                    schoolBook.getBookRowId(),
+                    new SchoolBookContentProgressRepository.Callback() {
+                        @Override
+                        public void onSuccess(
+                                int chapterCount,
+                                int contentCount
+                        ) {
+                            if (boundSubjectRowId != subjectRowId) {
+                                return;
+                            }
+
+                            applyContentSetupStatus(
+                                    SubjectContentSetupStatus
+                                            .resolveBookProgress(
+                                                    schoolSubject.isEnabled(),
+                                                    schoolBook.getBookTitle(),
+                                                    chapterCount,
+                                                    contentCount
+                                            )
+                            );
+                        }
+
+                        @Override
+                        public void onError(
+                                @NonNull Exception exception
+                        ) {
+                            // Existing safe summary remains visible.
                         }
                     }
             );
@@ -1168,12 +1244,16 @@ public final class SchoolCurriculumSubjectAdapter
             ComponentActivity activity =
                     hostActivity;
 
+            ActivityResultLauncher<Intent> launcher =
+                    contentImportLauncher;
+
             if (setupStatus == null
                     || setupStatus.getStep()
                     != SubjectContentSetupStatus.Step.ADD_MATERIAL
                     || primaryBook == null
                     || primaryBook.getBookRowId() <= 0L
-                    || activity == null) {
+                    || activity == null
+                    || launcher == null) {
 
                 openManageChapters(schoolSubject);
                 return;
@@ -1187,7 +1267,7 @@ public final class SchoolCurriculumSubjectAdapter
                     );
 
             try {
-                activity.startActivity(importIntent);
+                launcher.launch(importIntent);
 
             } catch (RuntimeException exception) {
                 showHostMessage(
