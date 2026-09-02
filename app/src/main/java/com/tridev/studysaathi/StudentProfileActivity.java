@@ -15,12 +15,10 @@ import com.tridev.studysaathi.databinding.ActivityStudentProfileBinding;
 
 public class StudentProfileActivity extends AppCompatActivity {
 
-    public static final String EXTRA_EDIT_PROFILE_ID =
-            "extra_edit_profile_id";
+    public static final String EXTRA_EDIT_PROFILE_ID = "extra_edit_profile_id";
 
     private ActivityStudentProfileBinding binding;
     private StudentProfileRepository studentProfileRepository;
-
     private boolean profileSaveInProgress;
     private long editProfileId;
     private StudentProfileEntity editingProfile;
@@ -36,93 +34,53 @@ public class StudentProfileActivity extends AppCompatActivity {
     };
 
     private final String[] classOptions = {
-            "Class 1",
-            "Class 2",
-            "Class 3",
-            "Class 4",
-            "Class 5",
-            "Class 6",
-            "Class 7",
-            "Class 8",
-            "Class 9",
-            "Class 10",
-            "Class 11",
-            "Class 12"
-    };
-
-    private final String[] mediumOptions = {
-            "English Medium",
-            "Hindi Medium",
-            "Other Medium"
-    };
-
-    private final String[] explanationOptions = {
-            "Hindi + English",
-            "Hindi",
-            "English"
+            "Class 1", "Class 2", "Class 3", "Class 4",
+            "Class 5", "Class 6", "Class 7", "Class 8",
+            "Class 9", "Class 10", "Class 11", "Class 12"
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        binding = ActivityStudentProfileBinding.inflate(
-                getLayoutInflater()
-        );
-
+        binding = ActivityStudentProfileBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        studentProfileRepository =
-                new StudentProfileRepository(this);
-
+        studentProfileRepository = new StudentProfileRepository(this);
         setupDropdowns();
         setupClickListeners();
-        editProfileId = getIntent().getLongExtra(
-                EXTRA_EDIT_PROFILE_ID,
-                0L
-        );
+
+        editProfileId = getIntent().getLongExtra(EXTRA_EDIT_PROFILE_ID, 0L);
         if (editProfileId > 0L) {
             loadProfileForEditing();
         }
     }
 
     private void setupDropdowns() {
-        ArrayAdapter<String> boardAdapter = new ArrayAdapter<>(
-                this,
-                R.layout.item_professional_dropdown,
-                boardOptions
-        );
+        String[] mediumOptions = {
+                getString(R.string.profile_medium_english),
+                getString(R.string.profile_medium_hindi),
+                getString(R.string.profile_medium_other)
+        };
+        String[] explanationOptions = {
+                getString(R.string.profile_explanation_english),
+                getString(R.string.profile_explanation_hindi),
+                getString(R.string.profile_explanation_hinglish)
+        };
 
-        ArrayAdapter<String> classAdapter = new ArrayAdapter<>(
-                this,
-                R.layout.item_professional_dropdown,
-                classOptions
-        );
+        binding.dropdownBoard.setAdapter(new ArrayAdapter<>(
+                this, R.layout.item_professional_dropdown, boardOptions));
+        binding.dropdownClass.setAdapter(new ArrayAdapter<>(
+                this, R.layout.item_professional_dropdown, classOptions));
+        binding.dropdownMedium.setAdapter(new ArrayAdapter<>(
+                this, R.layout.item_professional_dropdown, mediumOptions));
+        binding.dropdownExplanationLanguage.setAdapter(new ArrayAdapter<>(
+                this, R.layout.item_professional_dropdown, explanationOptions));
 
-        ArrayAdapter<String> mediumAdapter = new ArrayAdapter<>(
-                this,
-                R.layout.item_professional_dropdown,
-                mediumOptions
-        );
-
-        ArrayAdapter<String> explanationAdapter = new ArrayAdapter<>(
-                this,
-                R.layout.item_professional_dropdown,
-                explanationOptions
-        );
-
-        binding.dropdownBoard.setAdapter(boardAdapter);
-        binding.dropdownClass.setAdapter(classAdapter);
-        binding.dropdownMedium.setAdapter(mediumAdapter);
-
-        binding.dropdownExplanationLanguage.setAdapter(
-                explanationAdapter
-        );
-
+        // Preserve the old bilingual-first default under its final name.
         binding.dropdownExplanationLanguage.setText(
-                explanationOptions[0],
-                false
-        );
+                getExplanationDisplayLabel(
+                        StudentProfileEntity.EXPLANATION_LANGUAGE_HINGLISH),
+                false);
     }
 
     private void setupClickListeners() {
@@ -131,7 +89,6 @@ public class StudentProfileActivity extends AppCompatActivity {
                 getOnBackPressedDispatcher().onBackPressed();
             }
         });
-
         binding.buttonContinue.setOnClickListener(view -> {
             if (!profileSaveInProgress) {
                 validateAndSaveProfile();
@@ -143,97 +100,47 @@ public class StudentProfileActivity extends AppCompatActivity {
         clearErrors();
 
         String studentName = getStudentName();
-
-        String selectedBoard =
-                getSelectedValue(
-                        binding.dropdownBoard.getText()
-                );
-
-        String selectedClass =
-                getSelectedValue(
-                        binding.dropdownClass.getText()
-                );
-
-        String selectedMedium =
-                getSelectedValue(
-                        binding.dropdownMedium.getText()
-                );
-
+        String selectedBoard = textOf(binding.dropdownBoard.getText());
+        String selectedClass = textOf(binding.dropdownClass.getText());
+        String selectedMedium = StudentProfileEntity.normalizeStudyMedium(
+                textOf(binding.dropdownMedium.getText()));
         String selectedExplanationLanguage =
-                getSelectedValue(
-                        binding.dropdownExplanationLanguage.getText()
-                );
+                StudentProfileEntity.normalizeExplanationLanguage(
+                        textOf(binding.dropdownExplanationLanguage.getText()));
 
-        boolean isValid = true;
-
+        boolean valid = true;
         if (TextUtils.isEmpty(studentName)) {
             binding.inputLayoutStudentName.setError(
-                    getString(
-                            R.string.error_student_name_required
-                    )
-            );
-
-            isValid = false;
+                    getString(R.string.error_student_name_required));
+            valid = false;
         }
-
         if (TextUtils.isEmpty(selectedBoard)) {
             binding.inputLayoutBoard.setError(
-                    getString(
-                            R.string.error_board_required
-                    )
-            );
-
-            isValid = false;
+                    getString(R.string.error_board_required));
+            valid = false;
         }
-
         if (TextUtils.isEmpty(selectedClass)) {
             binding.inputLayoutClass.setError(
-                    getString(
-                            R.string.error_class_required
-                    )
-            );
-
-            isValid = false;
+                    getString(R.string.error_class_required));
+            valid = false;
         }
-
         if (TextUtils.isEmpty(selectedMedium)) {
             binding.inputLayoutMedium.setError(
-                    getString(
-                            R.string.error_medium_required
-                    )
-            );
-
-            isValid = false;
+                    getString(R.string.error_medium_required));
+            valid = false;
         }
-
         if (TextUtils.isEmpty(selectedExplanationLanguage)) {
             binding.inputLayoutExplanationLanguage.setError(
-                    getString(
-                            R.string.error_language_required
-                    )
-            );
-
-            isValid = false;
+                    getString(R.string.error_language_required));
+            valid = false;
         }
 
-        if (!isValid) {
-            Snackbar.make(
-                    binding.getRoot(),
+        if (!valid) {
+            Snackbar.make(binding.getRoot(),
                     R.string.complete_required_information,
-                    Snackbar.LENGTH_SHORT
-            ).show();
-
+                    Snackbar.LENGTH_SHORT).show();
             return;
         }
-
-        StudentProfileEntity studentProfile =
-                createStudentProfileEntity(
-                        studentName,
-                        selectedBoard,
-                        selectedClass,
-                        selectedMedium,
-                        selectedExplanationLanguage
-                );
 
         showSavingState(true);
         if (editingProfile != null) {
@@ -241,13 +148,17 @@ public class StudentProfileActivity extends AppCompatActivity {
             editingProfile.setEducationBoard(selectedBoard);
             editingProfile.setStudentClass(selectedClass);
             editingProfile.setStudyMedium(selectedMedium);
-            editingProfile.setExplanationLanguage(
-                    selectedExplanationLanguage
-            );
+            editingProfile.setExplanationLanguage(selectedExplanationLanguage);
             updateStudentProfile(editingProfile);
-        } else {
-            insertStudentProfile(studentProfile);
+            return;
         }
+
+        insertStudentProfile(createStudentProfileEntity(
+                studentName,
+                selectedBoard,
+                selectedClass,
+                selectedMedium,
+                selectedExplanationLanguage));
     }
 
     private void loadProfileForEditing() {
@@ -264,18 +175,19 @@ public class StudentProfileActivity extends AppCompatActivity {
                             finish();
                             return;
                         }
+
                         editingProfile = profile;
                         binding.editStudentName.setText(profile.getStudentName());
-                        binding.dropdownBoard.setText(profile.getEducationBoard(), false);
-                        binding.dropdownClass.setText(profile.getStudentClass(), false);
-                        binding.dropdownMedium.setText(profile.getStudyMedium(), false);
+                        binding.dropdownBoard.setText(
+                                profile.getEducationBoard(), false);
+                        binding.dropdownClass.setText(
+                                profile.getStudentClass(), false);
+                        binding.dropdownMedium.setText(
+                                getMediumDisplayLabel(profile.getStudyMedium()), false);
                         binding.dropdownExplanationLanguage.setText(
-                                profile.getExplanationLanguage(),
-                                false
-                        );
-                        binding.buttonContinue.setText("Save Changes");
+                                getExplanationDisplayLabel(
+                                        profile.getExplanationLanguage()), false);
                         showSavingState(false);
-                        binding.buttonContinue.setText("Save Changes");
                     }
 
                     @Override
@@ -284,13 +196,10 @@ public class StudentProfileActivity extends AppCompatActivity {
                             finish();
                         }
                     }
-                }
-        );
+                });
     }
 
-    private void updateStudentProfile(
-            @NonNull StudentProfileEntity profile
-    ) {
+    private void updateStudentProfile(@NonNull StudentProfileEntity profile) {
         studentProfileRepository.updateProfile(
                 profile,
                 new StudentProfileRepository.OperationCallback() {
@@ -309,15 +218,11 @@ public class StudentProfileActivity extends AppCompatActivity {
                             return;
                         }
                         showSavingState(false);
-                        binding.buttonContinue.setText("Save Changes");
-                        Snackbar.make(
-                                binding.getRoot(),
-                                "Profile update नहीं हो सका।",
-                                Snackbar.LENGTH_LONG
-                        ).show();
+                        Snackbar.make(binding.getRoot(),
+                                R.string.profile_update_failed,
+                                Snackbar.LENGTH_LONG).show();
                     }
-                }
-        );
+                });
     }
 
     private StudentProfileEntity createStudentProfileEntity(
@@ -327,32 +232,22 @@ public class StudentProfileActivity extends AppCompatActivity {
             @NonNull String studyMedium,
             @NonNull String explanationLanguage
     ) {
-        long currentTime = System.currentTimeMillis();
-
-        StudentProfileEntity studentProfile =
-                new StudentProfileEntity();
-
-        studentProfile.setStudentName(studentName);
-        studentProfile.setEducationBoard(educationBoard);
-        studentProfile.setStudentClass(studentClass);
-        studentProfile.setStudyMedium(studyMedium);
-
-        studentProfile.setExplanationLanguage(
-                explanationLanguage
-        );
-
-        studentProfile.setActive(false);
-        studentProfile.setCreatedAt(currentTime);
-        studentProfile.setUpdatedAt(currentTime);
-
-        return studentProfile;
+        long now = System.currentTimeMillis();
+        StudentProfileEntity profile = new StudentProfileEntity();
+        profile.setStudentName(studentName);
+        profile.setEducationBoard(educationBoard);
+        profile.setStudentClass(studentClass);
+        profile.setStudyMedium(studyMedium);
+        profile.setExplanationLanguage(explanationLanguage);
+        profile.setActive(false);
+        profile.setCreatedAt(now);
+        profile.setUpdatedAt(now);
+        return profile;
     }
 
-    private void insertStudentProfile(
-            @NonNull StudentProfileEntity studentProfile
-    ) {
+    private void insertStudentProfile(@NonNull StudentProfileEntity profile) {
         studentProfileRepository.insertProfile(
-                studentProfile,
+                profile,
                 new StudentProfileRepository.InsertProfileCallback() {
                     @Override
                     public void onSuccess(long insertedProfileId) {
@@ -360,28 +255,19 @@ public class StudentProfileActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onError(
-                            @NonNull Exception exception
-                    ) {
+                    public void onError(@NonNull Exception exception) {
                         if (isFinishing() || isDestroyed()) {
                             return;
                         }
-
                         showSavingState(false);
-
-                        Snackbar.make(
-                                binding.getRoot(),
+                        Snackbar.make(binding.getRoot(),
                                 R.string.profile_save_failed,
-                                Snackbar.LENGTH_LONG
-                        ).show();
+                                Snackbar.LENGTH_LONG).show();
                     }
-                }
-        );
+                });
     }
 
-    private void activateInsertedProfile(
-            long insertedProfileId
-    ) {
+    private void activateInsertedProfile(long insertedProfileId) {
         studentProfileRepository.activateProfile(
                 insertedProfileId,
                 new StudentProfileRepository.OperationCallback() {
@@ -390,69 +276,48 @@ public class StudentProfileActivity extends AppCompatActivity {
                         if (isFinishing() || isDestroyed()) {
                             return;
                         }
-
                         showSavingState(false);
                         openDashboard();
                     }
 
                     @Override
-                    public void onError(
-                            @NonNull Exception exception
-                    ) {
+                    public void onError(@NonNull Exception exception) {
                         if (isFinishing() || isDestroyed()) {
                             return;
                         }
-
                         showSavingState(false);
-
-                        Snackbar.make(
-                                binding.getRoot(),
+                        Snackbar.make(binding.getRoot(),
                                 R.string.profile_activation_failed,
-                                Snackbar.LENGTH_LONG
-                        ).show();
+                                Snackbar.LENGTH_LONG).show();
                     }
-                }
-        );
+                });
     }
 
     private void openDashboard() {
-        Intent dashboardIntent = new Intent(
-                StudentProfileActivity.this,
-                DashboardActivity.class
-        );
-
-        /*
-         * Profile बनने के बाद Welcome और Profile screens को
-         * back stack से हटाकर Dashboard को नई root screen बनाता है।
-         */
-        dashboardIntent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
-                        | Intent.FLAG_ACTIVITY_CLEAR_TASK
-        );
-
-        startActivity(dashboardIntent);
+        Intent intent = new Intent(
+                StudentProfileActivity.this, DashboardActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
     }
 
     private void showSavingState(boolean saving) {
         profileSaveInProgress = saving;
-
         binding.buttonContinue.setEnabled(!saving);
         binding.buttonBack.setEnabled(!saving);
-
         binding.editStudentName.setEnabled(!saving);
         binding.dropdownBoard.setEnabled(!saving);
         binding.dropdownClass.setEnabled(!saving);
         binding.dropdownMedium.setEnabled(!saving);
+        binding.dropdownExplanationLanguage.setEnabled(!saving);
 
-        binding.dropdownExplanationLanguage.setEnabled(
-                !saving
-        );
-
-        binding.buttonContinue.setText(
-                saving
-                        ? R.string.saving_profile
-                        : R.string.continue_button
-        );
+        if (saving) {
+            binding.buttonContinue.setText(R.string.saving_profile);
+        } else if (editProfileId > 0L || editingProfile != null) {
+            binding.buttonContinue.setText(R.string.profile_save_changes);
+        } else {
+            binding.buttonContinue.setText(R.string.continue_button);
+        }
     }
 
     private void clearErrors() {
@@ -460,30 +325,47 @@ public class StudentProfileActivity extends AppCompatActivity {
         binding.inputLayoutBoard.setError(null);
         binding.inputLayoutClass.setError(null);
         binding.inputLayoutMedium.setError(null);
+        binding.inputLayoutExplanationLanguage.setError(null);
+    }
 
-        binding.inputLayoutExplanationLanguage.setError(
-                null
-        );
+    @NonNull
+    private String getMediumDisplayLabel(String storedValue) {
+        String normalized = StudentProfileEntity.normalizeStudyMedium(storedValue);
+        if (StudentProfileEntity.STUDY_MEDIUM_HINDI.equals(normalized)) {
+            return getString(R.string.profile_medium_hindi);
+        }
+        if (StudentProfileEntity.STUDY_MEDIUM_OTHER.equals(normalized)) {
+            return getString(R.string.profile_medium_other);
+        }
+        if (StudentProfileEntity.STUDY_MEDIUM_ENGLISH.equals(normalized)) {
+            return getString(R.string.profile_medium_english);
+        }
+        return storedValue == null ? "" : storedValue.trim();
+    }
+
+    @NonNull
+    private String getExplanationDisplayLabel(String storedValue) {
+        String normalized =
+                StudentProfileEntity.normalizeExplanationLanguage(storedValue);
+        if (StudentProfileEntity.EXPLANATION_LANGUAGE_HINDI.equals(normalized)) {
+            return getString(R.string.profile_explanation_hindi);
+        }
+        if (StudentProfileEntity.EXPLANATION_LANGUAGE_ENGLISH.equals(normalized)) {
+            return getString(R.string.profile_explanation_english);
+        }
+        if (StudentProfileEntity.EXPLANATION_LANGUAGE_HINGLISH.equals(normalized)) {
+            return getString(R.string.profile_explanation_hinglish);
+        }
+        return storedValue == null ? "" : storedValue.trim();
     }
 
     private String getStudentName() {
-        if (binding.editStudentName.getText() == null) {
-            return "";
-        }
-
-        return binding.editStudentName
-                .getText()
-                .toString()
-                .trim();
+        return binding.editStudentName.getText() == null
+                ? ""
+                : binding.editStudentName.getText().toString().trim();
     }
 
-    private String getSelectedValue(
-            CharSequence value
-    ) {
-        if (value == null) {
-            return "";
-        }
-
-        return value.toString().trim();
+    private String textOf(CharSequence value) {
+        return value == null ? "" : value.toString().trim();
     }
 }
