@@ -14,6 +14,9 @@ import com.tridev.studysaathi.data.local.database
 import com.tridev.studysaathi.data.local.entity
         .SchoolBookChapterContentEntity;
 
+import java.util.Collections;
+import java.util.List;
+
 public final class SchoolBookChapterContentRepository {
 
     @NonNull
@@ -84,6 +87,31 @@ public final class SchoolBookChapterContentRepository {
             postSuccess(
                     callback,
                     content
+            );
+        }, callback::onError);
+    }
+
+    public void getContentsForBook(
+            long bookRowId,
+            @NonNull ContentsCallback callback
+    ) {
+        execute(() -> {
+            if (bookRowId <= 0L) {
+                throw new IllegalArgumentException(
+                        "A valid book row ID is required."
+                );
+            }
+
+            List<SchoolBookChapterContentEntity> contents =
+                    contentDao.getContentsForBook(bookRowId);
+
+            List<SchoolBookChapterContentEntity> safeContents =
+                    contents == null
+                            ? Collections.emptyList()
+                            : contents;
+
+            mainThreadHandler.post(() ->
+                    callback.onSuccess(safeContents)
             );
         }, callback::onError);
     }
@@ -494,6 +522,14 @@ public final class SchoolBookChapterContentRepository {
         void onError(
                 @NonNull Exception exception
         );
+    }
+
+    public interface ContentsCallback {
+        void onSuccess(
+                @NonNull List<SchoolBookChapterContentEntity> contents
+        );
+
+        void onError(@NonNull Exception exception);
     }
 
     public interface SaveContentCallback {

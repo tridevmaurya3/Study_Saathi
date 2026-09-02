@@ -9,6 +9,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.tridev.studysaathi.data.local.entity
+        .SchoolBookChapterContentEntity;
+import com.tridev.studysaathi.data.local.entity
         .SchoolBookChapterEntity;
 import com.tridev.studysaathi.databinding
         .ItemSchoolBookChapterBinding;
@@ -16,6 +18,8 @@ import com.tridev.studysaathi.databinding
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class SchoolBookChapterAdapter
         extends RecyclerView.Adapter<
@@ -24,6 +28,10 @@ public final class SchoolBookChapterAdapter
     @NonNull
     private final List<SchoolBookChapterEntity> chapters =
             new ArrayList<>();
+
+    @NonNull
+    private final Map<Long, String> contentReviewStatuses =
+            new HashMap<>();
 
     @NonNull
     private final ChapterActionListener actionListener;
@@ -121,6 +129,14 @@ public final class SchoolBookChapterAdapter
 
         chapters.clear();
 
+        notifyDataSetChanged();
+    }
+
+    public void submitContentReviewStatuses(
+            @NonNull Map<Long, String> statuses
+    ) {
+        contentReviewStatuses.clear();
+        contentReviewStatuses.putAll(statuses);
         notifyDataSetChanged();
     }
 
@@ -244,7 +260,22 @@ public final class SchoolBookChapterAdapter
             );
 
             String processingStatus =
-                    chapter.getContentProcessingStatus();
+                    contentReviewStatuses.get(
+                            chapter.getChapterRowId()
+                    );
+
+            if (processingStatus == null
+                    || processingStatus.trim().isEmpty()) {
+                processingStatus = "No Material";
+            } else if (SchoolBookChapterContentEntity
+                    .REVIEW_STATUS_APPROVED.equals(processingStatus)) {
+                processingStatus = "Approved";
+            } else if (SchoolBookChapterContentEntity
+                    .REVIEW_STATUS_PENDING_REVIEW.equals(processingStatus)) {
+                processingStatus = "Review Pending";
+            } else {
+                processingStatus = "Draft";
+            }
 
             if (processingStatus.isEmpty()) {
                 binding.chapterProcessingStatusTextView

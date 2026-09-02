@@ -15,7 +15,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.tridev.studysaathi.data.local.entity
+        .SchoolBookChapterContentEntity;
+import com.tridev.studysaathi.data.local.entity
         .SchoolBookChapterEntity;
+import com.tridev.studysaathi.data.repository
+        .SchoolBookChapterContentRepository;
 import com.tridev.studysaathi.data.repository
         .SchoolBookChapterRepository;
 import com.tridev.studysaathi.data.repository
@@ -27,6 +31,8 @@ import com.tridev.studysaathi.ui.adapter
 
 import java.util.Collections;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class SchoolBookChaptersActivity
         extends AppCompatActivity
@@ -51,6 +57,8 @@ public final class SchoolBookChaptersActivity
     private ActivitySchoolBookChaptersBinding binding;
 
     private SchoolBookChapterRepository chapterRepository;
+
+    private SchoolBookChapterContentRepository contentRepository;
 
     private SchoolBookChapterPageRepository chapterPageRepository;
 
@@ -179,6 +187,11 @@ public final class SchoolBookChaptersActivity
 
         chapterRepository =
                 new SchoolBookChapterRepository(
+                        getApplicationContext()
+                );
+
+        contentRepository =
+                new SchoolBookChapterContentRepository(
                         getApplicationContext()
                 );
 
@@ -354,6 +367,8 @@ public final class SchoolBookChaptersActivity
                                 safeChapters
                         );
 
+                        loadContentReviewStatuses();
+
                         updateSummary(
                                 safeChapters
                         );
@@ -392,6 +407,36 @@ public final class SchoolBookChaptersActivity
                                         "The chapter list could not be loaded."
                                 )
                         );
+                    }
+                }
+        );
+    }
+
+    private void loadContentReviewStatuses() {
+        contentRepository.getContentsForBook(
+                bookRowId,
+                new SchoolBookChapterContentRepository.ContentsCallback() {
+                    @Override
+                    public void onSuccess(
+                            @NonNull List<SchoolBookChapterContentEntity> contents
+                    ) {
+                        if (!canUpdateScreen()) {
+                            return;
+                        }
+
+                        Map<Long, String> statuses = new HashMap<>();
+                        for (SchoolBookChapterContentEntity content : contents) {
+                            statuses.put(
+                                    content.getChapterRowId(),
+                                    content.getReviewStatus()
+                            );
+                        }
+                        chapterAdapter.submitContentReviewStatuses(statuses);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        // Chapter list remains usable without status badges.
                     }
                 }
         );
