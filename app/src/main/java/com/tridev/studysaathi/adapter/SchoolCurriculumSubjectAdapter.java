@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.tridev.studysaathi.BookCoverScanActivity;
+import com.tridev.studysaathi.BookLearningImportActivity;
 import com.tridev.studysaathi.SchoolBookChaptersActivity;
 import com.tridev.studysaathi.data.content.setup
         .SubjectContentSetupStatus;
@@ -838,6 +839,12 @@ public final class SchoolCurriculumSubjectAdapter
 
         private long boundSubjectRowId = -1L;
 
+        @Nullable
+        private SchoolBookEntity boundPrimaryBook;
+
+        @Nullable
+        private SubjectContentSetupStatus.Result boundSetupStatus;
+
         private SubjectViewHolder(
                 @NonNull ItemSchoolCurriculumSubjectBinding binding
         ) {
@@ -854,6 +861,9 @@ public final class SchoolCurriculumSubjectAdapter
         ) {
             boundSubjectRowId =
                     schoolSubject.getSubjectRowId();
+
+            boundPrimaryBook = null;
+            boundSetupStatus = null;
 
             String englishSubjectName =
                     safeText(
@@ -929,7 +939,7 @@ public final class SchoolCurriculumSubjectAdapter
 
             binding.buttonManageCurriculumSubjectChapters
                     .setOnClickListener(view ->
-                            openManageChapters(
+                            openContentSetupNextStep(
                                     schoolSubject
                             )
                     );
@@ -1082,6 +1092,8 @@ public final class SchoolCurriculumSubjectAdapter
                                 return;
                             }
 
+                            boundPrimaryBook = schoolBook;
+
                             applyContentSetupStatus(
                                     SubjectContentSetupStatus
                                             .resolveBookProgress(
@@ -1107,6 +1119,7 @@ public final class SchoolCurriculumSubjectAdapter
         private void applyContentSetupStatus(
                 @NonNull SubjectContentSetupStatus.Result setupStatus
         ) {
+            boundSetupStatus = setupStatus;
 
             binding.textCurriculumSubjectSetupTitle
                     .setText(
@@ -1141,6 +1154,49 @@ public final class SchoolCurriculumSubjectAdapter
                     .setText(
                             setupStatus.getPrimaryActionLabel()
                     );
+        }
+
+        private void openContentSetupNextStep(
+                @NonNull SchoolSubjectEntity schoolSubject
+        ) {
+            SubjectContentSetupStatus.Result setupStatus =
+                    boundSetupStatus;
+
+            SchoolBookEntity primaryBook =
+                    boundPrimaryBook;
+
+            ComponentActivity activity =
+                    hostActivity;
+
+            if (setupStatus == null
+                    || setupStatus.getStep()
+                    != SubjectContentSetupStatus.Step.ADD_MATERIAL
+                    || primaryBook == null
+                    || primaryBook.getBookRowId() <= 0L
+                    || activity == null) {
+
+                openManageChapters(schoolSubject);
+                return;
+            }
+
+            Intent importIntent =
+                    BookLearningImportActivity.createIntent(
+                            activity,
+                            primaryBook.getBookRowId(),
+                            primaryBook.getBookTitle()
+                    );
+
+            try {
+                activity.startActivity(importIntent);
+
+            } catch (RuntimeException exception) {
+                showHostMessage(
+                        "Bulk material setup नहीं खुल सका। "
+                                + "Chapter list खोली जा रही है।"
+                );
+
+                openManageChapters(schoolSubject);
+            }
         }
     }
 }
