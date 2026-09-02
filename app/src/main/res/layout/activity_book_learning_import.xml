@@ -38,7 +38,7 @@
                 android:id="@+id/bookLearningImportTitleTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="पूरी पुस्तक से Learning Content बनाएँ"
+                android:text="एक बार Book File जोड़ें"
                 android:textAppearance="?attr/textAppearanceHeadlineSmall"
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
@@ -49,7 +49,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:lineSpacingExtra="2dp"
-                android:text="PDF या पुस्तक के पेज की image चुनें। Study Saathi chapters की सीमाएँ पहचानेगा और examples, explanations तथा exercises को अलग करने की तैयारी करेगा।"
+                android:text="Study Saathi आपकी book file से chapters और learning material तैयार करने में मदद करेगा। हर chapter अलग-अलग भरने की जरूरत नहीं है।"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -72,7 +72,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Parent review आवश्यक रहेगा"
+                        android:text="आसान 3-step setup"
                         android:textAppearance="?attr/textAppearanceTitleSmall"
                         android:textColor="?attr/colorOnSecondaryContainer"
                         android:textStyle="bold" />
@@ -82,7 +82,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
                         android:lineSpacingExtra="2dp"
-                        android:text="निकाला गया content सीधे Child Mode में प्रकाशित नहीं होगा। पहले Parent chapter boundaries और learning sections जाँचकर approve करेंगे।"
+                        android:text="1. Book file चुनें  •  2. Chapters जाँचें  •  3. Material approve करें। Approval से पहले कुछ भी Child Mode में publish नहीं होगा।"
                         android:textAppearance="?attr/textAppearanceBodySmall"
                         android:textColor="?attr/colorOnSecondaryContainer" />
 
@@ -94,7 +94,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Book file"
+                android:text="Step 1 of 3 • Book file"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
@@ -106,7 +106,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:minHeight="52dp"
-                android:text="Choose PDF or Image"
+                android:text="Choose Book File"
                 android:textAllCaps="false" />
 
             <com.google.android.material.card.MaterialCardView
@@ -213,7 +213,7 @@
                 android:layout_marginTop="12dp"
                 android:enabled="false"
                 android:minHeight="52dp"
-                android:text="Start Chapter Detection"
+                android:text="Continue to Chapter Review"
                 android:textAllCaps="false" />
 
             <com.google.android.material.button.MaterialButton

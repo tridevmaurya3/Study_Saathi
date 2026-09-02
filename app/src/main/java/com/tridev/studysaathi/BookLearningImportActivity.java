@@ -370,7 +370,7 @@ public final class BookLearningImportActivity
 
         binding.startBookLearningImportButton
                 .setText(
-                        "Start Chapter Detection"
+                        "Continue to Chapter Review"
                 );
 
         binding.startBookLearningImportButton
