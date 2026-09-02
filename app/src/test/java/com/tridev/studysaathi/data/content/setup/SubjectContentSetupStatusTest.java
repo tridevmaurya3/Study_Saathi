@@ -93,4 +93,45 @@ public final class SubjectContentSetupStatusTest {
                 ).getStep()
         );
     }
+
+    @Test
+    public void exactBookWithoutChaptersRequestsChapterList() {
+        SubjectContentSetupStatus.Result result =
+                SubjectContentSetupStatus.resolveBookProgress(
+                        true, "Mathematics", 0, 0
+                );
+
+        assertEquals(
+                SubjectContentSetupStatus.Step.ADD_CHAPTERS,
+                result.getStep()
+        );
+        assertEquals("Add Chapters", result.getPrimaryActionLabel());
+    }
+
+    @Test
+    public void partiallyProcessedBookResumesMaterial() {
+        SubjectContentSetupStatus.Result result =
+                SubjectContentSetupStatus.resolveBookProgress(
+                        true, "Science", 10, 4
+                );
+
+        assertEquals(
+                SubjectContentSetupStatus.Step.ADD_MATERIAL,
+                result.getStep()
+        );
+        assertEquals(
+                "4 of 10 chapters का material तैयार है",
+                result.getDescription()
+        );
+    }
+
+    @Test
+    public void completedBookRequestsReview() {
+        assertEquals(
+                SubjectContentSetupStatus.Step.REVIEW_CONTENT,
+                SubjectContentSetupStatus.resolveBookProgress(
+                        true, "English", 5, 7
+                ).getStep()
+        );
+    }
 }

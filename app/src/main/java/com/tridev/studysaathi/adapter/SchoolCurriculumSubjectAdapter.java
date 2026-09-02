@@ -836,6 +836,8 @@ public final class SchoolCurriculumSubjectAdapter
         @NonNull
         private final ItemSchoolCurriculumSubjectBinding binding;
 
+        private long boundSubjectRowId = -1L;
+
         private SubjectViewHolder(
                 @NonNull ItemSchoolCurriculumSubjectBinding binding
         ) {
@@ -850,6 +852,9 @@ public final class SchoolCurriculumSubjectAdapter
         private void bind(
                 @NonNull SchoolSubjectEntity schoolSubject
         ) {
+            boundSubjectRowId =
+                    schoolSubject.getSubjectRowId();
+
             String englishSubjectName =
                     safeText(
                             schoolSubject
@@ -900,6 +905,10 @@ public final class SchoolCurriculumSubjectAdapter
             );
 
             bindContentSetupStatus(
+                    schoolSubject
+            );
+
+            loadExactBookProgress(
                     schoolSubject
             );
 
@@ -1040,6 +1049,64 @@ public final class SchoolCurriculumSubjectAdapter
                             schoolSubject.getBookName(),
                             schoolSubject.getChapterCount()
                     );
+
+            applyContentSetupStatus(
+                    setupStatus
+            );
+        }
+
+        private void loadExactBookProgress(
+                @NonNull SchoolSubjectEntity schoolSubject
+        ) {
+            SchoolBookRepository repository =
+                    schoolBookRepository;
+
+            long subjectRowId =
+                    schoolSubject.getSubjectRowId();
+
+            if (repository == null
+                    || subjectRowId <= 0L
+                    || safeText(schoolSubject.getBookName()).isEmpty()) {
+                return;
+            }
+
+            repository.getPrimaryBookForSubject(
+                    subjectRowId,
+                    new SchoolBookRepository.SingleBookCallback() {
+                        @Override
+                        public void onSuccess(
+                                @Nullable SchoolBookEntity schoolBook
+                        ) {
+                            if (boundSubjectRowId != subjectRowId
+                                    || schoolBook == null) {
+                                return;
+                            }
+
+                            applyContentSetupStatus(
+                                    SubjectContentSetupStatus
+                                            .resolveBookProgress(
+                                                    schoolSubject.isEnabled(),
+                                                    schoolBook.getBookTitle(),
+                                                    schoolBook.getChapterCount(),
+                                                    schoolBook
+                                                            .getProcessedChapterCount()
+                                            )
+                            );
+                        }
+
+                        @Override
+                        public void onError(
+                                @NonNull Exception exception
+                        ) {
+                            // Existing subject summary remains visible.
+                        }
+                    }
+            );
+        }
+
+        private void applyContentSetupStatus(
+                @NonNull SubjectContentSetupStatus.Result setupStatus
+        ) {
 
             binding.textCurriculumSubjectSetupTitle
                     .setText(

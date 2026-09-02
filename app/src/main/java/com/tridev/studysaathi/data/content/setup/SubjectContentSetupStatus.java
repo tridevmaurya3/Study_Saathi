@@ -54,6 +54,56 @@ public final class SubjectContentSetupStatus {
         );
     }
 
+    /**
+     * Exact book की persisted progress fields मिलने पर ज्यादा स्पष्ट अगला step
+     * देता है। Counts केवल guidance के लिए हैं; यह method कोई data नहीं बदलता।
+     */
+    @NonNull
+    public static Result resolveBookProgress(
+            boolean subjectEnabled,
+            @Nullable String bookName,
+            int chapterCount,
+            int processedChapterCount
+    ) {
+        if (!subjectEnabled || safeText(bookName).isEmpty()) {
+            return resolve(subjectEnabled, bookName, chapterCount);
+        }
+
+        int safeChapterCount = Math.max(0, chapterCount);
+        int safeProcessedCount = Math.min(
+                safeChapterCount,
+                Math.max(0, processedChapterCount)
+        );
+
+        if (safeChapterCount == 0) {
+            return new Result(
+                    Step.ADD_CHAPTERS,
+                    "Next: Add book chapters",
+                    "Chapter list जोड़ें; material बाद में भी पूरा कर सकते हैं",
+                    "Add Chapters"
+            );
+        }
+
+        if (safeProcessedCount < safeChapterCount) {
+            return new Result(
+                    Step.ADD_MATERIAL,
+                    "Continue where you left off",
+                    safeProcessedCount + " of " + safeChapterCount
+                            + " chapters का material तैयार है",
+                    "Continue Material"
+            );
+        }
+
+        return new Result(
+                Step.REVIEW_CONTENT,
+                "Book content ready",
+                safeChapterCount + (safeChapterCount == 1
+                        ? " chapter का material review करें"
+                        : " chapters का material review करें"),
+                "Review Content"
+        );
+    }
+
     @NonNull
     private static String safeText(
             @Nullable String value
@@ -66,7 +116,10 @@ public final class SubjectContentSetupStatus {
     public enum Step {
         HIDDEN,
         ADD_BOOK,
-        CONTINUE_BOOK_SETUP
+        CONTINUE_BOOK_SETUP,
+        ADD_CHAPTERS,
+        ADD_MATERIAL,
+        REVIEW_CONTENT
     }
 
     public static final class Result {
