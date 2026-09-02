@@ -4,24 +4,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Locale;
 
 /**
- * Study Saathi का offline-first answer router।
+ * Offline-first Mathematics answer router.
  *
- * यह class Gemini request भेजने से पहले जाँचती है कि
- * वर्तमान question को सुरक्षित और भरोसेमंद तरीके से
- * local device पर हल किया जा सकता है या नहीं।
- *
- * वर्तमान supported local routes:
- *
- * 1. Mathematics divisibility questions और rules।
- * 2. Direct addition, subtraction, multiplication और division।
- * 3. दो संख्याओं वाले आसान Hindi या English word problems।
- *
- * यह router अस्पष्ट या कठिन question का अनुमान नहीं लगाता।
- * ऐसी स्थिति में handled=false देता है, जिससे question आगे
- * cache या Firebase AI / Gemini को भेजा जा सके।
+ * Stage 5 preserves the existing deterministic solvers and public API while
+ * replacing the old duplicated bilingual output with one natural Hinglish
+ * explanation when Hinglish is selected.
  */
 public final class OfflineSmartAnswerRouter {
 
@@ -34,31 +25,27 @@ public final class OfflineSmartAnswerRouter {
     public static final String SOURCE_NOT_HANDLED =
             "NOT_HANDLED";
 
-    private OfflineSmartAnswerRouter() {
-        /*
-         * Utility class.
-         * Object creation is not required.
-         */
-    }
+    @NonNull
+    private static final String[] HINGLISH_OVERRIDE_PHRASES = {
+            "in hinglish", "hinglish mein", "hinglish me", "हिंग्लिश में",
+            "हिंग्लिश मे", "hindi english mix", "hindi + english",
+            "hindi+english", "हिंदी इंग्लिश मिक्स", "हिन्दी इंग्लिश मिक्स"
+    };
 
-    /**
-     * Current student question का offline answer बनाने की कोशिश करता है।
-     *
-     * Routing order:
-     *
-     * 1. Request validation
-     * 2. Image safety check
-     * 3. Mathematics subject check
-     * 4. Divisibility solver
-     * 5. Basic arithmetic solver
-     *
-     * @param subjectName selected school subject
-     * @param question current student question
-     * @param explanationLanguage selected answer language
-     * @param imageAttached current question के साथ image लगी है या नहीं
-     *
-     * @return handled result या not-handled result
-     */
+    @NonNull
+    private static final String[] ENGLISH_OVERRIDE_PHRASES = {
+            "in english", "english mein", "english me", "english please",
+            "अंग्रेजी में", "अंग्रेज़ी में", "इंग्लिश में", "इंग्लिश मे"
+    };
+
+    @NonNull
+    private static final String[] HINDI_OVERRIDE_PHRASES = {
+            "in hindi", "hindi mein", "hindi me", "hindi please",
+            "हिंदी में", "हिन्दी में", "हिंदी मे", "हिन्दी मे"
+    };
+
+    private OfflineSmartAnswerRouter() { }
+
     @NonNull
     public static RouteResult tryCreateAnswer(
             @Nullable String subjectName,
@@ -66,28 +53,16 @@ public final class OfflineSmartAnswerRouter {
             @Nullable String explanationLanguage,
             boolean imageAttached
     ) {
-        String safeSubjectName =
-                safeText(
-                        subjectName
-                );
-
-        String safeQuestion =
-                safeText(
-                        question
-                );
+        String safeSubjectName = safeText(subjectName);
+        String safeQuestion = safeText(question);
 
         if (safeQuestion.isEmpty()) {
-            return RouteResult.notHandled(
-                    "Question is empty."
-            );
+            return RouteResult.notHandled("Question is empty.");
         }
 
         /*
-         * Original image वाले questions को अभी Gemini तक जाने दिया जाएगा।
-         *
-         * कारण:
-         * Image में diagram, handwritten symbols, fractions,
-         * extra numbers या visual information हो सकती है।
+         * Image questions continue through the existing Gemini/image path.
+         * We never guess visual information in the deterministic router.
          */
         if (imageAttached) {
             return RouteResult.notHandled(
@@ -95,38 +70,43 @@ public final class OfflineSmartAnswerRouter {
             );
         }
 
-        if (!isMathematicsSubject(
-                safeSubjectName
-        )) {
+        if (!isMathematicsSubject(safeSubjectName)) {
             return RouteResult.notHandled(
                     "Selected subject is not Mathematics."
             );
         }
 
+        LanguageMode languageMode =
+                resolveLanguageMode(explanationLanguage, safeQuestion);
+
         /*
-         * सबसे पहले divisibility question जाँचें।
-         *
-         * उदाहरण:
-         *
-         * क्या 403403 संख्या 11 से विभाज्य है?
-         * 3 से विभाज्यता का नियम बताओ।
-         * Is 826 divisible by 7?
-         *
-         * Divisibility solver language selection स्वयं संभालता है।
+         * Keep the existing deterministic divisibility solver. For Hinglish,
+         * ask it for a deterministic Hindi form and rebuild only the display
+         * wording from its structured result; the calculation is untouched.
          */
-        OfflineDivisibilitySolver.SolveResult
-                divisibilitySolveResult =
+        String divisibilitySolverLanguage =
+                languageMode == LanguageMode.ENGLISH
+                        ? "English"
+                        : "Hindi";
+
+        OfflineDivisibilitySolver.SolveResult divisibilitySolveResult =
                 OfflineDivisibilitySolver.trySolve(
                         safeQuestion,
-                        explanationLanguage
+                        divisibilitySolverLanguage
                 );
 
         if (divisibilitySolveResult.isSolved()) {
-            String divisibilityAnswer =
-                    safeText(
-                            divisibilitySolveResult
-                                    .getAnswerText()
-                    );
+            String divisibilityAnswer;
+
+            if (languageMode == LanguageMode.HINGLISH) {
+                divisibilityAnswer =
+                        createHinglishDivisibilityAnswer(
+                                divisibilitySolveResult
+                        );
+            } else {
+                divisibilityAnswer =
+                        safeText(divisibilitySolveResult.getAnswerText());
+            }
 
             if (!divisibilityAnswer.isEmpty()) {
                 return RouteResult.handled(
@@ -137,308 +117,321 @@ public final class OfflineSmartAnswerRouter {
             }
         }
 
-        /*
-         * Divisibility question न होने पर basic arithmetic
-         * और आसान word-problem solver चलाएँ।
-         */
-        OfflineBasicMathSolver.SolveResult
-                basicMathSolveResult =
-                OfflineBasicMathSolver.trySolve(
-                        safeQuestion
-                );
+        OfflineBasicMathSolver.SolveResult basicMathSolveResult =
+                OfflineBasicMathSolver.trySolve(safeQuestion);
 
         if (!basicMathSolveResult.isSolved()) {
             return RouteResult.notHandled(
                     createCombinedDiagnosticReason(
-                            divisibilitySolveResult
-                                    .getDiagnosticReason(),
-                            basicMathSolveResult
-                                    .getDiagnosticReason()
+                            divisibilitySolveResult.getDiagnosticReason(),
+                            basicMathSolveResult.getDiagnosticReason()
                     )
             );
         }
 
-        LanguageMode languageMode =
-                detectLanguageMode(
-                        explanationLanguage
-                );
+        String finalAnswer;
+        switch (languageMode) {
+            case ENGLISH:
+                finalAnswer =
+                        createEnglishBasicMathAnswer(basicMathSolveResult);
+                break;
 
-        String englishAnswer =
-                createEnglishBasicMathAnswer(
-                        basicMathSolveResult
-                );
+            case HINDI:
+                finalAnswer =
+                        safeText(basicMathSolveResult.getAnswerText());
+                break;
 
-        String hindiAnswer =
-                basicMathSolveResult
-                        .getAnswerText();
-
-        String finalAnswer =
-                combineAnswer(
-                        englishAnswer,
-                        hindiAnswer,
-                        languageMode
-                );
+            case HINGLISH:
+            default:
+                finalAnswer =
+                        createHinglishBasicMathAnswer(basicMathSolveResult);
+                break;
+        }
 
         return RouteResult.handled(
                 finalAnswer,
                 SOURCE_OFFLINE_BASIC_MATH,
-                basicMathSolveResult
-                        .getConfidence()
+                basicMathSolveResult.getConfidence()
         );
     }
 
-    /**
-     * Different school subject naming formats में Mathematics पहचानता है।
-     *
-     * Supported examples:
-     *
-     * Mathematics
-     * Maths
-     * Math
-     * गणित
-     * अंकगणित
-     */
-    private static boolean isMathematicsSubject(
-            @NonNull String subjectName
-    ) {
-        String normalizedSubjectName =
-                normalizeText(
-                        subjectName
-                );
+    private static boolean isMathematicsSubject(@NonNull String subjectName) {
+        String normalizedSubjectName = normalizeText(subjectName);
 
-        return normalizedSubjectName.contains(
-                "mathematics"
-        )
-                || normalizedSubjectName.contains(
-                "maths"
-        )
-                || normalizedSubjectName.equals(
-                "math"
-        )
-                || normalizedSubjectName.contains(
-                "गणित"
-        )
-                || normalizedSubjectName.contains(
-                "अंकगणित"
-        );
+        return normalizedSubjectName.contains("mathematics")
+                || normalizedSubjectName.contains("maths")
+                || normalizedSubjectName.equals("math")
+                || normalizedSubjectName.contains("गणित")
+                || normalizedSubjectName.contains("अंकगणित");
     }
 
-    /**
-     * Basic Mathematics structured result से English answer बनाता है।
-     */
     @NonNull
     private static String createEnglishBasicMathAnswer(
             @NonNull OfflineBasicMathSolver.SolveResult solveResult
     ) {
-        String expression =
-                solveResult.getExpression();
-
+        String expression = solveResult.getExpression();
         String resultDisplayValue =
                 formatBasicMathValue(
                         solveResult.getResultValue(),
                         solveResult.getCurrencySymbol()
                 );
 
-        StringBuilder answerBuilder =
-                new StringBuilder();
+        StringBuilder answerBuilder = new StringBuilder();
+        if (!safeText(expression).isEmpty()) {
+            answerBuilder.append(expression).append("\n\n");
+        }
 
-        answerBuilder.append(
-                expression
-        );
-
-        answerBuilder.append(
-                "\n\n"
-        );
-
-        OfflineBasicMathSolver.Operation operation =
-                solveResult.getOperation();
+        OfflineBasicMathSolver.Operation operation = solveResult.getOperation();
 
         if (operation == null) {
-            answerBuilder.append(
-                    "Therefore, the answer is "
-            );
-
-            answerBuilder.append(
-                    resultDisplayValue
-            );
-
-            answerBuilder.append(
-                    "."
-            );
-
-            return answerBuilder.toString();
+            return answerBuilder
+                    .append("Therefore, the answer is ")
+                    .append(resultDisplayValue)
+                    .append(".")
+                    .toString();
         }
 
         switch (operation) {
             case ADDITION:
-                answerBuilder.append(
-                        "Therefore, the total is "
-                );
-
-                answerBuilder.append(
-                        resultDisplayValue
-                );
-
-                answerBuilder.append(
-                        "."
-                );
+                answerBuilder.append("Therefore, the total is ")
+                        .append(resultDisplayValue)
+                        .append(".");
                 break;
 
             case SUBTRACTION:
-                if (!solveResult
-                        .getCurrencySymbol()
-                        .isEmpty()) {
-
-                    answerBuilder.append(
-                            "Therefore, "
-                    );
-
-                    answerBuilder.append(
-                            resultDisplayValue
-                    );
-
-                    answerBuilder.append(
-                            " remains."
-                    );
-
+                if (!solveResult.getCurrencySymbol().isEmpty()) {
+                    answerBuilder.append("Therefore, ")
+                            .append(resultDisplayValue)
+                            .append(" remains.");
                 } else {
-                    answerBuilder.append(
-                            "Therefore, the remaining value is "
-                    );
-
-                    answerBuilder.append(
-                            resultDisplayValue
-                    );
-
-                    answerBuilder.append(
-                            "."
-                    );
+                    answerBuilder.append("Therefore, the remaining value is ")
+                            .append(resultDisplayValue)
+                            .append(".");
                 }
                 break;
 
             case MULTIPLICATION:
-                answerBuilder.append(
-                        "Therefore, the product is "
-                );
-
-                answerBuilder.append(
-                        resultDisplayValue
-                );
-
-                answerBuilder.append(
-                        "."
-                );
+                answerBuilder.append("Therefore, the product is ")
+                        .append(resultDisplayValue)
+                        .append(".");
                 break;
 
             case DIVISION:
-                answerBuilder.append(
-                        "Therefore, the quotient is "
-                );
-
-                answerBuilder.append(
-                        resultDisplayValue
-                );
-
-                answerBuilder.append(
-                        "."
-                );
+                answerBuilder.append("Therefore, the quotient is ")
+                        .append(resultDisplayValue)
+                        .append(".");
                 break;
 
             default:
-                answerBuilder.append(
-                        "Therefore, the answer is "
-                );
-
-                answerBuilder.append(
-                        resultDisplayValue
-                );
-
-                answerBuilder.append(
-                        "."
-                );
+                answerBuilder.append("Therefore, the answer is ")
+                        .append(resultDisplayValue)
+                        .append(".");
                 break;
         }
 
         return answerBuilder.toString();
     }
 
-    /**
-     * Student की selected explanation language के अनुसार
-     * basic Mathematics final answer बनाता है।
-     */
     @NonNull
-    private static String combineAnswer(
-            @NonNull String englishAnswer,
-            @NonNull String hindiAnswer,
-            @NonNull LanguageMode languageMode
+    private static String createHinglishBasicMathAnswer(
+            @NonNull OfflineBasicMathSolver.SolveResult solveResult
     ) {
-        switch (languageMode) {
-            case HINDI:
-                return hindiAnswer;
+        String expression = safeText(solveResult.getExpression());
+        String resultDisplayValue =
+                formatBasicMathValue(
+                        solveResult.getResultValue(),
+                        solveResult.getCurrencySymbol()
+                );
 
-            case ENGLISH:
-                return englishAnswer;
+        StringBuilder answer = new StringBuilder();
+        if (!expression.isEmpty()) {
+            answer.append(expression).append("\n\n");
+        }
 
-            case BILINGUAL:
+        OfflineBasicMathSolver.Operation operation = solveResult.getOperation();
+        if (operation == null) {
+            return answer.append("इसलिए final answer ")
+                    .append(resultDisplayValue)
+                    .append(" है.")
+                    .toString();
+        }
+
+        switch (operation) {
+            case ADDITION:
+                answer.append("इस calculation में total ")
+                        .append(resultDisplayValue)
+                        .append(" है.");
+                break;
+
+            case SUBTRACTION:
+                answer.append("इस calculation के बाद ")
+                        .append(resultDisplayValue)
+                        .append(" remaining है.");
+                break;
+
+            case MULTIPLICATION:
+                answer.append("इसलिए product ")
+                        .append(resultDisplayValue)
+                        .append(" है.");
+                break;
+
+            case DIVISION:
+                answer.append("इसलिए quotient ")
+                        .append(resultDisplayValue)
+                        .append(" है.");
+                break;
+
             default:
-                return "English:\n"
-                        + englishAnswer
-                        + "\n\nहिंदी:\n"
-                        + hindiAnswer;
+                answer.append("इसलिए final answer ")
+                        .append(resultDisplayValue)
+                        .append(" है.");
+                break;
+        }
+
+        return answer.toString();
+    }
+
+    @NonNull
+    private static String createHinglishDivisibilityAnswer(
+            @NonNull OfflineDivisibilitySolver.SolveResult solveResult
+    ) {
+        BigInteger divisor = solveResult.getDivisor();
+
+        if (solveResult.isRuleAnswer()) {
+            if (divisor == null) {
+                return "";
+            }
+            return createHinglishDivisibilityRule(divisor);
+        }
+
+        BigInteger dividend = solveResult.getDividend();
+        BigInteger remainder = solveResult.getRemainder();
+
+        if (dividend == null || divisor == null || remainder == null) {
+            return "";
+        }
+
+        StringBuilder answer = new StringBuilder();
+        answer.append(dividend)
+                .append(" को ")
+                .append(divisor)
+                .append(" से divide करने पर remainder ")
+                .append(remainder)
+                .append(" आता है.\n\n");
+
+        if (solveResult.isDivisible()) {
+            answer.append("Remainder 0 है, इसलिए यह number ")
+                    .append(divisor)
+                    .append(" से completely divisible है.");
+        } else {
+            answer.append("Remainder 0 नहीं है, इसलिए यह number ")
+                    .append(divisor)
+                    .append(" से completely divisible नहीं है.");
+        }
+
+        return answer.toString();
+    }
+
+    @NonNull
+    private static String createHinglishDivisibilityRule(
+            @NonNull BigInteger divisor
+    ) {
+        int divisorValue =
+                divisor.bitLength() < 31
+                        ? divisor.intValue()
+                        : -1;
+
+        switch (divisorValue) {
+            case 2:
+                return "2 का divisibility rule:\nLast digit 0, 2, 4, 6 या 8 हो, तो number 2 से divisible होता है.";
+
+            case 3:
+                return "3 का divisibility rule:\nसभी digits का sum निकालें. अगर digit sum 3 से divisible है, तो पूरा number भी 3 से divisible होगा.";
+
+            case 4:
+                return "4 का divisibility rule:\nLast two digits से बने number को check करें. वह 4 से divisible हो, तो पूरा number भी 4 से divisible होगा.";
+
+            case 5:
+                return "5 का divisibility rule:\nLast digit 0 या 5 होना चाहिए.";
+
+            case 6:
+                return "6 का divisibility rule:\nNumber को 2 और 3 दोनों से divisible होना चाहिए.";
+
+            case 8:
+                return "8 का divisibility rule:\nLast three digits से बने number को check करें. वह 8 से divisible हो, तो पूरा number भी 8 से divisible होगा.";
+
+            case 9:
+                return "9 का divisibility rule:\nसभी digits का sum निकालें. अगर digit sum 9 से divisible है, तो पूरा number भी 9 से divisible होगा.";
+
+            case 10:
+                return "10 का divisibility rule:\nLast digit 0 होना चाहिए.";
+
+            case 11:
+                return "11 का divisibility rule:\nAlternate-place digits के दोनों sums का difference निकालें. Difference 0 या 11 का multiple हो, तो number 11 से divisible होता है.";
+
+            default:
+                return divisor
+                        + " से divisibility check करने के लिए number को "
+                        + divisor
+                        + " से divide करें. Remainder 0 हो, तो number divisible है.";
         }
     }
 
-    /**
-     * Explanation language setting को internal language mode में बदलता है।
-     */
     @NonNull
-    private static LanguageMode detectLanguageMode(
-            @Nullable String explanationLanguage
+    private static LanguageMode resolveLanguageMode(
+            @Nullable String explanationLanguage,
+            @Nullable String currentQuestion
     ) {
-        String normalizedLanguage =
-                normalizeText(
-                        explanationLanguage
-                );
+        String question = normalizeText(currentQuestion);
 
-        boolean containsHindi =
-                normalizedLanguage.contains(
-                        "hindi"
-                )
-                        || normalizedLanguage.contains(
-                        "हिंदी"
-                );
-
-        boolean containsEnglish =
-                normalizedLanguage.contains(
-                        "english"
-                )
-                        || normalizedLanguage.contains(
-                        "अंग्रेज"
-                );
-
-        if (containsHindi
-                && !containsEnglish) {
-
+        if (containsAny(question, HINGLISH_OVERRIDE_PHRASES)) {
+            return LanguageMode.HINGLISH;
+        }
+        if (containsAny(question, ENGLISH_OVERRIDE_PHRASES)) {
+            return LanguageMode.ENGLISH;
+        }
+        if (containsAny(question, HINDI_OVERRIDE_PHRASES)) {
             return LanguageMode.HINDI;
         }
 
-        if (containsEnglish
-                && !containsHindi) {
+        String language = normalizeText(explanationLanguage);
 
+        if (language.contains("hinglish")
+                || language.contains("bilingual")
+                || language.contains("hi,en")
+                || language.contains("hindi + english")
+                || language.contains("hindi+english")
+                || (language.contains("hindi") && language.contains("english"))) {
+            return LanguageMode.HINGLISH;
+        }
+
+        if ((language.contains("english") || language.equals("en"))
+                && !language.contains("hindi")) {
             return LanguageMode.ENGLISH;
         }
 
-        return LanguageMode.BILINGUAL;
+        if (language.contains("hindi")
+                || language.equals("hi")
+                || language.contains("हिंदी")
+                || language.contains("हिन्दी")) {
+            return LanguageMode.HINDI;
+        }
+
+        return LanguageMode.HINGLISH;
     }
 
-    /**
-     * BigDecimal को student-friendly format में बदलता है।
-     *
-     * उदाहरण:
-     *
-     * 42.00 → 42
-     * 7.50  → 7.5
-     */
+    private static boolean containsAny(
+            @NonNull String source,
+            @NonNull String[] keywords
+    ) {
+        for (String keyword : keywords) {
+            if (source.contains(keyword.toLowerCase(Locale.ROOT))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @NonNull
     private static String formatBasicMathValue(
             @Nullable BigDecimal value,
@@ -448,44 +441,24 @@ public final class OfflineSmartAnswerRouter {
             return currencySymbol + "0";
         }
 
-        BigDecimal normalizedValue =
-                value.stripTrailingZeros();
-
+        BigDecimal normalizedValue = value.stripTrailingZeros();
         if (normalizedValue.scale() < 0) {
-            normalizedValue =
-                    normalizedValue.setScale(
-                            0
-                    );
+            normalizedValue = normalizedValue.setScale(0);
         }
 
-        return currencySymbol
-                + normalizedValue.toPlainString();
+        return currencySymbol + normalizedValue.toPlainString();
     }
 
-    /**
-     * दोनों offline solvers के failure reasons को internal
-     * diagnostic message में जोड़ता है।
-     *
-     * यह message student को नहीं दिखाया जाएगा।
-     */
     @NonNull
     private static String createCombinedDiagnosticReason(
             @Nullable String divisibilityReason,
             @Nullable String basicMathReason
     ) {
-        String safeDivisibilityReason =
-                safeText(
-                        divisibilityReason
-                );
-
-        String safeBasicMathReason =
-                safeText(
-                        basicMathReason
-                );
+        String safeDivisibilityReason = safeText(divisibilityReason);
+        String safeBasicMathReason = safeText(basicMathReason);
 
         if (safeDivisibilityReason.isEmpty()
                 && safeBasicMathReason.isEmpty()) {
-
             return "No supported offline Mathematics route matched.";
         }
 
@@ -504,44 +477,24 @@ public final class OfflineSmartAnswerRouter {
     }
 
     @NonNull
-    private static String normalizeText(
-            @Nullable String value
-    ) {
-        return safeText(
-                value
-        )
-                .replaceAll(
-                        "\\s+",
-                        " "
-                )
-                .toLowerCase(
-                        Locale.ROOT
-                )
+    private static String normalizeText(@Nullable String value) {
+        return safeText(value)
+                .replaceAll("\\s+", " ")
+                .toLowerCase(Locale.ROOT)
                 .trim();
     }
 
     @NonNull
-    private static String safeText(
-            @Nullable Object value
-    ) {
-        return value == null
-                ? ""
-                : value.toString()
-                .trim();
+    private static String safeText(@Nullable Object value) {
+        return value == null ? "" : value.toString().trim();
     }
 
     private enum LanguageMode {
-
-        BILINGUAL,
-
+        ENGLISH,
         HINDI,
-
-        ENGLISH
+        HINGLISH
     }
 
-    /**
-     * Offline routing का immutable result।
-     */
     public static final class RouteResult {
 
         private final boolean handled;
@@ -565,20 +518,11 @@ public final class OfflineSmartAnswerRouter {
                 @NonNull String diagnosticReason,
                 @Nullable OfflineBasicMathSolver.Confidence confidence
         ) {
-            this.handled =
-                    handled;
-
-            this.answerText =
-                    answerText;
-
-            this.answerSource =
-                    answerSource;
-
-            this.diagnosticReason =
-                    diagnosticReason;
-
-            this.confidence =
-                    confidence;
+            this.handled = handled;
+            this.answerText = answerText;
+            this.answerSource = answerSource;
+            this.diagnosticReason = diagnosticReason;
+            this.confidence = confidence;
         }
 
         @NonNull
@@ -609,51 +553,25 @@ public final class OfflineSmartAnswerRouter {
             );
         }
 
-        /**
-         * true होने पर answer Gemini को भेजे बिना दिखाया जा सकता है।
-         */
         public boolean isHandled() {
             return handled;
         }
 
-        /**
-         * Student को दिखाने योग्य final answer।
-         */
         @NonNull
         public String getAnswerText() {
             return answerText;
         }
 
-        /**
-         * Answer किस local engine से आया।
-         *
-         * संभावित values:
-         *
-         * OFFLINE_DIVISIBILITY
-         * OFFLINE_BASIC_MATH
-         * NOT_HANDLED
-         */
         @NonNull
         public String getAnswerSource() {
             return answerSource;
         }
 
-        /**
-         * handled=false होने का internal कारण।
-         *
-         * यह text student को दिखाने के लिए नहीं है।
-         */
         @NonNull
         public String getDiagnosticReason() {
             return diagnosticReason;
         }
 
-        /**
-         * Basic Mathematics solver की confidence।
-         *
-         * Divisibility answer में यह null हो सकती है क्योंकि
-         * divisibility solver deterministic result देता है।
-         */
         @Nullable
         public OfflineBasicMathSolver.Confidence getConfidence() {
             return confidence;
