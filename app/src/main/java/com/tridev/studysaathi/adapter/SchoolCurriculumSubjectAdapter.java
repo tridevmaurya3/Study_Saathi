@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.tridev.studysaathi.BookCoverScanActivity;
 import com.tridev.studysaathi.SchoolBookChaptersActivity;
+import com.tridev.studysaathi.data.content.setup
+        .SubjectContentSetupStatus;
 import com.tridev.studysaathi.data.local.entity.SchoolBookEntity;
 import com.tridev.studysaathi.data.local.entity.SchoolSubjectEntity;
 import com.tridev.studysaathi.data.repository.SchoolBookRepository;
@@ -897,6 +899,10 @@ public final class SchoolCurriculumSubjectAdapter
                     schoolSubject
             );
 
+            bindContentSetupStatus(
+                    schoolSubject
+            );
+
             binding.cardCurriculumSubjectItem
                     .setOnClickListener(view ->
                             actionListener
@@ -1022,6 +1028,51 @@ public final class SchoolCurriculumSubjectAdapter
             binding.buttonManageCurriculumSubjectChapters
                     .setVisibility(
                             View.VISIBLE
+                    );
+        }
+
+        private void bindContentSetupStatus(
+                @NonNull SchoolSubjectEntity schoolSubject
+        ) {
+            SubjectContentSetupStatus.Result setupStatus =
+                    SubjectContentSetupStatus.resolve(
+                            schoolSubject.isEnabled(),
+                            schoolSubject.getBookName(),
+                            schoolSubject.getChapterCount()
+                    );
+
+            binding.textCurriculumSubjectSetupTitle
+                    .setText(
+                            setupStatus.getTitle()
+                    );
+
+            binding.textCurriculumSubjectSetupDescription
+                    .setText(
+                            setupStatus.getDescription()
+                    );
+
+            if (setupStatus.getStep()
+                    == SubjectContentSetupStatus.Step.HIDDEN) {
+                return;
+            }
+
+            boolean exactBookAvailable =
+                    !safeText(
+                            schoolSubject.getBookName()
+                    ).isEmpty();
+
+            if (!exactBookAvailable) {
+                binding.buttonScanCurriculumSubjectBook
+                        .setText(
+                                setupStatus.getPrimaryActionLabel()
+                        );
+
+                return;
+            }
+
+            binding.buttonManageCurriculumSubjectChapters
+                    .setText(
+                            setupStatus.getPrimaryActionLabel()
                     );
         }
     }
