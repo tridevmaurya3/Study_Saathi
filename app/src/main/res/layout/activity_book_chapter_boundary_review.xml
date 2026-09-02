@@ -12,7 +12,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorSurface"
         android:elevation="0dp"
-        android:title="Review Detected Chapters"
+        android:title="Step 2 • Check Chapters"
         app:navigationIcon="@drawable/ic_arrow_back"
         app:titleTextColor="?attr/colorOnSurface" />
 
@@ -34,7 +34,7 @@
                 android:id="@+id/chapterBoundaryReviewSummaryTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="0 chapters detected"
+                android:text="0 chapters मिले"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
@@ -69,7 +69,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Parent verification required"
+                        android:text="बस title और page range जाँचें"
                         android:textAppearance="?attr/textAppearanceTitleSmall"
                         android:textColor="?attr/colorOnSecondaryContainer"
                         android:textStyle="bold" />
@@ -80,7 +80,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dp"
                         android:lineSpacingExtra="2dp"
-                        android:text="हर chapter का title, start page और end page जाँचें। कम-confidence results को विशेष रूप से सुधारें।"
+                        android:text="Study Saathi ने बाकी details भर दी हैं। केवल गलत title या page range को edit करें।"
                         android:textAppearance="?attr/textAppearanceBodySmall"
                         android:textColor="?attr/colorOnSecondaryContainer" />
 
@@ -121,7 +121,7 @@
                 android:layout_height="wrap_content"
                 android:enabled="false"
                 android:minHeight="52dp"
-                android:text="Approve &amp; Continue"
+                android:text="Save Chapters &amp; Continue"
                 android:textAllCaps="false" />
 
             <com.google.android.material.button.MaterialButton
@@ -131,7 +131,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:minHeight="48dp"
-                android:text="Cancel"
+                android:text="Back"
                 android:textAllCaps="false" />
 
         </LinearLayout>
@@ -155,7 +155,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Preparing chapter review…"
+                android:text="Chapters तैयार किए जा रहे हैं…"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurfaceVariant" />
 

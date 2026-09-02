@@ -202,7 +202,9 @@ public final class BookChapterBoundaryReviewActivity
         binding.chapterBoundaryReviewSummaryTextView
                 .setText(
                         totalCandidates
-                                + " chapters detected"
+                                + (totalCandidates == 1
+                                ? " chapter मिला"
+                                : " chapters मिले")
                 );
 
         binding.chapterBoundaryReviewBookTitleTextView
@@ -214,11 +216,11 @@ public final class BookChapterBoundaryReviewActivity
 
         binding.chapterBoundaryReviewWarningTextView
                 .setText(
-                        "हर chapter का title, start page और "
-                                + "end page जाँचें। "
+                        "Title और page range जल्दी से जाँचें। "
                                 + carefulReviewCount
-                                + " low-confidence chapters को "
-                                + "विशेष रूप से सुधारें।"
+                                + (carefulReviewCount == 1
+                                ? " chapter को extra check चाहिए।"
+                                : " chapters को extra check चाहिए।")
                 );
     }
 
