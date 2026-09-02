@@ -77,6 +77,8 @@ public final class SchoolBookChaptersActivity
 
     private boolean focusedContentReview;
 
+    private boolean automaticResumeConsumed;
+
     @NonNull
     private final ActivityResultLauncher<Intent> contentsScanLauncher =
             registerForActivityResult(
@@ -428,10 +430,15 @@ public final class SchoolBookChaptersActivity
                         for (SchoolBookChapterContentEntity content : contents) {
                             statuses.put(
                                     content.getChapterRowId(),
-                                    content.getReviewStatus()
+                                    content.isReadyForChildMode()
+                                            ? SchoolBookChapterContentEntity
+                                            .REVIEW_STATUS_APPROVED
+                                            : content.getReviewStatus()
                             );
                         }
                         chapterAdapter.submitContentReviewStatuses(statuses);
+
+                        openNextUnfinishedChapter(statuses);
                     }
 
                     @Override
@@ -440,6 +447,29 @@ public final class SchoolBookChaptersActivity
                     }
                 }
         );
+    }
+
+    private void openNextUnfinishedChapter(
+            @NonNull Map<Long, String> statuses
+    ) {
+        if (!focusedContentReview || automaticResumeConsumed) {
+            return;
+        }
+
+        automaticResumeConsumed = true;
+
+        for (SchoolBookChapterEntity chapter
+                : chapterAdapter.getCurrentChapters()) {
+            String status = statuses.get(chapter.getChapterRowId());
+
+            if (!SchoolBookChapterContentEntity.REVIEW_STATUS_APPROVED
+                    .equals(status)) {
+                binding.chaptersRecyclerView.post(() ->
+                        onOpenChapter(chapter)
+                );
+                return;
+            }
+        }
     }
 
     private void updateSummary(

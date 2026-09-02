@@ -438,7 +438,8 @@ public final class SchoolCurriculumSubjectAdapter
      * screen खोलता है।
      */
     private void openManageChapters(
-            @NonNull SchoolSubjectEntity schoolSubject
+            @NonNull SchoolSubjectEntity schoolSubject,
+            boolean focusedReview
     ) {
         if (openingChapterScreen) {
             return;
@@ -497,7 +498,14 @@ public final class SchoolCurriculumSubjectAdapter
                         }
 
                         Intent chapterIntent =
-                                SchoolBookChaptersActivity
+                                focusedReview
+                                        ? SchoolBookChaptersActivity
+                                        .createContentReviewIntent(
+                                                activity,
+                                                schoolBook.getBookRowId(),
+                                                schoolBook.getBookTitle()
+                                        )
+                                        : SchoolBookChaptersActivity
                                         .createIntent(
                                                 activity,
                                                 schoolBook.getBookRowId(),
@@ -1255,7 +1263,12 @@ public final class SchoolCurriculumSubjectAdapter
                     || activity == null
                     || launcher == null) {
 
-                openManageChapters(schoolSubject);
+                boolean focusedReview =
+                        setupStatus != null
+                                && setupStatus.getStep()
+                                == SubjectContentSetupStatus.Step.REVIEW_CONTENT;
+
+                openManageChapters(schoolSubject, focusedReview);
                 return;
             }
 
@@ -1275,7 +1288,7 @@ public final class SchoolCurriculumSubjectAdapter
                                 + "Chapter list खोली जा रही है।"
                 );
 
-                openManageChapters(schoolSubject);
+                openManageChapters(schoolSubject, false);
             }
         }
     }
