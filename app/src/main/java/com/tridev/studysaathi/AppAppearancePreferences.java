@@ -15,6 +15,15 @@ public final class AppAppearancePreferences {
 
     public static final String LANGUAGE_HINDI = "hi";
     public static final String LANGUAGE_ENGLISH = "en";
+    public static final String LANGUAGE_HINGLISH = "hinglish";
+
+    /**
+     * Legacy value used by older Study Saathi builds.
+     *
+     * Keep this constant so old saved preferences remain readable while the
+     * public product language is now called Hinglish.
+     */
+    @Deprecated
     public static final String LANGUAGE_BILINGUAL = "hi,en";
 
     private static final String PREFERENCES_NAME =
@@ -60,15 +69,30 @@ public final class AppAppearancePreferences {
     public static String getLanguage(
             @NonNull Context context
     ) {
-        String language =
+        String storedLanguage =
                 preferences(context).getString(
                         KEY_LANGUAGE,
-                        LANGUAGE_BILINGUAL
+                        LANGUAGE_HINGLISH
                 );
 
-        return language == null
-                ? LANGUAGE_BILINGUAL
-                : language;
+        String normalizedLanguage =
+                normalizeLanguage(
+                        storedLanguage
+                );
+
+        if (storedLanguage == null
+                || !normalizedLanguage.equals(
+                storedLanguage
+        )) {
+            preferences(context).edit()
+                    .putString(
+                            KEY_LANGUAGE,
+                            normalizedLanguage
+                    )
+                    .apply();
+        }
+
+        return normalizedLanguage;
     }
 
     public static void saveAndApplyTheme(
@@ -86,11 +110,21 @@ public final class AppAppearancePreferences {
             @NonNull Context context,
             @NonNull String language
     ) {
+        String normalizedLanguage =
+                normalizeLanguage(
+                        language
+                );
+
         preferences(context).edit()
-                .putString(KEY_LANGUAGE, language)
+                .putString(
+                        KEY_LANGUAGE,
+                        normalizedLanguage
+                )
                 .apply();
 
-        applyLanguage(language);
+        applyLanguage(
+                normalizedLanguage
+        );
     }
 
     private static void applyTheme(
@@ -117,17 +151,26 @@ public final class AppAppearancePreferences {
     private static void applyLanguage(
             @NonNull String language
     ) {
+        String normalizedLanguage =
+                normalizeLanguage(
+                        language
+                );
+
         String languageTags;
 
-        if (LANGUAGE_HINDI.equals(language)) {
-            languageTags = "hi";
-        } else if (LANGUAGE_ENGLISH.equals(language)) {
-            languageTags = "en";
+        if (LANGUAGE_HINDI.equals(
+                normalizedLanguage
+        )) {
+            languageTags =
+                    "hi";
         } else {
-            AppCompatDelegate.setApplicationLocales(
-                    LocaleListCompat.getEmptyLocaleList()
-            );
-            return;
+            /*
+             * English and Hinglish both use the English UI resource shell.
+             * Hinglish remains a separate Study Saathi learning/explanation
+             * mode; it is not an Android system locale.
+             */
+            languageTags =
+                    "en";
         }
 
         AppCompatDelegate.setApplicationLocales(
@@ -135,6 +178,47 @@ public final class AppAppearancePreferences {
                         languageTags
                 )
         );
+    }
+
+    @NonNull
+    private static String normalizeLanguage(
+            String language
+    ) {
+        if (language == null) {
+            return LANGUAGE_HINGLISH;
+        }
+
+        String normalized =
+                language.trim();
+
+        if (LANGUAGE_HINDI.equalsIgnoreCase(
+                normalized
+        )) {
+            return LANGUAGE_HINDI;
+        }
+
+        if (LANGUAGE_ENGLISH.equalsIgnoreCase(
+                normalized
+        )) {
+            return LANGUAGE_ENGLISH;
+        }
+
+        if (LANGUAGE_HINGLISH.equalsIgnoreCase(
+                normalized
+        )
+                || LANGUAGE_BILINGUAL.equalsIgnoreCase(
+                normalized
+        )
+                || "bilingual".equalsIgnoreCase(
+                normalized
+        )
+                || "hindi + english".equalsIgnoreCase(
+                normalized
+        )) {
+            return LANGUAGE_HINGLISH;
+        }
+
+        return LANGUAGE_HINGLISH;
     }
 
     @NonNull

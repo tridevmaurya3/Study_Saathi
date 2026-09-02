@@ -10,7 +10,7 @@
     <string name="settings_language_label">APP LANGUAGE</string>
     <string name="settings_language_hindi">हिन्दी</string>
     <string name="settings_language_english">English</string>
-    <string name="settings_language_bilingual">Bilingual</string>
+    <string name="settings_language_bilingual">Hinglish</string>
     <string name="settings_appearance_saved">Theme और language preference save हो गई।</string>
     <string name="settings_drawer_entry">Settings • Theme &amp; Language</string>
 
