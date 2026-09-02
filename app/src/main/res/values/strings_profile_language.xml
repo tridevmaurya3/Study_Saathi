@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_medium_english">English Medium</string>
+    <string name="profile_medium_hindi">Hindi Medium</string>
+    <string name="profile_medium_other">Other Medium</string>
+    <string name="profile_explanation_english">English</string>
+    <string name="profile_explanation_hindi">हिन्दी</string>
+    <string name="profile_explanation_hinglish">Hinglish</string>
+    <string name="profile_save_changes">Save Changes</string>
+    <string name="profile_update_failed">Profile update नहीं हो सका।</string>
+</resources>
