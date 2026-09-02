@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Stage 2 core English UI resource pack. -->
+    <string name="app_name">Study Saathi</string>
+
+    <string name="welcome_language">English</string>
+    <string name="welcome_label">SMART LEARNING PLATFORM</string>
+    <string name="welcome_title">Learning made simple,\nsmart and personal</string>
+    <string name="welcome_description">Easy learning tailored to each student’s board, class and level of understanding.</string>
+    <string name="classes_title">Classes 1–12</string>
+    <string name="classes_description">Learning support for every school class</string>
+    <string name="boards_title">Multiple Boards</string>
+    <string name="boards_description">CBSE, CISCE, State Boards, NIOS and more</string>
+    <string name="language_title">Language-adaptive Learning</string>
+    <string name="language_description">Learn and get explanations in your selected language</string>
+    <string name="smart_title">Smart Guidance</string>
+    <string name="smart_description">Step-by-step learning, practice and progress</string>
+    <string name="create_profile">Create Student Profile</string>
+    <string name="explore_app">Explore Study Saathi</string>
+    <string name="section_title">Everything needed for better learning</string>
+    <string name="section_description">Chapters, practice, homework help and progress in one safe place.</string>
+    <string name="parent_note">Designed for students, guided by parents</string>
+    <string name="explore_mode_coming_soon">Explore mode will be added in a later stage.</string>
+
+    <string name="back">Back</string>
+    <string name="create_student_profile">Student Profile</string>
+    <string name="profile_setup_subtitle">Personal learning setup</string>
+    <string name="personal_learning_setup">PERSONAL LEARNING SETUP</string>
+    <string name="profile_setup_title">Tell us about the student</string>
+    <string name="profile_setup_description">Study Saathi will use these details to provide the right board, class, subjects and explanations.</string>
+    <string name="student_information">Student Information</string>
+    <string name="student_information_description">Choose the student’s basic study details.</string>
+    <string name="student_name">Student name</string>
+    <string name="student_name_helper">This name will appear on the student dashboard.</string>
+    <string name="select_board">Select education board</string>
+    <string name="select_class">Select current class</string>
+    <string name="select_study_medium">Select school medium</string>
+    <string name="explanation_language">Explanation language</string>
+    <string name="continue_button">Continue</string>
+    <string name="saving_profile">Saving profile…</string>
+    <string name="profile_preview">Profile information ready</string>
+    <string name="profile_privacy_note">Student information stays private and is used only for the learning experience.</string>
+
+    <string name="error_student_name_required">Enter the student name.</string>
+    <string name="error_board_required">Select an education board.</string>
+    <string name="error_class_required">Select the current class.</string>
+    <string name="error_medium_required">Select the school medium.</string>
+    <string name="error_language_required">Select an explanation language.</string>
+    <string name="complete_required_information">Please complete all required information.</string>
+    <string name="profile_save_failed">The profile could not be saved. Please try again.</string>
+    <string name="profile_activation_failed">The profile was saved but could not be activated.</string>
+    <string name="profile_loading_failed">The student profile could not be loaded.</string>
+    <string name="no_active_profile">No active student profile found.</string>
+    <string name="create_profile_to_continue">Create a student profile to start learning.</string>
+
+    <string name="dashboard_subtitle">Smart learning companion</string>
+    <string name="my_learning_dashboard">MY LEARNING DASHBOARD</string>
+    <string name="dashboard_default_greeting">Hello, Student!</string>
+    <string name="dashboard_greeting_format">Hello, %1$s!</string>
+    <string name="loading_student_profile">Loading student profile…</string>
+    <string name="loading_explanation_language">Preparing learning language…</string>
+    <string name="explanation_language_format">Explanation: %1$s</string>
+    <string name="start_learning">Start Learning</string>
+    <string name="today_learning">Today’s Learning</string>
+    <string name="today_learning_description">Even a small step today is meaningful progress.</string>
+    <string name="study_minutes">Study Minutes</string>
+    <string name="start_small_today">Start with 10 minutes today</string>
+    <string name="study_streak">Day Streak</string>
+    <string name="new_streak_today">Start a new streak today</string>
+    <string name="smart_study_coach">Smart Study Coach</string>
+    <string name="smart_study_coach_description">Gentle reminders, revision and encouraging guidance.</string>
+    <string name="default_coach_message">Start with just 10 minutes of study today.</string>
+    <string name="first_day_coach_message_format">%1$s, a small effort today can build a stronger tomorrow.</string>
+    <string name="tap_for_study_plan">Tap to view your smart study plan for today.</string>
+    <string name="quick_learning_actions">Quick Learning Actions</string>
+    <string name="quick_learning_actions_description">Quickly open your subjects, revision and Study Saathi.</string>
+    <string name="subjects">Subjects</string>
+    <string name="revision">Revision</string>
+    <string name="ask_study_saathi">Ask Study Saathi</string>
+    <string name="dashboard_parent_note">Safe learning experience • Parent guided</string>
+
+    <string name="continue_learning_coming_soon">Chapter learning will be added in a later stage.</string>
+    <string name="subjects_coming_soon">Subject selection will be added in a later stage.</string>
+    <string name="revision_coming_soon">The smart revision planner will be added soon.</string>
+    <string name="ai_teacher_coming_soon">AI Study Saathi will be available in a later stage.</string>
+    <string name="study_coach_coming_soon">Full Smart Study Coach planning will be added in later stages.</string>
+    <string name="decrease_reading_font">Decrease reading font size</string>
+    <string name="increase_reading_font">Increase reading font size</string>
+    <string name="lesson_approved_content_loading">Loading parent-approved lesson content…</string>
+
+    <string name="settings_appearance_title">Theme &amp; Language</string>
+    <string name="settings_appearance_description">Choose the display mode and interface language for the whole app.</string>
+    <string name="settings_theme_label">APP THEME</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_language_label">APP LANGUAGE</string>
+    <string name="settings_language_hindi">हिन्दी</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_bilingual">Hinglish</string>
+    <string name="settings_appearance_saved">Theme and language preference saved.</string>
+    <string name="settings_drawer_entry">Settings • Theme &amp; Language</string>
+    <string name="study_tools_settings_option">Settings &amp; Profiles</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_subtitle">Profiles, study goals and learning tools</string>
+    <string name="settings_profile_section_title">Active Student Profile</string>
+    <string name="settings_no_active_profile">No active student</string>
+    <string name="settings_no_active_profile_description">Create a student profile or activate an existing profile first.</string>
+    <string name="settings_profile_detail_format">%1$s • %2$s</string>
+    <string name="settings_active_profile_available">Progress, goals, notes and doubts are kept separately for this profile.</string>
+    <string name="settings_profile_required_status">An active profile is required to use study settings.</string>
+    <string name="settings_manage_profiles">Manage Student Profiles</string>
+    <string name="settings_daily_goal_title">Daily Study Goal</string>
+    <string name="settings_daily_goal_description">Choose how many study actions the active student should complete each day.</string>
+    <string name="settings_goal_one">1 Action</string>
+    <string name="settings_goal_three">3 Actions</string>
+    <string name="settings_goal_five">5 Actions</string>
+    <string name="settings_daily_goal_status_format">%1$s’s current daily goal: %2$d study actions</string>
+    <string name="settings_daily_goal_saved_format">Daily goal set to %1$d study actions.</string>
+    <string name="settings_daily_goal_unavailable">Choose an active student profile to change the daily goal.</string>
+    <string name="settings_tools_title">Study Tools</string>
+    <string name="settings_tools_description">Manage reminders, personal notes and saved doubt history.</string>
+    <string name="settings_reminder_button">Daily Study Reminder</string>
+    <string name="settings_notes_button">Open Notes Library</string>
+    <string name="settings_doubt_history_button">Open Saved Doubt History</string>
+    <string name="settings_offline_data_title">Offline-first Data</string>
+    <string name="settings_offline_data_description">Student profiles, lesson progress, quiz history, revisions, doubts and notes remain available securely on the device.</string>
+    <string name="settings_profile_load_failed">The active student profile could not be loaded.</string>
+    <string name="settings_profile_required_message">Choose an active student profile before using this feature.</string>
+
+</resources>

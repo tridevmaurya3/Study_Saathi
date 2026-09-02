@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Stage 2 core Hindi UI resource pack. -->
+    <string name="app_name">Study Saathi</string>
+
+    <string name="welcome_language">हिन्दी</string>
+    <string name="welcome_label">स्मार्ट अध्ययन मंच</string>
+    <string name="welcome_title">पढ़ाई को सरल,\nसमझने योग्य और व्यक्तिगत बनाएँ</string>
+    <string name="welcome_description">हर बच्चे के शिक्षा बोर्ड, कक्षा और समझ के स्तर के अनुसार आसान पढ़ाई।</string>
+    <string name="classes_title">कक्षा 1–12</string>
+    <string name="classes_description">हर कक्षा के लिए अध्ययन सहायता</string>
+    <string name="boards_title">अनेक शिक्षा बोर्ड</string>
+    <string name="boards_description">सीबीएसई, सीआईएससीई, राज्य बोर्ड, एनआईओएस और अन्य</string>
+    <string name="language_title">भाषा के अनुसार पढ़ाई</string>
+    <string name="language_description">अपनी चुनी हुई भाषा में पढ़ें और समझें</string>
+    <string name="smart_title">समझदार मार्गदर्शन</string>
+    <string name="smart_description">चरण-दर-चरण पढ़ाई, अभ्यास और प्रगति</string>
+    <string name="create_profile">विद्यार्थी विवरण बनाएँ</string>
+    <string name="explore_app">Study Saathi देखें</string>
+    <string name="section_title">बेहतर पढ़ाई के लिए सब कुछ एक जगह</string>
+    <string name="section_description">अध्याय, अभ्यास, गृहकार्य सहायता और प्रगति एक सुरक्षित स्थान पर।</string>
+    <string name="parent_note">विद्यार्थियों के लिए बनाया गया • अभिभावक के मार्गदर्शन के साथ</string>
+    <string name="explore_mode_coming_soon">खोज मोड अगले चरण में जोड़ा जाएगा।</string>
+
+    <string name="back">वापस</string>
+    <string name="create_student_profile">विद्यार्थी विवरण</string>
+    <string name="profile_setup_subtitle">व्यक्तिगत अध्ययन व्यवस्था</string>
+    <string name="personal_learning_setup">व्यक्तिगत अध्ययन व्यवस्था</string>
+    <string name="profile_setup_title">विद्यार्थी के बारे में बताएँ</string>
+    <string name="profile_setup_description">इन जानकारियों के आधार पर Study Saathi सही शिक्षा बोर्ड, कक्षा, विषय और समझाने की भाषा उपलब्ध कराएगा।</string>
+    <string name="student_information">विद्यार्थी की जानकारी</string>
+    <string name="student_information_description">विद्यार्थी की आवश्यक अध्ययन जानकारी चुनें।</string>
+    <string name="student_name">विद्यार्थी का नाम</string>
+    <string name="student_name_helper">यह नाम विद्यार्थी के अध्ययन पटल पर दिखाई देगा।</string>
+    <string name="select_board">शिक्षा बोर्ड चुनें</string>
+    <string name="select_class">वर्तमान कक्षा चुनें</string>
+    <string name="select_study_medium">विद्यालय का माध्यम चुनें</string>
+    <string name="explanation_language">समझाने की भाषा</string>
+    <string name="continue_button">आगे बढ़ें</string>
+    <string name="saving_profile">विद्यार्थी विवरण सुरक्षित किया जा रहा है…</string>
+    <string name="profile_preview">विद्यार्थी की जानकारी तैयार है</string>
+    <string name="profile_privacy_note">विद्यार्थी की जानकारी निजी रहेगी और केवल अध्ययन अनुभव के लिए उपयोग होगी।</string>
+
+    <string name="error_student_name_required">विद्यार्थी का नाम दर्ज करें।</string>
+    <string name="error_board_required">शिक्षा बोर्ड चुनें।</string>
+    <string name="error_class_required">वर्तमान कक्षा चुनें।</string>
+    <string name="error_medium_required">विद्यालय का माध्यम चुनें।</string>
+    <string name="error_language_required">समझाने की भाषा चुनें।</string>
+    <string name="complete_required_information">कृपया सभी आवश्यक जानकारी पूरी करें।</string>
+    <string name="profile_save_failed">विद्यार्थी विवरण सुरक्षित नहीं हो सका। दोबारा प्रयास करें।</string>
+    <string name="profile_activation_failed">विद्यार्थी विवरण सुरक्षित हुआ, लेकिन सक्रिय नहीं हो सका।</string>
+    <string name="profile_loading_failed">विद्यार्थी विवरण लोड नहीं हो सका।</string>
+    <string name="no_active_profile">कोई सक्रिय विद्यार्थी विवरण नहीं मिला।</string>
+    <string name="create_profile_to_continue">पढ़ाई शुरू करने के लिए विद्यार्थी विवरण बनाएँ।</string>
+
+    <string name="dashboard_subtitle">आपका व्यक्तिगत अध्ययन साथी</string>
+    <string name="my_learning_dashboard">मेरा अध्ययन पटल</string>
+    <string name="dashboard_default_greeting">नमस्ते, विद्यार्थी!</string>
+    <string name="dashboard_greeting_format">नमस्ते, %1$s!</string>
+    <string name="loading_student_profile">विद्यार्थी विवरण लोड किया जा रहा है…</string>
+    <string name="loading_explanation_language">अध्ययन भाषा तैयार की जा रही है…</string>
+    <string name="explanation_language_format">समझाने की भाषा: %1$s</string>
+    <string name="start_learning">पढ़ाई शुरू करें</string>
+    <string name="today_learning">आज की पढ़ाई</string>
+    <string name="today_learning_description">आज की छोटी प्रगति भी एक अच्छी शुरुआत है।</string>
+    <string name="study_minutes">पढ़ाई के मिनट</string>
+    <string name="start_small_today">आज 10 मिनट से शुरू करें</string>
+    <string name="study_streak">लगातार पढ़ाई के दिन</string>
+    <string name="new_streak_today">आज से नई लगातार पढ़ाई शुरू करें</string>
+    <string name="smart_study_coach">स्मार्ट अध्ययन मार्गदर्शक</string>
+    <string name="smart_study_coach_description">हल्के अनुस्मारक, पुनरावृत्ति और प्रोत्साहन।</string>
+    <string name="default_coach_message">आज केवल 10 मिनट पढ़कर अच्छी शुरुआत करें।</string>
+    <string name="first_day_coach_message_format">%1$s, आज का छोटा प्रयास कल की बड़ी सफलता बन सकता है।</string>
+    <string name="tap_for_study_plan">आज की अध्ययन योजना देखने के लिए दबाएँ।</string>
+    <string name="quick_learning_actions">त्वरित अध्ययन विकल्प</string>
+    <string name="quick_learning_actions_description">अपने विषय, पुनरावृत्ति और Study Saathi तक जल्दी पहुँचें।</string>
+    <string name="subjects">विषय</string>
+    <string name="revision">पुनरावृत्ति</string>
+    <string name="ask_study_saathi">Study Saathi से पूछें</string>
+    <string name="dashboard_parent_note">सुरक्षित अध्ययन अनुभव • अभिभावक के मार्गदर्शन के साथ</string>
+
+    <string name="continue_learning_coming_soon">अध्याय के अनुसार पढ़ाई अगले चरण में जोड़ी जाएगी।</string>
+    <string name="subjects_coming_soon">विषय चयन अगले चरण में जोड़ा जाएगा।</string>
+    <string name="revision_coming_soon">समझदार पुनरावृत्ति योजना जल्द जोड़ी जाएगी।</string>
+    <string name="ai_teacher_coming_soon">AI Study Saathi बाद के चरण में उपलब्ध होगा।</string>
+    <string name="study_coach_coming_soon">संपूर्ण अध्ययन मार्गदर्शन बाद के चरणों में जोड़ा जाएगा।</string>
+    <string name="decrease_reading_font">पढ़ने के अक्षर छोटे करें</string>
+    <string name="increase_reading_font">पढ़ने के अक्षर बड़े करें</string>
+    <string name="lesson_approved_content_loading">अभिभावक द्वारा स्वीकृत पाठ सामग्री लोड की जा रही है…</string>
+
+    <string name="settings_appearance_title">रूप-रंग और भाषा</string>
+    <string name="settings_appearance_description">पूरे ऐप का रूप-रंग और भाषा चुनें।</string>
+    <string name="settings_theme_label">ऐप का रूप-रंग</string>
+    <string name="settings_theme_system">प्रणाली के अनुसार</string>
+    <string name="settings_theme_light">हल्का</string>
+    <string name="settings_theme_dark">गहरा</string>
+    <string name="settings_language_label">ऐप की भाषा</string>
+    <string name="settings_language_hindi">हिन्दी</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_bilingual">Hinglish</string>
+    <string name="settings_appearance_saved">रूप-रंग और भाषा की पसंद सुरक्षित हो गई।</string>
+    <string name="settings_drawer_entry">व्यवस्थाएँ • रूप-रंग और भाषा</string>
+    <string name="study_tools_settings_option">व्यवस्थाएँ और विद्यार्थी विवरण</string>
+    <string name="settings_title">व्यवस्थाएँ</string>
+    <string name="settings_subtitle">विद्यार्थी विवरण, पढ़ाई के लक्ष्य और अध्ययन साधन</string>
+    <string name="settings_profile_section_title">सक्रिय विद्यार्थी विवरण</string>
+    <string name="settings_no_active_profile">कोई सक्रिय विद्यार्थी नहीं</string>
+    <string name="settings_no_active_profile_description">पहले नया विद्यार्थी विवरण बनाएँ या पहले से मौजूद विवरण सक्रिय करें।</string>
+    <string name="settings_profile_detail_format">%1$s • %2$s</string>
+    <string name="settings_active_profile_available">इस विद्यार्थी की प्रगति, लक्ष्य, टिप्पणियाँ और प्रश्न अलग सुरक्षित हैं।</string>
+    <string name="settings_profile_required_status">अध्ययन व्यवस्थाओं के लिए सक्रिय विद्यार्थी आवश्यक है।</string>
+    <string name="settings_manage_profiles">विद्यार्थी विवरण प्रबंधित करें</string>
+    <string name="settings_daily_goal_title">रोज़ का अध्ययन लक्ष्य</string>
+    <string name="settings_daily_goal_description">सक्रिय विद्यार्थी के लिए रोज़ पूरे किए जाने वाले अध्ययन कार्य चुनें।</string>
+    <string name="settings_goal_one">1 कार्य</string>
+    <string name="settings_goal_three">3 कार्य</string>
+    <string name="settings_goal_five">5 कार्य</string>
+    <string name="settings_daily_goal_status_format">%1$s का वर्तमान रोज़ का लक्ष्य: %2$d अध्ययन कार्य</string>
+    <string name="settings_daily_goal_saved_format">रोज़ का लक्ष्य %1$d अध्ययन कार्य पर तय किया गया।</string>
+    <string name="settings_daily_goal_unavailable">रोज़ का लक्ष्य बदलने के लिए सक्रिय विद्यार्थी चुनें।</string>
+    <string name="settings_tools_title">अध्ययन साधन</string>
+    <string name="settings_tools_description">अनुस्मारक, निजी टिप्पणियाँ और सुरक्षित प्रश्न इतिहास प्रबंधित करें।</string>
+    <string name="settings_reminder_button">रोज़ का अध्ययन अनुस्मारक</string>
+    <string name="settings_notes_button">टिप्पणी संग्रह खोलें</string>
+    <string name="settings_doubt_history_button">सुरक्षित प्रश्न इतिहास खोलें</string>
+    <string name="settings_offline_data_title">बिना इंटरनेट भी सुरक्षित आँकड़े</string>
+    <string name="settings_offline_data_description">विद्यार्थी विवरण, पाठ प्रगति, प्रश्नोत्तरी इतिहास, पुनरावृत्ति, प्रश्न और टिप्पणियाँ इस यंत्र पर सुरक्षित रहती हैं।</string>
+    <string name="settings_profile_load_failed">सक्रिय विद्यार्थी विवरण लोड नहीं हो सका।</string>
+    <string name="settings_profile_required_message">इस सुविधा के लिए पहले सक्रिय विद्यार्थी चुनें।</string>
+
+</resources>

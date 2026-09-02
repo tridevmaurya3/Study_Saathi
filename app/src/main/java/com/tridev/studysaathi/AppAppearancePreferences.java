@@ -26,6 +26,22 @@ public final class AppAppearancePreferences {
     @Deprecated
     public static final String LANGUAGE_BILINGUAL = "hi,en";
 
+    private static final String LOCALE_TAG_HINDI =
+            "hi";
+
+    private static final String LOCALE_TAG_ENGLISH =
+            "en";
+
+    /**
+     * Hinglish is a Study Saathi product mode, not a separate natural
+     * language code. We use the India-specific English resource variant so
+     * Android can select a dedicated values-en-rIN pack while still falling
+     * back safely to pure English resources for keys that are not translated
+     * yet.
+     */
+    private static final String LOCALE_TAG_HINGLISH =
+            "en-IN";
+
     private static final String PREFERENCES_NAME =
             "study_saathi_appearance";
 
@@ -162,15 +178,15 @@ public final class AppAppearancePreferences {
                 normalizedLanguage
         )) {
             languageTags =
-                    "hi";
-        } else {
-            /*
-             * English and Hinglish both use the English UI resource shell.
-             * Hinglish remains a separate Study Saathi learning/explanation
-             * mode; it is not an Android system locale.
-             */
+                    LOCALE_TAG_HINDI;
+        } else if (LANGUAGE_ENGLISH.equals(
+                normalizedLanguage
+        )) {
             languageTags =
-                    "en";
+                    LOCALE_TAG_ENGLISH;
+        } else {
+            languageTags =
+                    LOCALE_TAG_HINGLISH;
         }
 
         AppCompatDelegate.setApplicationLocales(
