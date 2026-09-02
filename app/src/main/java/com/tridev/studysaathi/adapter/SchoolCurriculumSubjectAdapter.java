@@ -1221,9 +1221,8 @@ public final class SchoolCurriculumSubjectAdapter
             }
 
             boolean exactBookAvailable =
-                    !safeText(
-                            schoolSubject.getBookName()
-                    ).isEmpty();
+                    setupStatus.getStep()
+                            != SubjectContentSetupStatus.Step.ADD_BOOK;
 
             if (!exactBookAvailable) {
                 binding.buttonScanCurriculumSubjectBook
