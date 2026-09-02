@@ -8,9 +8,11 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.provider.Settings;
@@ -38,6 +40,7 @@ import androidx.core.content.ContextCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.tridev.studysaathi.R;
 import com.tridev.studysaathi.data.ai.FirebaseStudyTutorClient;
+import com.tridev.studysaathi.data.ai.QuestionImageBitmapLoader;
 import com.tridev.studysaathi.data.ai.SmartTutorAnswerResult;
 import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
 import com.tridev.studysaathi.data.learning.StudentKnowledgeGraphStore;
@@ -60,7 +63,9 @@ public final class StudyOverlayBubbleService extends Service {
     private static final String CHANNEL = "study_ai_overlay";
     static final String ACTION_TOGGLE = "com.tridev.studysaathi.overlay.TOGGLE";
     static final String ACTION_VOICE_RESULT = "com.tridev.studysaathi.overlay.VOICE_RESULT";
+    static final String ACTION_PHOTO_RESULT = "com.tridev.studysaathi.overlay.PHOTO_RESULT";
     static final String EXTRA_VOICE_TEXT = "overlay_voice_text";
+    static final String EXTRA_PHOTO_URI = "overlay_photo_uri";
     private static final String PREFS = "study_ai_overlay_preferences";
     private static final String KEY_ALPHA = "bubble_alpha";
     private static final String KEY_PANEL_WIDTH = "panel_width";
@@ -86,6 +91,8 @@ public final class StudyOverlayBubbleService extends Service {
     private Button send;
     private ObjectAnimator pulse;
     private FirebaseStudyTutorClient tutorClient;
+    private QuestionImageBitmapLoader questionImageBitmapLoader;
+    @Nullable private Bitmap pendingQuestionImage;
     private boolean asking;
     private int resizeCorner;
     private int resizeStartWidth;
@@ -125,6 +132,7 @@ public final class StudyOverlayBubbleService extends Service {
             return;
         }
         tutorClient = new FirebaseStudyTutorClient(this);
+        questionImageBitmapLoader = new QuestionImageBitmapLoader(this);
         loadChats();
         showBubble();
     }
@@ -285,8 +293,7 @@ public final class StudyOverlayBubbleService extends Service {
         microphone.setOnClickListener(v -> launchVoiceInput());
         questionResize.setOnTouchListener(this::resizeQuestionBox);
         send.setOnClickListener(v -> askQuestion());
-        photo.setOnClickListener(v -> status.setText(
-                "Photo प्रश्न Study Saathi app के अंदर उपलब्ध है।"));
+        photo.setOnClickListener(v -> launchPhotoInput());
         simpler.setOnClickListener(v -> submitQuickPrompt(
                 "पिछले उत्तर को और आसान भाषा में समझाओ।"));
         example.setOnClickListener(v -> submitQuickPrompt(
@@ -457,6 +464,10 @@ public final class StudyOverlayBubbleService extends Service {
     }
 
     private void launchVoiceInput() {
+        if (asking) {
+            if (status != null) status.setText("पहले वर्तमान answer पूरा होने दें।");
+            return;
+        }
         try {
             startActivity(new Intent(this, OverlayVoiceInputActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -464,6 +475,60 @@ public final class StudyOverlayBubbleService extends Service {
         } catch (RuntimeException error) {
             status.setText("Voice input अभी उपलब्ध नहीं है।");
         }
+    }
+
+    private void launchPhotoInput() {
+        if (asking) {
+            if (status != null) status.setText("पहले वर्तमान answer पूरा होने दें।");
+            return;
+        }
+        try {
+            startActivity(new Intent(this, OverlayPhotoInputActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            if (status != null) status.setText("Question photo चुनें…");
+        } catch (RuntimeException error) {
+            if (status != null) status.setText("Photo input अभी उपलब्ध नहीं है।");
+        }
+    }
+
+    private void loadOverlayPhoto(@NonNull String imageUriText) {
+        final Uri imageUri;
+        try {
+            imageUri = Uri.parse(imageUriText);
+        } catch (RuntimeException error) {
+            if (status != null) status.setText("Photo पढ़ी नहीं जा सकी।");
+            return;
+        }
+
+        if (questionImageBitmapLoader == null) {
+            questionImageBitmapLoader = new QuestionImageBitmapLoader(this);
+        }
+
+        if (panel == null) showPanel();
+        if (status != null) status.setText("Photo तैयार की जा रही है…");
+
+        questionImageBitmapLoader.loadForAi(
+                imageUri,
+                new QuestionImageBitmapLoader.ImageLoadCallback() {
+                    @Override public void onSuccess(@NonNull Bitmap bitmap) {
+                        recyclePendingQuestionImage();
+                        pendingQuestionImage = bitmap;
+                        if (panel == null) showPanel();
+                        if (status != null) {
+                            status.setText("📷 Photo attached • सवाल लिखें या सीधे पूछें");
+                        }
+                        if (question != null) {
+                            question.requestFocus();
+                        }
+                    }
+
+                    @Override public void onError(@NonNull Throwable throwable) {
+                        if (status != null) {
+                            status.setText("Photo load नहीं हो सकी। दूसरी photo चुनें।");
+                        }
+                    }
+                }
+        );
     }
 
     private boolean resizeQuestionBox(View view, MotionEvent event) {
@@ -531,17 +596,33 @@ public final class StudyOverlayBubbleService extends Service {
     }
 
     private void askQuestion() {
+        if (asking || question == null) return;
+
         String prompt = question.getText().toString().trim();
-        if (prompt.isEmpty() || asking) return;
+        if (prompt.isEmpty() && pendingQuestionImage != null) {
+            prompt = "इस photo में दिए question को पढ़कर आसान तरीके से समझाओ।";
+        }
+        if (prompt.isEmpty()) return;
+
+        final String finalPrompt = prompt;
+        final Bitmap questionImage = pendingQuestionImage;
+        pendingQuestionImage = null;
+
         asking = true;
         send.setEnabled(false);
-        status.setText("उत्तर तैयार किया जा रहा है…");
-        appendToActiveChat("\n\nआप: " + prompt, prompt);
+        status.setText(questionImage == null
+                ? "उत्तर तैयार किया जा रहा है…"
+                : "Photo question समझा जा रहा है…");
+        appendToActiveChat("\n\nआप: "
+                + (questionImage == null ? "" : "📷 ")
+                + finalPrompt, finalPrompt);
         question.setText("");
+
         new StudentProfileRepository(this).getActiveProfile(
                 new StudentProfileRepository.SingleProfileCallback() {
                     @Override public void onSuccess(@Nullable StudentProfileEntity profile) {
                         if (profile == null) {
+                            recycleBitmap(questionImage);
                             finishError("Active student profile उपलब्ध नहीं है।");
                             return;
                         }
@@ -549,31 +630,35 @@ public final class StudyOverlayBubbleService extends Service {
                                 new AdaptiveLearningLevelResolver(
                                         StudyOverlayBubbleService.this)
                                         .resolve(profile.getProfileId(),
-                                                "General Studies", "General", prompt);
+                                                "General Studies", "General", finalPrompt);
                         StudentMisconceptionDetector.Detection misconception =
-                                StudentMisconceptionDetector.inspect("General Studies", prompt);
+                                StudentMisconceptionDetector.inspect("General Studies", finalPrompt);
                         LearningStylePreference.Style learningStyle =
                                 new LearningStyleMemoryStore(StudyOverlayBubbleService.this)
-                                        .recordAndResolve(profile.getProfileId(), prompt);
-                        status.setText(adaptiveLevel.getDisplayLabel()
-                                + " पर उत्तर तैयार किया जा रहा है…");
+                                        .recordAndResolve(profile.getProfileId(), finalPrompt);
+                        if (status != null) {
+                            status.setText(adaptiveLevel.getDisplayLabel()
+                                    + " पर उत्तर तैयार किया जा रहा है…");
+                        }
                         FirebaseStudyTutorClient.TutorRequest request =
                                 new FirebaseStudyTutorClient.TutorRequest(
                                         profile.getStudentName(), profile.getEducationBoard(),
                                         profile.getStudentClass(), profile.getExplanationLanguage(),
-                                        "General Studies", "", prompt,
+                                        "General Studies", "", finalPrompt,
                                         "", "", adaptiveLevel.getRequestValue(),
                                         misconception.getRequestContext(),
                                         learningStyle.getRequestValue());
-                        tutorClient.askTextQuestionWithResult(request,
+
+                        FirebaseStudyTutorClient.TutorResultCallback callback =
                                 new FirebaseStudyTutorClient.TutorResultCallback() {
                                     @Override public void onSuccess(@NonNull SmartTutorAnswerResult result) {
+                                        recycleBitmap(questionImage);
                                         new StudentKnowledgeGraphStore(StudyOverlayBubbleService.this)
                                                 .recordAnswer(profile.getProfileId(),
-                                                        "General Studies", "General", prompt, result);
+                                                        "General Studies", "General", finalPrompt, result);
                                         new StudentKnowledgeGraphStore(StudyOverlayBubbleService.this)
                                                 .recordMisconceptionReview(profile.getProfileId(),
-                                                        "General Studies", "General", prompt,
+                                                        "General Studies", "General", finalPrompt,
                                                         misconception);
                                         asking = false;
                                         if (panel == null) return;
@@ -589,12 +674,22 @@ public final class StudyOverlayBubbleService extends Service {
                                                 + "\n"
                                                 + result.getRawAnswerText(), null);
                                     }
+
                                     @Override public void onError(@NonNull Throwable error) {
+                                        recycleBitmap(questionImage);
                                         finishError("अभी उत्तर नहीं मिल पाया। Internet जाँचकर दोबारा प्रयास करें।");
                                     }
-                                });
+                                };
+
+                        if (questionImage == null) {
+                            tutorClient.askTextQuestionWithResult(request, callback);
+                        } else {
+                            tutorClient.askQuestionWithResult(request, questionImage, callback);
+                        }
                     }
+
                     @Override public void onError(@NonNull Exception error) {
+                        recycleBitmap(questionImage);
                         finishError("Student profile load नहीं हो पाया।");
                     }
                 });
@@ -605,6 +700,18 @@ public final class StudyOverlayBubbleService extends Service {
         if (panel == null) return;
         send.setEnabled(true);
         status.setText(message);
+    }
+
+    private void recyclePendingQuestionImage() {
+        recycleBitmap(pendingQuestionImage);
+        pendingQuestionImage = null;
+    }
+
+    private void recycleBitmap(@Nullable Bitmap bitmap) {
+        if (bitmap == null || bitmap.isRecycled()) return;
+        try {
+            bitmap.recycle();
+        } catch (RuntimeException ignored) { }
     }
 
     private void addCornerHint(String symbol, int gravity) {
@@ -815,7 +922,6 @@ public final class StudyOverlayBubbleService extends Service {
         transcript.addView(answerRow, rowParams);
     }
 
-
     private void loadChats() {
         chats.clear();
         String raw = getSharedPreferences(PREFS, MODE_PRIVATE).getString(KEY_CHATS, "");
@@ -958,12 +1064,22 @@ public final class StudyOverlayBubbleService extends Service {
                 question.setSelection(question.length());
                 status.setText("Voice question तैयार है।");
             }
+        } else if (intent != null && ACTION_PHOTO_RESULT.equals(intent.getAction())) {
+            String imageUriText = intent.getStringExtra(EXTRA_PHOTO_URI);
+            if (imageUriText != null && !imageUriText.trim().isEmpty()) {
+                loadOverlayPhoto(imageUriText.trim());
+            }
         }
         return START_STICKY;
     }
 
     @Override public void onDestroy() {
         if (pulse != null) pulse.cancel();
+        recyclePendingQuestionImage();
+        if (questionImageBitmapLoader != null) {
+            questionImageBitmapLoader.close();
+            questionImageBitmapLoader = null;
+        }
         removePanel();
         if (bubble != null && windowManager != null) {
             try { windowManager.removeView(bubble); } catch (RuntimeException ignored) { }

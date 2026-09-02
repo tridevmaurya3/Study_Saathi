@@ -62,19 +62,25 @@
             android:exported="false"
             android:theme="@style/Theme.StudySaathi.TransparentVoice" />
 
+        <activity
+            android:name=".overlay.OverlayPhotoInputActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@style/Theme.StudySaathi.TransparentVoice" />
+
         <receiver
             android:name=".reminder.StudyReminderActionReceiver"
             android:enabled="true"
             android:exported="false" />
 
-        <!-- Camera/Gallery à¤¸à¥‡ Contents page à¤²à¥‡à¤•à¤° OCR à¤šà¤²à¤¾à¤¨à¥‡ à¤•à¥€ screen. -->
+        <!-- Camera/Gallery से Contents page लेकर OCR चलाने की screen. -->
         <activity
             android:name=".BookContentsScanActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- OCR candidates à¤•à¥€ Parent review screen. -->
+        <!-- OCR candidates की Parent review screen. -->
         <activity
             android:name=".BookContentsReviewActivity"
             android:exported="false"
@@ -95,7 +101,7 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Exact school-book chapter list à¤”à¤° management. -->
+        <!-- Exact school-book chapter list और management. -->
         <activity
             android:name=".SchoolBookChaptersActivity"
             android:exported="false"
@@ -123,14 +129,14 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Scanned book details à¤•à¥€ Parent review screen. -->
+        <!-- Scanned book details की Parent review screen. -->
         <activity
             android:name=".BookMatchReviewActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- School-book cover scan à¤”à¤° online discovery screen. -->
+        <!-- School-book cover scan और online discovery screen. -->
         <activity
             android:name=".BookCoverScanActivity"
             android:exported="false"
