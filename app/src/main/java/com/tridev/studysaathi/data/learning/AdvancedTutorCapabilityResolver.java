@@ -11,6 +11,7 @@ import java.util.Locale;
 public final class AdvancedTutorCapabilityResolver {
 
     public enum Capability {
+        SMART_EXPLANATION_MODE,
         DIAGRAM_TABLE,
         CHAPTER_SUMMARY,
         QUESTION_GENERATOR,
@@ -49,6 +50,12 @@ public final class AdvancedTutorCapabilityResolver {
         String text = question == null ? "" : question.trim().toLowerCase(Locale.ROOT);
         List<Capability> found = new ArrayList<>();
         StringBuilder rules = new StringBuilder();
+
+        SmartExplanationModeResolver.Decision explanationMode =
+                SmartExplanationModeResolver.resolve(question);
+        addIf(found, rules, Capability.SMART_EXPLANATION_MODE,
+                explanationMode.hasMode(),
+                explanationMode.getPromptInstruction());
 
         ExactStudyContextResolver.Decision exactContext =
                 ExactStudyContextResolver.resolve(question, imageAttached);
