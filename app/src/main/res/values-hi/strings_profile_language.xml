@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_medium_english">अंग्रेज़ी माध्यम</string>
+    <string name="profile_medium_hindi">हिन्दी माध्यम</string>
+    <string name="profile_medium_other">अन्य माध्यम</string>
+    <string name="profile_explanation_english">English</string>
+    <string name="profile_explanation_hindi">हिन्दी</string>
+    <string name="profile_explanation_hinglish">Hinglish</string>
+    <string name="profile_save_changes">बदलाव सुरक्षित करें</string>
+    <string name="profile_update_failed">विद्यार्थी विवरण अपडेट नहीं हो सका। दोबारा प्रयास करें।</string>
+</resources>
