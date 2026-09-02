@@ -23,6 +23,7 @@ public final class AdvancedTutorCapabilityResolver {
         READ_ALONG,
         VISUAL_ANSWER,
         PRONUNCIATION,
+        EXACT_BOOK_CONTEXT,
         PHOTO_BOOK_CONTEXT
     }
 
@@ -49,15 +50,11 @@ public final class AdvancedTutorCapabilityResolver {
         List<Capability> found = new ArrayList<>();
         StringBuilder rules = new StringBuilder();
 
-        if (imageAttached) {
-            PhotoBookContextIndex.MatchResult photoContext =
-                    PhotoBookContextIndex.matchImageQuestion(question);
-            addIf(found, rules, Capability.PHOTO_BOOK_CONTEXT,
-                    photoContext.hasVerifiedPage(),
-                    photoContext.getPromptInstruction());
-        } else {
-            PhotoBookContextIndex.clearLatestMatch();
-        }
+        ExactStudyContextResolver.Decision exactContext =
+                ExactStudyContextResolver.resolve(question, imageAttached);
+        addIf(found, rules, Capability.EXACT_BOOK_CONTEXT,
+                exactContext.hasVerifiedExactContext(),
+                exactContext.getPromptInstruction());
 
         addIf(found, rules, Capability.DIAGRAM_TABLE,
                 imageAttached || has(text, "diagram", "चित्र", "आरेख", "table", "तालिका", "graph", "चार्ट"),
