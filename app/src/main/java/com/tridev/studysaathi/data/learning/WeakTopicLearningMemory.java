@@ -82,7 +82,10 @@ public final class WeakTopicLearningMemory {
         all.sort(Comparator
                 .comparingInt((TopicMemory memory) -> memory.getState().priority)
                 .thenComparingInt(TopicMemory::getReadinessScore)
-                .thenComparingLong(TopicMemory::getLastUpdatedAt).reversed());
+                .thenComparing(
+                        Comparator.comparingLong(TopicMemory::getLastUpdatedAt)
+                                .reversed()
+                ));
 
         return new MemorySummary(
                 all,
