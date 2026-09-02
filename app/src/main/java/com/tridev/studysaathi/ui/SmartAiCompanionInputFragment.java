@@ -1,12 +1,10 @@
 package com.tridev.studysaathi.ui;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.speech.RecognizerIntent;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -17,13 +15,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import com.tridev.studysaathi.AppAppearancePreferences;
-
-import java.util.ArrayList;
+import com.tridev.studysaathi.data.ai.StudyVoiceLanguageHelper;
+import com.tridev.studysaathi.data.local.entity.StudentProfileEntity;
+import com.tridev.studysaathi.data.repository.StudentProfileRepository;
 
 /**
- * Global companion के voice/camera/gallery Activity Result contracts का
- * headless lifecycle owner।
+ * Headless lifecycle owner for the global companion voice/camera/gallery
+ * Activity Result contracts.
  */
 public final class SmartAiCompanionInputFragment extends Fragment {
 
@@ -70,20 +68,19 @@ public final class SmartAiCompanionInputFragment extends Fragment {
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() != Activity.RESULT_OK
-                            || result.getData() == null
                             || getActivity() == null) {
                         return;
                     }
-                    ArrayList<String> results = result.getData()
-                            .getStringArrayListExtra(
-                                    RecognizerIntent.EXTRA_RESULTS
+
+                    String spokenQuestion =
+                            StudyVoiceLanguageHelper.extractBestSpeechResult(
+                                    result.getData()
                             );
-                    if (results != null && !results.isEmpty()
-                            && results.get(0) != null
-                            && !results.get(0).trim().isEmpty()) {
+
+                    if (!spokenQuestion.isEmpty()) {
                         SmartAiCompanionController.deliverVoiceQuestion(
                                 requireActivity(),
-                                results.get(0).trim()
+                                spokenQuestion
                         );
                     }
                 }
@@ -115,32 +112,55 @@ public final class SmartAiCompanionInputFragment extends Fragment {
     }
 
     public void launchVoice() {
-        String appLanguage = AppAppearancePreferences.getLanguage(
-                requireContext()
+        if (!isAdded()) {
+            return;
+        }
+
+        new StudentProfileRepository(requireContext()).getActiveProfile(
+                new StudentProfileRepository.SingleProfileCallback() {
+                    @Override
+                    public void onSuccess(
+                            @Nullable StudentProfileEntity studentProfile
+                    ) {
+                        if (!isAdded()) {
+                            return;
+                        }
+
+                        launchVoiceRecognition(
+                                studentProfile == null
+                                        ? ""
+                                        : studentProfile.getExplanationLanguage()
+                        );
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception exception) {
+                        if (isAdded()) {
+                            launchVoiceRecognition("");
+                        }
+                    }
+                }
         );
-        boolean englishOnly =
-                AppAppearancePreferences.LANGUAGE_ENGLISH.equals(appLanguage);
-        Intent intent = new Intent(
-                RecognizerIntent.ACTION_RECOGNIZE_SPEECH
+    }
+
+    private void launchVoiceRecognition(
+            @Nullable String explanationLanguage
+    ) {
+        if (!isAdded()) {
+            return;
+        }
+
+        Intent intent = StudyVoiceLanguageHelper.createRecognitionIntent(
+                explanationLanguage,
+                ""
         );
-        intent.putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-        );
-        intent.putExtra(
-                RecognizerIntent.EXTRA_LANGUAGE,
-                englishOnly ? "en-IN" : "hi-IN"
-        );
-        intent.putExtra(
-                RecognizerIntent.EXTRA_PROMPT,
-                englishOnly ? "Speak your question" : "अपना सवाल बोलें"
-        );
+
         try {
             voiceLauncher.launch(intent);
-        } catch (ActivityNotFoundException ignored) {
+        } catch (RuntimeException error) {
             Toast.makeText(
                     requireContext(),
-                    englishOnly
+                    StudyVoiceLanguageHelper.isEnglishOnly(explanationLanguage)
                             ? "Voice input is unavailable on this device."
                             : "इस device पर voice input उपलब्ध नहीं है।",
                     Toast.LENGTH_LONG
