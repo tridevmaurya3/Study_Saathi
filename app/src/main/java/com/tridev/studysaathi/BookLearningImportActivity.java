@@ -102,6 +102,8 @@ public final class BookLearningImportActivity
 
     private boolean extractingPages;
 
+    private boolean draftsReadyForReview;
+
     @NonNull
     private final ActivityResultLauncher<Intent>
             sourcePickerLauncher =
@@ -282,6 +284,11 @@ public final class BookLearningImportActivity
         binding.startBookLearningImportButton
                 .setOnClickListener(
                         ignored -> {
+                            if (draftsReadyForReview) {
+                                openSavedChaptersForReview();
+                                return;
+                            }
+
                             if (latestBoundaryResult != null
                                     && latestBoundaryResult
                                     .isSuccessful()) {
@@ -313,6 +320,7 @@ public final class BookLearningImportActivity
     ) {
         latestOcrResult = null;
         latestBoundaryResult = null;
+        draftsReadyForReview = false;
         approvedBoundaries.clear();
         extractedChapterContents.clear();
 
@@ -1169,12 +1177,14 @@ public final class BookLearningImportActivity
                         setSelectionControlsEnabled(true);
 
                         binding.startBookLearningImportButton
-                                .setEnabled(false);
+                                .setEnabled(true);
 
                         binding.startBookLearningImportButton
                                 .setText(
-                                        "Page Drafts Saved"
+                                        "Step 3 • Review Saved Chapters"
                                 );
+
+                        draftsReadyForReview = true;
 
                         binding.bookLearningImportProgressTitleTextView
                                 .setText(
@@ -1414,11 +1424,13 @@ public final class BookLearningImportActivity
 
                         binding.startBookLearningImportButton
                                 .setText(
-                                        "Drafts Saved"
+                                        "Step 3 • Review Saved Chapters"
                                 );
 
                         binding.startBookLearningImportButton
-                                .setEnabled(false);
+                                .setEnabled(true);
+
+                        draftsReadyForReview = true;
 
                         showMessage(
                                 result.getSavedDraftCount()
@@ -1463,6 +1475,28 @@ public final class BookLearningImportActivity
                     }
                 }
         );
+    }
+
+    private void openSavedChaptersForReview() {
+        Intent reviewIntent =
+                SchoolBookChaptersActivity.createIntent(
+                        this,
+                        bookRowId,
+                        bookTitle
+                );
+
+        try {
+            startActivity(reviewIntent);
+            setResult(Activity.RESULT_OK);
+            finish();
+        } catch (RuntimeException exception) {
+            showMessage(
+                    readableMessage(
+                            exception,
+                            "Saved chapters अभी नहीं खुल सके।"
+                    )
+            );
+        }
     }
 
     private boolean canUpdateScreen() {
