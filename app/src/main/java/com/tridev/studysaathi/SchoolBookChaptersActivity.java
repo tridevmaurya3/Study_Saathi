@@ -39,6 +39,9 @@ public final class SchoolBookChaptersActivity
     public static final String EXTRA_BOOK_TITLE =
             "extra_book_title";
 
+    public static final String EXTRA_FOCUSED_CONTENT_REVIEW =
+            "extra_focused_content_review";
+
     private static final int REQUEST_MANUAL_CHAPTER =
             6801;
 
@@ -63,6 +66,8 @@ public final class SchoolBookChaptersActivity
     private boolean loading;
 
     private boolean changingChapterState;
+
+    private boolean focusedContentReview;
 
     @NonNull
     private final ActivityResultLauncher<Intent> contentsScanLauncher =
@@ -142,6 +147,17 @@ public final class SchoolBookChaptersActivity
         return intent;
     }
 
+    @NonNull
+    public static Intent createContentReviewIntent(
+            @NonNull Context context,
+            long bookRowId,
+            @Nullable String bookTitle
+    ) {
+        Intent intent = createIntent(context, bookRowId, bookTitle);
+        intent.putExtra(EXTRA_FOCUSED_CONTENT_REVIEW, true);
+        return intent;
+    }
+
     @Override
     protected void onCreate(
             @Nullable Bundle savedInstanceState
@@ -206,6 +222,12 @@ public final class SchoolBookChaptersActivity
                                 EXTRA_BOOK_TITLE
                         )
                 );
+
+        focusedContentReview =
+                intent.getBooleanExtra(
+                        EXTRA_FOCUSED_CONTENT_REVIEW,
+                        false
+                );
     }
 
     private void configureRecyclerView() {
@@ -267,7 +289,9 @@ public final class SchoolBookChaptersActivity
     private void bindBookInformation() {
         binding.screenTitleTextView
                 .setText(
-                        "School Book Chapters"
+                        focusedContentReview
+                                ? "Step 3 • Review Saved Chapters"
+                                : "School Book Chapters"
                 );
 
         binding.bookTitleTextView
@@ -276,6 +300,20 @@ public final class SchoolBookChaptersActivity
                                 ? "Exact School Book"
                                 : bookTitle
                 );
+
+        int setupVisibility =
+                focusedContentReview
+                        ? View.GONE
+                        : View.VISIBLE;
+
+        binding.chapterSetupQuickActionsContainer
+                .setVisibility(setupVisibility);
+
+        binding.importFullBookContentButton
+                .setVisibility(setupVisibility);
+
+        binding.importFullBookContentHintTextView
+                .setVisibility(setupVisibility);
     }
 
     private void loadChapters() {

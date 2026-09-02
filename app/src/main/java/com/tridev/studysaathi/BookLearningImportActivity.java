@@ -1479,7 +1479,7 @@ public final class BookLearningImportActivity
 
     private void openSavedChaptersForReview() {
         Intent reviewIntent =
-                SchoolBookChaptersActivity.createIntent(
+                SchoolBookChaptersActivity.createContentReviewIntent(
                         this,
                         bookRowId,
                         bookTitle
