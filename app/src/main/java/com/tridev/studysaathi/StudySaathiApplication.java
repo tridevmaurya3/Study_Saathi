@@ -21,6 +21,7 @@ import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
 import com.tridev.studysaathi.data.ai.FirebaseAiQuotaActivityObserver;
 import com.tridev.studysaathi.data.ai.SmartTutorTextToSpeechActivityObserver;
+import com.tridev.studysaathi.data.learning.PhotoBookContextIndex;
 import com.tridev.studysaathi.family.FamilyRealtimeSyncManager;
 import com.tridev.studysaathi.overlay.StudyOverlayBubbleService;
 import com.tridev.studysaathi.ui.SmartAiCompanionController;
@@ -77,6 +78,14 @@ public final class StudySaathiApplication
         super.onCreate();
 
         AppAppearancePreferences.applySavedAppearance(
+                this
+        );
+
+        /*
+         * Parent-approved exact book pages का read-only index background में
+         * तैयार करें। इससे Photo/OCR question page context पहचान सकता है।
+         */
+        PhotoBookContextIndex.initialize(
                 this
         );
 

@@ -22,7 +22,8 @@ public final class AdvancedTutorCapabilityResolver {
         FLASHCARDS,
         READ_ALONG,
         VISUAL_ANSWER,
-        PRONUNCIATION
+        PRONUNCIATION,
+        PHOTO_BOOK_CONTEXT
     }
 
     public static final class Decision {
@@ -47,6 +48,16 @@ public final class AdvancedTutorCapabilityResolver {
         String text = question == null ? "" : question.trim().toLowerCase(Locale.ROOT);
         List<Capability> found = new ArrayList<>();
         StringBuilder rules = new StringBuilder();
+
+        if (imageAttached) {
+            PhotoBookContextIndex.MatchResult photoContext =
+                    PhotoBookContextIndex.matchImageQuestion(question);
+            addIf(found, rules, Capability.PHOTO_BOOK_CONTEXT,
+                    photoContext.hasVerifiedPage(),
+                    photoContext.getPromptInstruction());
+        } else {
+            PhotoBookContextIndex.clearLatestMatch();
+        }
 
         addIf(found, rules, Capability.DIAGRAM_TABLE,
                 imageAttached || has(text, "diagram", "चित्र", "आरेख", "table", "तालिका", "graph", "चार्ट"),

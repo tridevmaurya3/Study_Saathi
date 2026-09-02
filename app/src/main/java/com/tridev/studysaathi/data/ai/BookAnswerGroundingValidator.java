@@ -3,6 +3,8 @@ package com.tridev.studysaathi.data.ai;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.tridev.studysaathi.data.learning.PhotoBookContextIndex;
+
 import java.util.LinkedHashSet;
 import java.util.Collections;
 import java.util.Set;
@@ -21,7 +23,12 @@ public final class BookAnswerGroundingValidator {
 
     @NonNull
     public static Result validate(@Nullable String answer, @Nullable String approvedReference) {
-        Set<Integer> approvedPages = collect(APPROVED_PAGE, approvedReference);
+        String effectiveReference = approvedReference == null ? "" : approvedReference.trim();
+        if (effectiveReference.isEmpty()) {
+            effectiveReference = PhotoBookContextIndex.consumeLatestVerifiedReference();
+        }
+
+        Set<Integer> approvedPages = collect(APPROVED_PAGE, effectiveReference);
         if (approvedPages.isEmpty()) {
             return new Result(Status.NO_EXACT_EVIDENCE, approvedPages, Collections.emptySet());
         }
