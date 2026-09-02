@@ -84,6 +84,42 @@
                 android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/contentSetupCompleteContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#E8F5E9"
+                android:orientation="vertical"
+                android:padding="14dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Book content setup complete"
+                    android:textColor="#207A3C"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="सभी chapters का material approved और Child Mode के लिए ready है।"
+                    android:textColor="#315B3D"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/finishContentSetupButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Finish Content Setup"
+                    android:textAllCaps="false" />
+
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/pendingReviewContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

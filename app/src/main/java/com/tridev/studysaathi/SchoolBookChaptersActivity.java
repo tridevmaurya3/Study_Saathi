@@ -79,6 +79,8 @@ public final class SchoolBookChaptersActivity
 
     private boolean automaticResumeConsumed;
 
+    private boolean hasResumedOnce;
+
     @NonNull
     private final ActivityResultLauncher<Intent> contentsScanLauncher =
             registerForActivityResult(
@@ -299,6 +301,23 @@ public final class SchoolBookChaptersActivity
                 .setOnClickListener(view ->
                         openFullBookLearningImportScreen()
                 );
+
+        binding.finishContentSetupButton
+                .setOnClickListener(view -> finishContentSetup());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (!hasResumedOnce) {
+            hasResumedOnce = true;
+            return;
+        }
+
+        if (focusedContentReview && hasValidBook()) {
+            loadContentReviewStatuses();
+        }
     }
 
     private void bindBookInformation() {
@@ -438,6 +457,8 @@ public final class SchoolBookChaptersActivity
                         }
                         chapterAdapter.submitContentReviewStatuses(statuses);
 
+                        showCompletionState(statuses);
+
                         openNextUnfinishedChapter(statuses);
                     }
 
@@ -447,6 +468,33 @@ public final class SchoolBookChaptersActivity
                     }
                 }
         );
+    }
+
+    private void showCompletionState(
+            @NonNull Map<Long, String> statuses
+    ) {
+        List<SchoolBookChapterEntity> chapters =
+                chapterAdapter.getCurrentChapters();
+
+        boolean allApproved = !chapters.isEmpty();
+        for (SchoolBookChapterEntity chapter : chapters) {
+            if (!SchoolBookChapterContentEntity.REVIEW_STATUS_APPROVED
+                    .equals(statuses.get(chapter.getChapterRowId()))) {
+                allApproved = false;
+                break;
+            }
+        }
+
+        binding.contentSetupCompleteContainer.setVisibility(
+                focusedContentReview && allApproved
+                        ? View.VISIBLE
+                        : View.GONE
+        );
+    }
+
+    private void finishContentSetup() {
+        setResult(Activity.RESULT_OK);
+        finish();
     }
 
     private void openNextUnfinishedChapter(
