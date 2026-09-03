@@ -19,9 +19,6 @@
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
-    <uses-permission
-        android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
-
     <application
         android:name=".StudySaathiApplication"
         android:allowBackup="false"
@@ -58,17 +55,6 @@
                 android:value="Student-requested floating AI study access" />
 
         </service>
-
-        <service
-            android:name=".overlay.StudyLensCaptureService"
-            android:exported="false"
-            android:foregroundServiceType="mediaProjection" />
-
-        <activity
-            android:name=".overlay.OverlayScreenCaptureActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:theme="@style/Theme.StudySaathi.TransparentVoice" />
 
         <activity
             android:name=".overlay.OverlayVoiceInputActivity"

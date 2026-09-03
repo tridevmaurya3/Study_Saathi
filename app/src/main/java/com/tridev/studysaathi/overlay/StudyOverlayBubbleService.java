@@ -64,11 +64,8 @@ public final class StudyOverlayBubbleService extends Service {
     static final String ACTION_TOGGLE = "com.tridev.studysaathi.overlay.TOGGLE";
     static final String ACTION_VOICE_RESULT = "com.tridev.studysaathi.overlay.VOICE_RESULT";
     static final String ACTION_PHOTO_RESULT = "com.tridev.studysaathi.overlay.PHOTO_RESULT";
-    static final String ACTION_SCREEN_CANCELLED = "com.tridev.studysaathi.overlay.SCREEN_CANCELLED";
     static final String EXTRA_VOICE_TEXT = "overlay_voice_text";
     static final String EXTRA_PHOTO_URI = "overlay_photo_uri";
-    static final String EXTRA_SCREEN_SOURCE = "overlay_screen_source";
-    static final String EXTRA_PENDING_QUESTION = "overlay_pending_question";
     private static final String PREFS = "study_ai_overlay_preferences";
     private static final String KEY_ALPHA = "bubble_alpha";
     private static final String KEY_PANEL_WIDTH = "panel_width";
@@ -96,7 +93,6 @@ public final class StudyOverlayBubbleService extends Service {
     private FirebaseStudyTutorClient tutorClient;
     private QuestionImageBitmapLoader questionImageBitmapLoader;
     @Nullable private Bitmap pendingQuestionImage;
-    private boolean pendingQuestionFromScreen;
     private boolean asking;
     private int resizeCorner;
     private int resizeStartWidth;
@@ -229,8 +225,6 @@ public final class StudyOverlayBubbleService extends Service {
         LinearLayout primaryActions = actionRow();
         Button photo = actionButton("📷 फोटो", Color.rgb(255, 249, 232),
                 Color.rgb(181, 143, 42));
-        Button screenCapture = actionButton("▣ स्क्रीन", Color.rgb(237, 245, 255),
-                Color.rgb(55, 105, 190));
         send = new Button(this);
         send.setText("पूछें");
         send.setTextColor(Color.WHITE);
@@ -238,9 +232,6 @@ public final class StudyOverlayBubbleService extends Service {
         send.setAllCaps(false);
         send.setBackground(rounded(Color.rgb(43, 91, 201), Color.rgb(43, 91, 201), 14));
         primaryActions.addView(photo, weightedButton());
-        LinearLayout.LayoutParams screenLp = weightedButton();
-        screenLp.leftMargin = dp(7);
-        primaryActions.addView(screenCapture, screenLp);
         LinearLayout.LayoutParams sendLp = weightedButton();
         sendLp.leftMargin = dp(7);
         primaryActions.addView(send, sendLp);
@@ -303,7 +294,6 @@ public final class StudyOverlayBubbleService extends Service {
         questionResize.setOnTouchListener(this::resizeQuestionBox);
         send.setOnClickListener(v -> askQuestion());
         photo.setOnClickListener(v -> launchPhotoInput());
-        screenCapture.setOnClickListener(v -> launchScreenCapture());
         simpler.setOnClickListener(v -> submitQuickPrompt(
                 "पिछले उत्तर को और आसान भाषा में समझाओ।"));
         example.setOnClickListener(v -> submitQuickPrompt(
@@ -501,30 +491,7 @@ public final class StudyOverlayBubbleService extends Service {
         }
     }
 
-    private void launchScreenCapture() {
-        if (asking) {
-            if (status != null) status.setText("पहले वर्तमान answer पूरा होने दें।");
-            return;
-        }
-        try {
-            String pendingText = question == null
-                    ? "" : question.getText().toString().trim();
-            startActivity(new Intent(this, OverlayScreenCaptureActivity.class)
-                    .putExtra(EXTRA_PENDING_QUESTION, pendingText)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-            if (status != null) status.setText("Screen share की अनुमति दें…");
-        } catch (RuntimeException error) {
-            if (status != null) status.setText("Screen question अभी उपलब्ध नहीं है।");
-        }
-    }
-
     private void loadOverlayPhoto(@NonNull String imageUriText) {
-        loadOverlayPhoto(imageUriText, false, "");
-    }
-
-    private void loadOverlayPhoto(@NonNull String imageUriText,
-                                  boolean fromScreen,
-                                  @NonNull String pendingText) {
         final Uri imageUri;
         try {
             imageUri = Uri.parse(imageUriText);
@@ -538,11 +505,6 @@ public final class StudyOverlayBubbleService extends Service {
         }
 
         if (panel == null) showPanel();
-        pendingQuestionFromScreen = fromScreen;
-        if (question != null && !pendingText.trim().isEmpty()) {
-            question.setText(pendingText.trim());
-            question.setSelection(question.length());
-        }
         if (status != null) status.setText("Photo तैयार की जा रही है…");
 
         questionImageBitmapLoader.loadForAi(
@@ -553,9 +515,7 @@ public final class StudyOverlayBubbleService extends Service {
                         pendingQuestionImage = bitmap;
                         if (panel == null) showPanel();
                         if (status != null) {
-                            status.setText(fromScreen
-                                    ? "▣ Screen attached • सवाल लिखें या सीधे पूछें"
-                                    : "📷 Photo attached • सवाल लिखें या सीधे पूछें");
+                            status.setText("📷 Photo attached • सवाल लिखें या सीधे पूछें");
                         }
                         if (question != null) {
                             question.requestFocus();
@@ -640,17 +600,13 @@ public final class StudyOverlayBubbleService extends Service {
 
         String prompt = question.getText().toString().trim();
         if (prompt.isEmpty() && pendingQuestionImage != null) {
-            prompt = pendingQuestionFromScreen
-                    ? "इस screen या चुने हुए हिस्से को पढ़कर आसान तरीके से समझाओ।"
-                    : "इस photo में दिए question को पढ़कर आसान तरीके से समझाओ।";
+            prompt = "इस photo में दिए question को पढ़कर आसान तरीके से समझाओ।";
         }
         if (prompt.isEmpty()) return;
 
         final String finalPrompt = prompt;
         final Bitmap questionImage = pendingQuestionImage;
-        final boolean questionFromScreen = pendingQuestionFromScreen;
         pendingQuestionImage = null;
-        pendingQuestionFromScreen = false;
 
         asking = true;
         send.setEnabled(false);
@@ -658,7 +614,7 @@ public final class StudyOverlayBubbleService extends Service {
                 ? "उत्तर तैयार किया जा रहा है…"
                 : "Photo question समझा जा रहा है…");
         appendToActiveChat("\n\nआप: "
-                + (questionImage == null ? "" : questionFromScreen ? "▣ " : "📷 ")
+                + (questionImage == null ? "" : "📷 ")
                 + finalPrompt, finalPrompt);
         question.setText("");
 
@@ -1111,25 +1067,10 @@ public final class StudyOverlayBubbleService extends Service {
         } else if (intent != null && ACTION_PHOTO_RESULT.equals(intent.getAction())) {
             String imageUriText = intent.getStringExtra(EXTRA_PHOTO_URI);
             if (imageUriText != null && !imageUriText.trim().isEmpty()) {
-                loadOverlayPhoto(imageUriText.trim(),
-                        intent.getBooleanExtra(EXTRA_SCREEN_SOURCE, false),
-                        valueOrEmpty(intent.getStringExtra(EXTRA_PENDING_QUESTION)));
+                loadOverlayPhoto(imageUriText.trim());
             }
-        } else if (intent != null && ACTION_SCREEN_CANCELLED.equals(intent.getAction())) {
-            if (panel == null) showPanel();
-            String pendingText = intent.getStringExtra(EXTRA_PENDING_QUESTION);
-            if (question != null && pendingText != null && !pendingText.trim().isEmpty()) {
-                question.setText(pendingText.trim());
-                question.setSelection(question.length());
-            }
-            if (status != null) status.setText("Screen question रद्द किया गया।");
         }
         return START_STICKY;
-    }
-
-    @NonNull
-    private static String valueOrEmpty(@Nullable String value) {
-        return value == null ? "" : value;
     }
 
     @Override public void onDestroy() {
