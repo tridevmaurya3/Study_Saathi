@@ -69,6 +69,23 @@
 
                 </LinearLayout>
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonCloudHelp"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:contentDescription="Account help"
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetRight="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:text="?"
+                    android:textColor="@color/ss_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="16dp" />
+
             </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView

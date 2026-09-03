@@ -223,6 +223,15 @@ public class CloudAccountActivity
                         .onBackPressed()
         );
 
+        binding.buttonCloudHelp.setOnClickListener(view -> {
+            Intent helpIntent = new Intent(this, HelpAboutActivity.class);
+            helpIntent.putExtra(
+                    HelpAboutActivity.EXTRA_MODE,
+                    HelpAboutActivity.MODE_AUTHENTICATION
+            );
+            startActivity(helpIntent);
+        });
+
         binding.buttonCloudPrimaryAction
                 .setOnClickListener(view ->
                         submitAccountForm()

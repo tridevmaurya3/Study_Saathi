@@ -13,14 +13,44 @@
         android:orientation="vertical"
         android:padding="12dp">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="Study Saathi"
-            android:textColor="@color/ss_primary"
-            android:textSize="30sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="48dp"
+                android:layout_height="1dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Study Saathi"
+                android:textColor="@color/ss_primary"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonModeHelp"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="Mode selection help"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:minWidth="0dp"
+                android:text="?"
+                android:textColor="@color/ss_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                app:cornerRadius="16dp" />
+
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"

@@ -21,6 +21,8 @@ import com.tridev.studysaathi.databinding.ActivityHelpAboutBinding;
 public final class HelpAboutActivity extends AppCompatActivity {
 
     public static final String EXTRA_MODE = "extra_help_mode";
+    public static final String MODE_AUTHENTICATION = "AUTHENTICATION";
+    public static final String MODE_SELECTION = "MODE_SELECTION";
     public static final String MODE_STUDENT = "STUDENT";
     public static final String MODE_PARENT = "PARENT";
 
@@ -40,8 +42,7 @@ public final class HelpAboutActivity extends AppCompatActivity {
         binding = ActivityHelpAboutBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        mode = MODE_PARENT.equals(getIntent().getStringExtra(EXTRA_MODE))
-                ? MODE_PARENT : MODE_STUDENT;
+        mode = resolveMode(getIntent().getStringExtra(EXTRA_MODE));
 
         binding.buttonHelpBack.setOnClickListener(view ->
                 getOnBackPressedDispatcher().onBackPressed()
@@ -82,10 +83,26 @@ public final class HelpAboutActivity extends AppCompatActivity {
 
         if (MODE_STUDENT.equals(mode)) {
             loadStudentContext();
-        } else {
+        } else if (MODE_PARENT.equals(mode)) {
             profileContext = "Parent Mode • verified account और device-lock protection";
             renderGuide();
+        } else if (MODE_AUTHENTICATION.equals(mode)) {
+            profileContext = "Account access • sign in, create account और email verification";
+            renderGuide();
+        } else {
+            profileContext = "Verified account • सही उपयोगकर्ता mode चुनें";
+            renderGuide();
         }
+    }
+
+    @NonNull
+    private String resolveMode(@Nullable String requestedMode) {
+        if (MODE_AUTHENTICATION.equals(requestedMode)
+                || MODE_SELECTION.equals(requestedMode)
+                || MODE_PARENT.equals(requestedMode)) {
+            return requestedMode;
+        }
+        return MODE_STUDENT;
     }
 
     private void loadStudentContext() {
@@ -120,16 +137,15 @@ public final class HelpAboutActivity extends AppCompatActivity {
     }
 
     private void renderGuide() {
-        boolean parent = MODE_PARENT.equals(mode);
-        binding.textHelpMode.setText(modeTitle(parent));
+        binding.textHelpMode.setText(modeTitle());
         binding.textHelpMotto.setText(motto());
-        binding.textHelpIntro.setText(parent ? parentHeading() : studentHeading());
+        binding.textHelpIntro.setText(guideHeading());
         binding.textHelpProfileContext.setText(profileContext);
-        binding.textHelpSafety.setText(parent ? parentSafety() : studentSafety());
+        binding.textHelpSafety.setText(safetyText());
         binding.editHelpSearch.setHint(searchHint());
 
         binding.containerHelpSteps.removeAllViews();
-        String[][] steps = parent ? parentSteps() : studentSteps();
+        String[][] steps = guideSteps();
         int visibleCount = 0;
         for (int index = 0; index < steps.length; index++) {
             if (matchesSearch(steps[index][0], steps[index][1])) {
@@ -227,14 +243,45 @@ public final class HelpAboutActivity extends AppCompatActivity {
         return "सुरक्षित Parent Mode • Complete parent guide";
     }
 
-    private String modeTitle(boolean parent) {
+    private String authenticationHeading() {
+        if (LANGUAGE_HINDI.equals(language)) return "Login और नया account बनाने में सहायता";
+        if (LANGUAGE_ENGLISH.equals(language)) return "Help with sign-in and account creation";
+        return "Login और नया account • Sign-in help";
+    }
+
+    private String modeSelectionHeading() {
+        if (LANGUAGE_HINDI.equals(language)) return "सही उपयोगकर्ता मोड कैसे चुनें";
+        if (LANGUAGE_ENGLISH.equals(language)) return "How to choose the correct user mode";
+        return "सही मोड चुनें • Choose the correct mode";
+    }
+
+    private String guideHeading() {
+        if (MODE_AUTHENTICATION.equals(mode)) return authenticationHeading();
+        if (MODE_SELECTION.equals(mode)) return modeSelectionHeading();
+        if (MODE_PARENT.equals(mode)) return parentHeading();
+        return studentHeading();
+    }
+
+    private String modeTitle() {
         if (LANGUAGE_HINDI.equals(language)) {
-            return parent ? "सुरक्षित अभिभावक मोड गाइड" : "विद्यार्थी सहायता गाइड";
+            if (MODE_AUTHENTICATION.equals(mode)) return "Account सहायता";
+            if (MODE_SELECTION.equals(mode)) return "मोड चयन सहायता";
+            return MODE_PARENT.equals(mode)
+                    ? "सुरक्षित अभिभावक मोड गाइड"
+                    : "विद्यार्थी सहायता गाइड";
         }
         if (LANGUAGE_ENGLISH.equals(language)) {
-            return parent ? "Secure Parent Mode Guide" : "Student Learning Guide";
+            if (MODE_AUTHENTICATION.equals(mode)) return "Account Help";
+            if (MODE_SELECTION.equals(mode)) return "Mode Selection Help";
+            return MODE_PARENT.equals(mode)
+                    ? "Secure Parent Mode Guide"
+                    : "Student Learning Guide";
         }
-        return parent ? "अभिभावक गाइड • Parent Guide" : "विद्यार्थी गाइड • Student Guide";
+        if (MODE_AUTHENTICATION.equals(mode)) return "Account सहायता • Account Help";
+        if (MODE_SELECTION.equals(mode)) return "मोड चयन • Mode Selection";
+        return MODE_PARENT.equals(mode)
+                ? "अभिभावक गाइड • Parent Guide"
+                : "विद्यार्थी गाइड • Student Guide";
     }
 
     private String searchHint() {
@@ -256,9 +303,54 @@ public final class HelpAboutActivity extends AppCompatActivity {
                 || detail.toLowerCase(java.util.Locale.ROOT).contains(query);
     }
 
+    private String[][] guideSteps() {
+        if (MODE_AUTHENTICATION.equals(mode)) return authenticationSteps();
+        if (MODE_SELECTION.equals(mode)) return modeSelectionSteps();
+        if (MODE_PARENT.equals(mode)) return parentSteps();
+        return studentSteps();
+    }
+
+    private String[][] authenticationSteps() {
+        String[][] hi = {
+                {"1. Sign in या Create Account चुनें", "पहले से account है तो Sign In चुनें। पहली बार उपयोग कर रहे हैं तो Create Account चुनें और अपना display name, सही email तथा मजबूत password भरें।"},
+                {"2. Google या email से प्रवेश करें", "Google button से अपना सही account चुनें, या email/password भरकर मुख्य button दबाएँ। एक ही पढ़ाई और backup data के लिए हर device पर वही verified account उपयोग करें।"},
+                {"3. नया email account verify करें", "Create Account के बाद inbox में Study Saathi/Firebase verification email खोलें और verification link दबाएँ। फिर app पर लौटकर sign in करें। Spam/Junk folder भी जाँचें।"},
+                {"4. Password भूलने पर", "Sign In mode में अपना email भरें और Forgot Password दबाएँ। मिले reset email से नया password बनाएँ; password या OTP किसी से साझा न करें।"},
+                {"5. Error आए तो जाँचें", "Internet चालू रखें, email spelling जाँचें और password पूरा लिखें। Google sign-in रुकने पर सही Google account और Play Services जाँचकर फिर प्रयास करें; बार-बार नया account न बनाएँ।"},
+                {"6. आगे क्या खुलेगा", "Verified sign-in सफल होने पर Mode Selection page खुलेगा। वहाँ Student Mode पढ़ाई के लिए और Parent Mode profiles, reports, curriculum, safety तथा backup controls के लिए चुनें।"}
+        };
+        String[][] en = {
+                {"1. Choose Sign In or Create Account", "Choose Sign In if an account already exists. First-time users should choose Create Account and enter a display name, correct email and strong password."},
+                {"2. Continue with Google or email", "Select the correct account with the Google button, or enter email/password and tap the primary action. Use the same verified account on every device that needs the same learning and backup data."},
+                {"3. Verify a new email account", "After account creation, open the Study Saathi/Firebase verification email and tap its verification link. Return to the app and sign in. Also check Spam or Junk."},
+                {"4. Reset a forgotten password", "In Sign In mode, enter the email and tap Forgot Password. Use the reset email to create a new password; never share a password or OTP."},
+                {"5. Troubleshoot an error", "Keep internet enabled, check email spelling and enter the complete password. If Google sign-in stops, verify the selected Google account and Play Services, then retry instead of creating duplicate accounts."},
+                {"6. Continue after verification", "A successful verified sign-in opens Mode Selection. Choose Student Mode for learning or Parent Mode for profiles, reports, curriculum, safety and backup controls."}
+        };
+        return combine(hi, en);
+    }
+
+    private String[][] modeSelectionSteps() {
+        String[][] hi = {
+                {"1. Signed-in account जाँचें", "ऊपर दिख रहा email वही verified account होना चाहिए जिसमें profiles, progress और backup रखना है। गलत account हो तो Use another account दबाएँ।"},
+                {"2. Student Mode कब चुनें", "पढ़ाई, lesson, Photo/Voice/Text से प्रश्न, practice, revision, weak topics, notes, bookmarks और progress के लिए Student Mode चुनें।"},
+                {"3. Parent Mode कब चुनें", "Student profiles, school curriculum/books, daily goal, reports, AI trust insights, privacy, local/cloud backup और restore controls के लिए Parent Mode चुनें। प्रवेश पर device lock verification माँगा जा सकता है।"},
+                {"4. Mode बाद में बदलें", "Student या Parent dashboard के menu से दूसरे mode में जा सकते हैं। Mode बदलने से account या saved data delete नहीं होता; केवल उपलब्ध controls बदलते हैं।"},
+                {"5. बच्चे को सुरक्षित access दें", "बच्चे के सामान्य उपयोग के लिए Student Mode दें। Parent controls, account password, backup/restore और curriculum editing किसी जिम्मेदार अभिभावक की देखरेख में रखें।"}
+        };
+        String[][] en = {
+                {"1. Check the signed-in account", "The email shown above must be the verified account that should hold profiles, progress and backup. Tap Use another account if it is incorrect."},
+                {"2. When to choose Student Mode", "Choose Student Mode for lessons, Photo/Voice/Text questions, practice, revision, weak topics, notes, bookmarks and learning progress."},
+                {"3. When to choose Parent Mode", "Choose Parent Mode for student profiles, school curriculum/books, daily goals, reports, AI trust insights, privacy, local/cloud backup and restore controls. Device-lock verification may be required."},
+                {"4. Switch modes later", "Use the Student or Parent dashboard menu to switch mode. Switching does not delete the account or saved data; it changes the available controls."},
+                {"5. Give a child safe access", "Use Student Mode for the child’s normal learning. Keep parent controls, account password, backup/restore and curriculum editing under responsible adult supervision."}
+        };
+        return combine(hi, en);
+    }
+
     private String[][] studentSteps() {
         String[][] hi = {
-                {"1. प्रोफाइल और भाषा तैयार करें", "Dashboard पर सही student profile चुनें। Profile में Class, Board, study medium और explanation language सही रखें। Settings → Theme & Language से पूरे app को हिन्दी, English या दोनों में दिखाएँ।"},
+                {"1. प्रोफाइल और भाषा तैयार करें", "Dashboard पर सही student profile चुनें। Profile में Class, Board, study medium और explanation language सही रखें। Settings → Theme & Language से पूरे app को हिन्दी, English या Hinglish में दिखाएँ।"},
                 {"2. विषय, किताब और chapter चुनें", "Subjects खोलें → विषय चुनें → chapter खोलें। यदि school book उपलब्ध नहीं है तो parent से Curriculum Setup में सही किताब scan या manually add करवाएँ। Tutor इसी saved class, board, subject और chapter को प्राथमिकता देता है।"},
                 {"3. Lesson पढ़ें और वहीं से जारी रखें", "Lesson में content पढ़ें, font छोटा-बड़ा करें और पूरा होने पर lesson complete करें। Dashboard का Continue Learning पिछला अधूरा lesson खोलता है। Chapter Page Reader में चुने हुए book pages पढ़े जा सकते हैं।"},
                 {"4. Ask Study Saathi में प्रश्न पूछें", "Ask Study Saathi खोलें → subject/chapter जाँचें → प्रश्न लिखें और Send दबाएँ। Mic से बोलकर, camera से photo लेकर या gallery image लगाकर भी प्रश्न भेज सकते हैं। साफ photo और पूरा सवाल बेहतर उत्तर देते हैं।"},
@@ -272,7 +364,7 @@ public final class HelpAboutActivity extends AppCompatActivity {
                 {"12. Flashcards और spaced repetition", "‘इस chapter के flashcards बनाओ’ लिखें। Front देखकर उत्तर याद करें, फिर Back जाँचें। Revision Planner गलतियों, confidence, बीते दिनों और correct streak से अगली revision तथा forgetting risk तय करता है।"},
                 {"13. Smart Study Plan और daily queue", "Dashboard → Smart Study Plan खोलें। आज के lesson, practice और revision actions क्रम से पूरे करें। Daily Revision Queue पहले overdue, high-risk और कमजोर topics दिखाती है।"},
                 {"14. Voice Tutor, Read-Along और pronunciation", "Mic से प्रश्न बोलें और speaker button से उत्तर सुनें। ‘साथ पढ़ो’ कहने पर छोटे हिस्सों में read-along करें। ‘इस शब्द का उच्चारण बताओ’ कहने पर syllable, sound hint और repeat-after-me अभ्यास मिलता है।"},
-                {"15. AI Companion से लगातार follow-up", "किसी supported screen पर floating AI icon दबाएँ। उसी panel में ‘क्यों?’, ‘दूसरा example’ या ‘पिछला step समझाओ’ पूछें। Conversation context follow-up समझने में मदद करता है।"},
+                {"15. Floating Study Saathi और follow-up", "किसी supported screen पर floating AI icon दबाएँ। उसी panel में Text, Mic या Photo से प्रश्न पूछें; full app खोले बिना उत्तर वहीं लौटता है। फिर ‘क्यों?’, ‘दूसरा example’ या ‘पिछला step समझाओ’ जैसे follow-up पूछें।"},
                 {"16. Search, bookmarks और history", "Global Search से lessons, chapters और उपलब्ध content खोजें। जरूरी page/bookmark save करें। Doubt History में पुराने AI प्रश्न और उत्तर देखें; गलत profile/subject हो तो नया सही प्रश्न पूछें।"},
                 {"17. Progress और weekly study देखें", "Learning Progress में completed lessons, quiz performance और progress देखें। Weekly Study में streak/activity जाँचें। Parent द्वारा तय daily goal के actions पूरे होने पर dashboard progress बदलती है।"},
                 {"18. Offline उपयोग और sync", "Downloaded/local lessons, verified offline knowledge और cached answers सीमित network में मदद करते हैं। नया AI answer या online book search इंटरनेट माँग सकता है। Sync/restore parent की देखरेख में और सही account पर करें।"},
@@ -280,7 +372,7 @@ public final class HelpAboutActivity extends AppCompatActivity {
                 {"20. समस्या आने पर क्या करें", "पहले सही profile, subject, chapter, भाषा, internet और permissions जाँचें। धुँधली photo दोबारा लें। Sync के बाद Build/ऐप restart करें। फिर भी समस्या हो तो error का पूरा screenshot और उस समय किए गए steps parent/developer को दें।"}
         };
         String[][] en = {
-                {"1. Set up profile and language", "Select the correct student profile on Dashboard. Keep Class, Board, study medium and explanation language accurate. Use Settings → Theme & Language to display the app in Hindi, English or Bilingual mode."},
+                {"1. Set up profile and language", "Select the correct student profile on Dashboard. Keep Class, Board, study medium and explanation language accurate. Use Settings → Theme & Language to display the app in Hindi, English or Hinglish mode."},
                 {"2. Choose subject, book and chapter", "Open Subjects → choose a subject → open a chapter. If the school book is missing, ask a parent to scan or add it in Curriculum Setup. The tutor prioritises the saved class, board, subject and chapter."},
                 {"3. Read lessons and resume", "Read lesson content, adjust font size and mark the lesson complete. Continue Learning opens the last unfinished lesson. Chapter Page Reader can display selected pages from an added school book."},
                 {"4. Ask a question", "Open Ask Study Saathi → verify subject/chapter → type the question → tap Send. You may also speak, take a camera photo or attach a gallery image. A clear full image and complete question produce better results."},
@@ -294,7 +386,7 @@ public final class HelpAboutActivity extends AppCompatActivity {
                 {"12. Use flashcards and spaced repetition", "Ask for chapter flashcards, recall the Front, then verify the Back. Revision scheduling uses mistakes, confidence, elapsed days and correct streak to estimate the next review and forgetting risk."},
                 {"13. Follow Smart Study Plan", "Open Dashboard → Smart Study Plan and complete today’s lesson, practice and revision actions in order. Daily Revision Queue prioritises overdue, high-risk and weak topics."},
                 {"14. Use Voice Tutor, Read-Along and pronunciation", "Speak through the microphone and listen with the speaker button. Ask for read-along to work through short sections. Ask for pronunciation to receive syllable breaks, sound guidance and repeat-after-me practice."},
-                {"15. Continue with AI Companion", "Tap the floating AI icon on a supported screen. Ask follow-ups such as ‘why?’, ‘another example’ or ‘explain the previous step’. Conversation context helps the tutor understand references."},
+                {"15. Use Floating Study Saathi and follow up", "Tap the floating AI icon on a supported screen. Ask by Text, Mic or Photo and receive the answer in the same panel without opening the full app. Then ask follow-ups such as ‘why?’, ‘another example’ or ‘explain the previous step’."},
                 {"16. Search, bookmark and review history", "Use Global Search for lessons, chapters and available content. Save important bookmarks. Open Doubt History for earlier AI questions and answers; ask again if the saved profile or subject was wrong."},
                 {"17. Review learning progress", "Learning Progress shows completed lessons, quiz performance and progress. Weekly Study shows streak/activity. Dashboard progress changes as actions in the parent-set daily goal are completed."},
                 {"18. Learn offline and sync safely", "Downloaded/local lessons, verified offline knowledge and cached answers help with limited connectivity. New AI answers or online book search may require internet. Sync or restore only under parent supervision and on the correct account."},
@@ -321,7 +413,7 @@ public final class HelpAboutActivity extends AppCompatActivity {
                 {"13. Encrypted cloud backup और restore", "केवल verified cloud account उपयोग करें। Backup encryption enabled रखें। Restore से पहले account, backup date और target device जाँचें—restore मौजूदा data बदल सकता है। प्रक्रिया के बीच app बंद न करें।"},
                 {"14. Privacy और account सुरक्षा", "Password, OTP, address, phone number या बच्चे की निजी पहचान AI prompt में न लिखें। Device lock और verified email सक्रिय रखें। Cloud backup/account delete के लिए current-password verification पूरा करें।"},
                 {"15. Offline और network व्यवहार", "Local lessons/cache offline चल सकते हैं; नया Gemini answer, book search और cloud sync इंटरनेट माँग सकते हैं। Failure पर बार-बार duplicate submit न करें—network जाँचकर retry करें।"},
-                {"16. भाषा और accessibility", "Settings में हिन्दी, English या Bilingual interface चुनें। Student profile की explanation language अलग setting है। बड़े font, speaker, voice input और read-along को बच्चे की जरूरत के अनुसार उपयोग करें।"},
+                {"16. भाषा और accessibility", "Settings में हिन्दी, English या Hinglish interface चुनें। Student profile की explanation language अलग setting है। बड़े font, speaker, voice input और read-along को बच्चे की जरूरत के अनुसार उपयोग करें।"},
                 {"17. Student Mode में सुरक्षित लौटें", "Switch to Student Mode दबाएँ और learning-only interface बच्चे को दें। Parent Mode दोबारा खोलते समय verified account तथा device security check सुनिश्चित करें।"},
                 {"18. समस्या रिपोर्ट करने का सही तरीका", "Profile नाम, screen, किए गए exact steps और पूरा error screenshot लिखें। Backup/restore समस्या में file name/date दें, लेकिन password/OTP कभी साझा न करें। Developer fix के बाद Git Pull, Gradle Sync और Rebuild करें।"}
         };
@@ -341,7 +433,7 @@ public final class HelpAboutActivity extends AppCompatActivity {
                 {"13. Use encrypted cloud backup and restore", "Use only a verified cloud account and keep encryption enabled. Before restoring, verify account, backup date and target device because restore may replace current data. Do not close the app mid-process."},
                 {"14. Protect privacy and account", "Never put passwords, OTPs, address, phone number or a child’s private identity in an AI prompt. Keep device lock and verified email active. Complete current-password verification for cloud backup/account deletion."},
                 {"15. Understand offline and network behaviour", "Local lessons/cache may work offline; new Gemini answers, online book search and cloud sync can require internet. Do not create duplicate requests after failure—check the connection, then retry."},
-                {"16. Configure language and accessibility", "Select Hindi, English or Bilingual interface in Settings. The student profile’s explanation language is separate. Use larger text, speaker, voice input and read-along according to the child’s needs."},
+                {"16. Configure language and accessibility", "Select Hindi, English or Hinglish interface in Settings. The student profile’s explanation language is separate. Use larger text, speaker, voice input and read-along according to the child’s needs."},
                 {"17. Return safely to Student Mode", "Tap Switch to Student Mode and hand over the learning-only interface. Require the verified account and device security check whenever Parent Mode is opened again."},
                 {"18. Report a problem properly", "Record profile name, screen, exact steps and the complete error screenshot. For backup/restore issues, include file name/date but never a password or OTP. After a developer fix, Git Pull, Gradle Sync and Rebuild."}
         };
@@ -369,6 +461,20 @@ public final class HelpAboutActivity extends AppCompatActivity {
         if (LANGUAGE_HINDI.equals(language)) return "Parent checklist: Email verified रखें, device lock चालू रखें, books/curriculum जाँचें, doubts review करें और नियमित encrypted backup बनाएँ।";
         if (LANGUAGE_ENGLISH.equals(language)) return "Parent checklist: Keep email verified and device lock enabled, review books/curriculum and doubts, and create regular encrypted backups.";
         return "Parent checklist • अभिभावक जाँच\nVerified email, device lock, reviewed curriculum और regular encrypted backup बनाए रखें।";
+    }
+
+    private String safetyText() {
+        if (MODE_AUTHENTICATION.equals(mode)) {
+            if (LANGUAGE_HINDI.equals(language)) return "Account सुरक्षा: Password और OTP कभी साझा न करें। केवल अपने भरोसेमंद device पर sign in करें और email verification पूरा करें।";
+            if (LANGUAGE_ENGLISH.equals(language)) return "Account safety: Never share a password or OTP. Sign in only on a trusted device and complete email verification.";
+            return "Account सुरक्षा • Account safety\nPassword/OTP साझा न करें और verified email का उपयोग करें।";
+        }
+        if (MODE_SELECTION.equals(mode)) {
+            if (LANGUAGE_HINDI.equals(language)) return "सुरक्षित उपयोग: बच्चे के लिए Student Mode रखें। Parent Mode के account, curriculum और restore controls अभिभावक की देखरेख में उपयोग करें।";
+            if (LANGUAGE_ENGLISH.equals(language)) return "Safe use: Keep the child in Student Mode. Use Parent Mode account, curriculum and restore controls under adult supervision.";
+            return "सुरक्षित mode • Safe mode\nStudent learning अलग रखें; Parent controls जिम्मेदार अभिभावक संभालें।";
+        }
+        return MODE_PARENT.equals(mode) ? parentSafety() : studentSafety();
     }
 
     private int dp(int value) {

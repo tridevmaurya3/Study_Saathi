@@ -36,6 +36,14 @@ public final class UserModeSelectionActivity extends AppCompatActivity {
         binding.buttonParentMode.setOnClickListener(view ->
                 openAsRoot(ParentDashboardActivity.class)
         );
+        binding.buttonModeHelp.setOnClickListener(view -> {
+            Intent helpIntent = new Intent(this, HelpAboutActivity.class);
+            helpIntent.putExtra(
+                    HelpAboutActivity.EXTRA_MODE,
+                    HelpAboutActivity.MODE_SELECTION
+            );
+            startActivity(helpIntent);
+        });
         binding.buttonSignOut.setOnClickListener(view -> {
             FirebaseAuth.getInstance().signOut();
             openAuthentication();

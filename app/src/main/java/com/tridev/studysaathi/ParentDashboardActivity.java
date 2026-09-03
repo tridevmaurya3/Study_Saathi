@@ -443,6 +443,9 @@ public class ParentDashboardActivity
         binding.buttonParentHelp.setOnClickListener(view -> {
             openParentHelp();
         });
+        binding.buttonParentHeaderHelp.setOnClickListener(view ->
+                openParentHelp()
+        );
     }
 
     public void openParentNavigationDrawer() {

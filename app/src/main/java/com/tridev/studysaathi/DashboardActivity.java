@@ -139,6 +139,15 @@ public class DashboardActivity extends AppCompatActivity {
                 )
         );
 
+        binding.cardStudentHelp.setOnClickListener(view -> {
+            Intent help = new Intent(this, HelpAboutActivity.class);
+            help.putExtra(
+                    HelpAboutActivity.EXTRA_MODE,
+                    HelpAboutActivity.MODE_STUDENT
+            );
+            startActivity(help);
+        });
+
         binding.cardDashboardMenu.setOnClickListener(view ->
                 binding.dashboardRoot.openDrawer(
                         GravityCompat.START
