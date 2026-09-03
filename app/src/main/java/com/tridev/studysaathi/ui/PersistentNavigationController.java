@@ -1,17 +1,23 @@
 package com.tridev.studysaathi.ui;
 
 import android.app.Activity;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.view.ViewTreeObserver;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.Space;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.NestedScrollView;
+
+import com.tridev.studysaathi.R;
 
 import java.util.Collections;
 import java.util.Locale;
@@ -19,23 +25,26 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * Existing page header को scroll के दौरान स्थिर रखता है।
+ * Scroll content में बने existing page header को वास्तविक fixed header बनाता है।
  *
- * यह controller कोई नया Back या Hamburger view नहीं बनाता। हर Activity का
- * layout-defined navigation control और उसका पुराना click listener canonical
- * navigation रहता है।
+ * Controller कोई नया Back/Hamburger control नहीं बनाता और किसी header को
+ * translate/float नहीं करता। Existing header, title और click listener को scroll
+ * container के बाहर सुरक्षित रूप से re-parent किया जाता है।
  */
 public final class PersistentNavigationController {
 
+    private static final int DEFAULT_HEADER_HEIGHT_DP = 64;
+    private static final int HEADER_ELEVATION_DP = 8;
+
     @NonNull
-    private static final Map<Activity, Session> SESSIONS =
+    private static final Map<Activity, View> PINNED_HEADERS =
             Collections.synchronizedMap(new WeakHashMap<>());
 
     private PersistentNavigationController() {
     }
 
     public static void attach(@NonNull Activity activity) {
-        if (activity.isFinishing() || SESSIONS.containsKey(activity)) {
+        if (activity.isFinishing() || PINNED_HEADERS.containsKey(activity)) {
             return;
         }
 
@@ -43,65 +52,136 @@ public final class PersistentNavigationController {
         if (!(content instanceof ViewGroup)) {
             return;
         }
-
-        content.post(() -> attachAfterLayout(activity, (ViewGroup) content));
+        content.post(() -> pinAfterLayout(activity, (ViewGroup) content));
     }
 
-    private static void attachAfterLayout(
+    private static void pinAfterLayout(
             @NonNull Activity activity,
             @NonNull ViewGroup content
     ) {
-        if (activity.isFinishing() || SESSIONS.containsKey(activity)) {
+        if (activity.isFinishing() || PINNED_HEADERS.containsKey(activity)) {
             return;
         }
 
-        PinnedHeader pinnedHeader = findPinnedHeader(content);
-        if (pinnedHeader == null) {
+        PinnedHeader candidate = findPinnedHeader(content);
+        if (candidate == null) {
             return;
         }
 
-        Session session = new Session(content, pinnedHeader);
-        SESSIONS.put(activity, session);
-        ViewCompat.setTranslationZ(
-                pinnedHeader.header,
+        View header = candidate.header;
+        ViewParent currentParent = header.getParent();
+        ViewParent scrollParent = candidate.scrollContainer.getParent();
+        if (!(currentParent instanceof ViewGroup)
+                || !(scrollParent instanceof ViewGroup)) {
+            return;
+        }
+
+        ViewGroup originalParent = (ViewGroup) currentParent;
+        ViewGroup fixedHost = (ViewGroup) scrollParent;
+        int originalIndex = originalParent.indexOfChild(header);
+        if (originalIndex < 0 || fixedHost == originalParent) {
+            return;
+        }
+
+        int headerHeight = header.getHeight() > 0
+                ? header.getHeight()
+                : dp(activity, DEFAULT_HEADER_HEIGHT_DP);
+        ViewGroup.LayoutParams originalParams = header.getLayoutParams();
+
+        originalParent.removeViewAt(originalIndex);
+        Space reservedHeaderSpace = new Space(activity);
+        reservedHeaderSpace.setImportantForAccessibility(
+                View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        );
+        originalParent.addView(
+                reservedHeaderSpace,
+                originalIndex,
+                createSpacerParams(originalParams, headerHeight)
+        );
+
+        header.setTranslationX(0F);
+        header.setTranslationY(0F);
+        header.setMinimumHeight(dp(activity, 56));
+        header.setBackgroundColor(activity.getColor(R.color.ss_background));
+        if (!(header instanceof Toolbar)) {
+            header.setPaddingRelative(
+                    Math.max(header.getPaddingStart(), dp(activity, 12)),
+                    header.getPaddingTop(),
+                    Math.max(header.getPaddingEnd(), dp(activity, 12)),
+                    header.getPaddingBottom()
+            );
+        }
+        ViewCompat.setElevation(
+                header,
                 Math.max(
-                        pinnedHeader.originalTranslationZ,
-                        dp(activity, 12)
+                        ViewCompat.getElevation(header),
+                        dp(activity, HEADER_ELEVATION_DP)
                 )
         );
-        content.getViewTreeObserver().addOnScrollChangedListener(session);
-        session.onScrollChanged();
+        fixedHost.addView(
+                header,
+                createFixedHeaderParams(fixedHost, headerHeight)
+        );
+        PINNED_HEADERS.put(activity, header);
     }
 
     public static void detach(@NonNull Activity activity) {
-        Session session = SESSIONS.remove(activity);
-        if (session == null) {
-            return;
-        }
+        /* Header Activity के जीवनभर fixed रहता है; केवल tracking हटती है। */
+        PINNED_HEADERS.remove(activity);
+    }
 
-        ViewTreeObserver observer =
-                session.observerHost.getViewTreeObserver();
-        if (observer.isAlive()) {
-            observer.removeOnScrollChangedListener(session);
+    @NonNull
+    private static ViewGroup.LayoutParams createSpacerParams(
+            @Nullable ViewGroup.LayoutParams original,
+            int headerHeight
+    ) {
+        if (original instanceof LinearLayout.LayoutParams) {
+            LinearLayout.LayoutParams result =
+                    new LinearLayout.LayoutParams(
+                            (LinearLayout.LayoutParams) original
+                    );
+            result.height = headerHeight;
+            return result;
         }
-
-        session.pinnedHeader.header.setTranslationY(
-                session.pinnedHeader.originalTranslationY
+        return new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                headerHeight
         );
-        ViewCompat.setTranslationZ(
-                session.pinnedHeader.header,
-                session.pinnedHeader.originalTranslationZ
+    }
+
+    @NonNull
+    private static ViewGroup.LayoutParams createFixedHeaderParams(
+            @NonNull ViewGroup host,
+            int headerHeight
+    ) {
+        if (host instanceof CoordinatorLayout) {
+            CoordinatorLayout.LayoutParams params =
+                    new CoordinatorLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            headerHeight
+                    );
+            params.gravity = Gravity.TOP;
+            return params;
+        }
+        if (host instanceof FrameLayout) {
+            return new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    headerHeight,
+                    Gravity.TOP
+            );
+        }
+        return new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                headerHeight
         );
     }
 
     @Nullable
     private static PinnedHeader findPinnedHeader(@NonNull View view) {
-        if (view instanceof ScrollView
-                || view instanceof NestedScrollView) {
+        if (view instanceof ScrollView || view instanceof NestedScrollView) {
             ViewGroup scrollContainer = (ViewGroup) view;
             View navigationView = findNavigationView(scrollContainer);
             View header = findTopLevelHeader(scrollContainer, navigationView);
-
             if (navigationView != null && header != null) {
                 return new PinnedHeader(scrollContainer, header);
             }
@@ -116,7 +196,6 @@ public final class PersistentNavigationController {
                 }
             }
         }
-
         return null;
     }
 
@@ -125,7 +204,6 @@ public final class PersistentNavigationController {
         if (isDeclaredNavigationView(view)) {
             return view;
         }
-
         if (view instanceof ViewGroup) {
             ViewGroup group = (ViewGroup) view;
             for (int index = 0; index < group.getChildCount(); index++) {
@@ -135,7 +213,6 @@ public final class PersistentNavigationController {
                 }
             }
         }
-
         return null;
     }
 
@@ -181,7 +258,6 @@ public final class PersistentNavigationController {
 
         View contentRoot = scrollContainer.getChildAt(0);
         View current = navigationView;
-
         while (current != null) {
             ViewParent parent = current.getParent();
             if (parent == contentRoot) {
@@ -192,35 +268,16 @@ public final class PersistentNavigationController {
             }
             current = (View) parent;
         }
-
         return null;
     }
 
-    private static final class Session
-            implements ViewTreeObserver.OnScrollChangedListener {
-
-        @NonNull
-        private final View observerHost;
-
-        @NonNull
-        private final PinnedHeader pinnedHeader;
-
-        private Session(
-                @NonNull View observerHost,
-                @NonNull PinnedHeader pinnedHeader
-        ) {
-            this.observerHost = observerHost;
-            this.pinnedHeader = pinnedHeader;
-        }
-
-        @Override
-        public void onScrollChanged() {
-            int scrollY = pinnedHeader.scrollContainer.getScrollY();
-            pinnedHeader.header.setTranslationY(
-                    pinnedHeader.originalTranslationY
-                            + Math.max(0, scrollY)
-            );
-        }
+    private static int dp(@NonNull Activity activity, int value) {
+        return Math.round(
+                value
+                        * activity.getResources()
+                        .getDisplayMetrics()
+                        .density
+        );
     }
 
     private static final class PinnedHeader {
@@ -231,28 +288,12 @@ public final class PersistentNavigationController {
         @NonNull
         private final View header;
 
-        private final float originalTranslationY;
-
-        private final float originalTranslationZ;
-
         private PinnedHeader(
                 @NonNull ViewGroup scrollContainer,
                 @NonNull View header
         ) {
             this.scrollContainer = scrollContainer;
             this.header = header;
-            this.originalTranslationY = header.getTranslationY();
-            this.originalTranslationZ =
-                    ViewCompat.getTranslationZ(header);
         }
-    }
-
-    private static int dp(@NonNull Activity activity, int value) {
-        return Math.round(
-                value
-                        * activity.getResources()
-                        .getDisplayMetrics()
-                        .density
-        );
     }
 }

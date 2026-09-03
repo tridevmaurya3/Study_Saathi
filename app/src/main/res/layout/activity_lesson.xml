@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingStart="12dp"
-        android:paddingTop="14dp"
+        android:paddingTop="8dp"
         android:paddingEnd="12dp"
         android:paddingBottom="12dp">
 
@@ -290,7 +290,7 @@
                 style="@style/TextAppearance.StudySaathi.Reading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="19dp"
+                android:padding="14dp"
                 android:textIsSelectable="true" />
 
         </com.google.android.material.card.MaterialCardView>
@@ -322,7 +322,7 @@
                 style="@style/TextAppearance.StudySaathi.Reading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="19dp"
+                android:padding="14dp"
                 android:textIsSelectable="true" />
 
         </com.google.android.material.card.MaterialCardView>
@@ -354,7 +354,7 @@
                 style="@style/TextAppearance.StudySaathi.Reading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="19dp"
+                android:padding="14dp"
                 android:textIsSelectable="true" />
 
         </com.google.android.material.card.MaterialCardView>
@@ -386,7 +386,7 @@
                 style="@style/TextAppearance.StudySaathi.Reading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="19dp"
+                android:padding="14dp"
                 android:textIsSelectable="true" />
 
         </com.google.android.material.card.MaterialCardView>

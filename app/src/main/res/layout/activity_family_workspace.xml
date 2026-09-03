@@ -5,15 +5,23 @@
     android:fillViewport="true" android:background="@color/ss_background">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="vertical" android:padding="14dp">
-        <com.google.android.material.button.MaterialButton android:id="@+id/buttonFamilyBack"
-            style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content"
-            android:layout_height="44dp" android:text="← वापस" android:textAllCaps="false" />
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Family Learning Workspace" android:textSize="24sp" android:textStyle="bold"
-            android:textColor="@color/ss_text_primary" />
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="5dp" android:text="मम्मी और पापा के अलग accounts—बच्चे का साझा, encrypted Study Saathi data।"
-            android:textSize="14sp" android:textColor="@color/ss_text_secondary" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="64dp"
+            android:gravity="center_vertical" android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton android:id="@+id/buttonFamilyBack"
+                style="@style/Widget.Material3.Button.TextButton" android:layout_width="48dp"
+                android:layout_height="48dp" android:minWidth="0dp" android:text="←"
+                android:textSize="26sp" android:textAllCaps="false" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Family Learning Workspace" android:textSize="20sp" android:textStyle="bold"
+                    android:textColor="@color/ss_text_primary" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:ellipsize="end" android:maxLines="1"
+                    android:text="Shared and encrypted parent workspace"
+                    android:textSize="12sp" android:textColor="@color/ss_text_secondary" />
+            </LinearLayout>
+        </LinearLayout>
         <ProgressBar android:id="@+id/familyProgress" android:layout_width="36dp" android:layout_height="36dp"
             android:layout_gravity="center" android:layout_margin="12dp" android:visibility="gone" />
         <com.google.android.material.card.MaterialCardView android:id="@+id/cardFamilySetup"
