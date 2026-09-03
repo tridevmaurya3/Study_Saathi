@@ -10,6 +10,7 @@ import android.widget.ScrollView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.ViewCompat;
 import androidx.core.widget.NestedScrollView;
 
 import java.util.Collections;
@@ -61,6 +62,13 @@ public final class PersistentNavigationController {
 
         Session session = new Session(content, pinnedHeader);
         SESSIONS.put(activity, session);
+        ViewCompat.setTranslationZ(
+                pinnedHeader.header,
+                Math.max(
+                        pinnedHeader.originalTranslationZ,
+                        dp(activity, 12)
+                )
+        );
         content.getViewTreeObserver().addOnScrollChangedListener(session);
         session.onScrollChanged();
     }
@@ -77,7 +85,13 @@ public final class PersistentNavigationController {
             observer.removeOnScrollChangedListener(session);
         }
 
-        session.pinnedHeader.header.setTranslationY(0F);
+        session.pinnedHeader.header.setTranslationY(
+                session.pinnedHeader.originalTranslationY
+        );
+        ViewCompat.setTranslationZ(
+                session.pinnedHeader.header,
+                session.pinnedHeader.originalTranslationZ
+        );
     }
 
     @Nullable
@@ -147,6 +161,8 @@ public final class PersistentNavigationController {
 
         return entryName.equals("buttonback")
                 || entryName.equals("backbutton")
+                || (entryName.contains("back")
+                        && entryName.endsWith("button"))
                 || entryName.endsWith("backbutton")
                 || entryName.endsWith("helpback")
                 || entryName.endsWith("familyback")
@@ -200,10 +216,10 @@ public final class PersistentNavigationController {
         @Override
         public void onScrollChanged() {
             int scrollY = pinnedHeader.scrollContainer.getScrollY();
-            pinnedHeader.header.setTranslationY(Math.max(0, scrollY));
-            if (scrollY > 0) {
-                pinnedHeader.header.bringToFront();
-            }
+            pinnedHeader.header.setTranslationY(
+                    pinnedHeader.originalTranslationY
+                            + Math.max(0, scrollY)
+            );
         }
     }
 
@@ -215,12 +231,28 @@ public final class PersistentNavigationController {
         @NonNull
         private final View header;
 
+        private final float originalTranslationY;
+
+        private final float originalTranslationZ;
+
         private PinnedHeader(
                 @NonNull ViewGroup scrollContainer,
                 @NonNull View header
         ) {
             this.scrollContainer = scrollContainer;
             this.header = header;
+            this.originalTranslationY = header.getTranslationY();
+            this.originalTranslationZ =
+                    ViewCompat.getTranslationZ(header);
         }
+    }
+
+    private static int dp(@NonNull Activity activity, int value) {
+        return Math.round(
+                value
+                        * activity.getResources()
+                        .getDisplayMetrics()
+                        .density
+        );
     }
 }
