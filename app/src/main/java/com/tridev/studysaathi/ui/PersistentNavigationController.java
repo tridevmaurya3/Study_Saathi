@@ -1,31 +1,29 @@
 package com.tridev.studysaathi.ui;
 
 import android.app.Activity;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.ViewTreeObserver;
-import android.widget.FrameLayout;
 import android.widget.ScrollView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.GravityCompat;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.widget.NestedScrollView;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.tridev.studysaathi.DashboardActivity;
-import com.tridev.studysaathi.MainActivity;
-import com.tridev.studysaathi.ParentDashboardActivity;
-import com.tridev.studysaathi.R;
-import com.tridev.studysaathi.UserModeSelectionActivity;
 
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+/**
+ * Existing page header को scroll के दौरान स्थिर रखता है।
+ *
+ * यह controller कोई नया Back या Hamburger view नहीं बनाता। हर Activity का
+ * layout-defined navigation control और उसका पुराना click listener canonical
+ * navigation रहता है।
+ */
 public final class PersistentNavigationController {
 
     @NonNull
@@ -36,64 +34,35 @@ public final class PersistentNavigationController {
     }
 
     public static void attach(@NonNull Activity activity) {
-        if (activity instanceof MainActivity
-                || activity instanceof UserModeSelectionActivity
-                || activity instanceof ParentDashboardActivity
-                || activity.isFinishing()
-                || SESSIONS.containsKey(activity)) {
+        if (activity.isFinishing() || SESSIONS.containsKey(activity)) {
             return;
         }
 
         View content = activity.findViewById(android.R.id.content);
-        if (!(content instanceof FrameLayout)) {
+        if (!(content instanceof ViewGroup)) {
             return;
         }
 
-        FrameLayout host = (FrameLayout) content;
-        boolean dashboard = activity instanceof DashboardActivity;
-        TextView back = new TextView(activity);
-        back.setText(dashboard ? "☰" : "←");
-        back.setTextSize(25);
-        back.setTextColor(activity.getColor(R.color.ss_primary));
-        back.setGravity(Gravity.CENTER);
-        back.setBackgroundResource(R.drawable.bg_persistent_back);
-        back.setElevation(dp(activity, 14));
-        back.setContentDescription(dashboard ? "Open study menu" : "Back");
-        back.setVisibility(View.GONE);
+        content.post(() -> attachAfterLayout(activity, (ViewGroup) content));
+    }
 
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                dp(activity, 52),
-                dp(activity, 52),
-                Gravity.TOP | Gravity.START
-        );
-        params.leftMargin = dp(activity, 8);
-        params.topMargin = dp(activity, 8);
-        host.addView(back, params);
+    private static void attachAfterLayout(
+            @NonNull Activity activity,
+            @NonNull ViewGroup content
+    ) {
+        if (activity.isFinishing() || SESSIONS.containsKey(activity)) {
+            return;
+        }
 
-        back.setOnClickListener(view -> {
-            if (dashboard) {
-                View dashboardRoot = activity.findViewById(
-                        R.id.dashboardRoot
-                );
-                if (dashboardRoot instanceof DrawerLayout) {
-                    ((DrawerLayout) dashboardRoot)
-                            .openDrawer(GravityCompat.START);
-                }
-                return;
-            }
-            if (activity instanceof AppCompatActivity) {
-                ((AppCompatActivity) activity)
-                        .getOnBackPressedDispatcher()
-                        .onBackPressed();
-            } else {
-                activity.onBackPressed();
-            }
-        });
+        PinnedHeader pinnedHeader = findPinnedHeader(content);
+        if (pinnedHeader == null) {
+            return;
+        }
 
-        Session session = new Session(host, back);
+        Session session = new Session(content, pinnedHeader);
         SESSIONS.put(activity, session);
-        host.getViewTreeObserver().addOnScrollChangedListener(session);
-        host.post(session::onScrollChanged);
+        content.getViewTreeObserver().addOnScrollChangedListener(session);
+        session.onScrollChanged();
     }
 
     public static void detach(@NonNull Activity activity) {
@@ -101,66 +70,157 @@ public final class PersistentNavigationController {
         if (session == null) {
             return;
         }
-        ViewTreeObserver observer = session.host.getViewTreeObserver();
+
+        ViewTreeObserver observer =
+                session.observerHost.getViewTreeObserver();
         if (observer.isAlive()) {
             observer.removeOnScrollChangedListener(session);
         }
-        session.host.removeView(session.back);
+
+        session.pinnedHeader.header.setTranslationY(0F);
+    }
+
+    @Nullable
+    private static PinnedHeader findPinnedHeader(@NonNull View view) {
+        if (view instanceof ScrollView
+                || view instanceof NestedScrollView) {
+            ViewGroup scrollContainer = (ViewGroup) view;
+            View navigationView = findNavigationView(scrollContainer);
+            View header = findTopLevelHeader(scrollContainer, navigationView);
+
+            if (navigationView != null && header != null) {
+                return new PinnedHeader(scrollContainer, header);
+            }
+        }
+
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int index = 0; index < group.getChildCount(); index++) {
+                PinnedHeader result = findPinnedHeader(group.getChildAt(index));
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static View findNavigationView(@NonNull View view) {
+        if (isDeclaredNavigationView(view)) {
+            return view;
+        }
+
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int index = 0; index < group.getChildCount(); index++) {
+                View result = findNavigationView(group.getChildAt(index));
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean isDeclaredNavigationView(@NonNull View view) {
+        if (view instanceof Toolbar
+                && ((Toolbar) view).getNavigationIcon() != null) {
+            return true;
+        }
+
+        int viewId = view.getId();
+        if (viewId == View.NO_ID) {
+            return false;
+        }
+
+        String entryName;
+        try {
+            entryName = view.getResources()
+                    .getResourceEntryName(viewId)
+                    .toLowerCase(Locale.ROOT);
+        } catch (RuntimeException exception) {
+            return false;
+        }
+
+        return entryName.equals("buttonback")
+                || entryName.equals("backbutton")
+                || entryName.endsWith("backbutton")
+                || entryName.endsWith("helpback")
+                || entryName.endsWith("familyback")
+                || entryName.equals("carddashboardmenu")
+                || entryName.equals("buttonparentmenu");
+    }
+
+    @Nullable
+    private static View findTopLevelHeader(
+            @NonNull ViewGroup scrollContainer,
+            @Nullable View navigationView
+    ) {
+        if (navigationView == null || scrollContainer.getChildCount() == 0) {
+            return null;
+        }
+
+        View contentRoot = scrollContainer.getChildAt(0);
+        View current = navigationView;
+
+        while (current != null) {
+            ViewParent parent = current.getParent();
+            if (parent == contentRoot) {
+                return current;
+            }
+            if (!(parent instanceof View)) {
+                return null;
+            }
+            current = (View) parent;
+        }
+
+        return null;
     }
 
     private static final class Session
             implements ViewTreeObserver.OnScrollChangedListener {
 
         @NonNull
-        private final FrameLayout host;
+        private final View observerHost;
+
         @NonNull
-        private final TextView back;
+        private final PinnedHeader pinnedHeader;
 
         private Session(
-                @NonNull FrameLayout host,
-                @NonNull TextView back
+                @NonNull View observerHost,
+                @NonNull PinnedHeader pinnedHeader
         ) {
-            this.host = host;
-            this.back = back;
+            this.observerHost = observerHost;
+            this.pinnedHeader = pinnedHeader;
         }
 
         @Override
         public void onScrollChanged() {
-            boolean scrolled = hasScrolledContent(host, back);
-            back.setVisibility(scrolled ? View.VISIBLE : View.GONE);
-        }
-    }
-
-    private static boolean hasScrolledContent(
-            @NonNull View view,
-            @NonNull View ignored
-    ) {
-        if (view == ignored) {
-            return false;
-        }
-        if ((view instanceof ScrollView
-                || view instanceof NestedScrollView)
-                && view.getScrollY() > dp(view.getContext(), 24)) {
-            return true;
-        }
-        if (view instanceof RecyclerView
-                && view.canScrollVertically(-1)) {
-            return true;
-        }
-        if (view instanceof ViewGroup) {
-            ViewGroup group = (ViewGroup) view;
-            for (int index = 0; index < group.getChildCount(); index++) {
-                if (hasScrolledContent(group.getChildAt(index), ignored)) {
-                    return true;
-                }
+            int scrollY = pinnedHeader.scrollContainer.getScrollY();
+            pinnedHeader.header.setTranslationY(Math.max(0, scrollY));
+            if (scrollY > 0) {
+                pinnedHeader.header.bringToFront();
             }
         }
-        return false;
     }
 
-    private static int dp(@NonNull android.content.Context context, int value) {
-        return Math.round(
-                value * context.getResources().getDisplayMetrics().density
-        );
+    private static final class PinnedHeader {
+
+        @NonNull
+        private final ViewGroup scrollContainer;
+
+        @NonNull
+        private final View header;
+
+        private PinnedHeader(
+                @NonNull ViewGroup scrollContainer,
+                @NonNull View header
+        ) {
+            this.scrollContainer = scrollContainer;
+            this.header = header;
+        }
     }
 }
